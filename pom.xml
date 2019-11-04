@@ -2975,9 +2975,9 @@
     </profile>
 
     <profile>
-      <id>spark-thriftserver</id>
+      <id>service</id>
       <modules>
-        <module>sql/thriftserver</module>
+        <module>sql/service</module>
       </modules>
     </profile>
 
