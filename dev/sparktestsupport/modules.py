@@ -170,15 +170,15 @@ hive_thriftserver = Module(
     ]
 )
 
-service = Module(
-    name="service",
+spark_thriftserver = Module(
+    name="spark-thriftserver",
     dependencies=[hive],
     source_file_regexes=[
         "sql/service",
         "sbin/start-thriftserver.sh",
     ],
     build_profile_flags=[
-        "-Pservice",
+        "-Pspark-thriftserver",
     ],
     sbt_test_goals=[
         "service/test",
