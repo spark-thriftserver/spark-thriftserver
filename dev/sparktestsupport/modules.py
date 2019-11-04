@@ -170,8 +170,8 @@ hive_thriftserver = Module(
     ]
 )
 
-spark_thriftserver = Module(
-    name="spark-thriftserver",
+service = Module(
+    name="service",
     dependencies=[hive],
     source_file_regexes=[
         "sql/service",
