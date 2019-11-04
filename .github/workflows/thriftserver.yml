@@ -29,7 +29,7 @@ jobs:
           java-version: ${{ matrix.java }}
       - name: Test thriftserver with Sbt
         run: |
-          ./build/sbt  "hive-thriftserver/test-only" -Phive-thriftserver -P${{ matrix.hadoop }} -Djava.version=${{ matrix.java }}
+          ./build/sbt  "service/test-only" -Pspark-thriftserver -P${{ matrix.hadoop }} -Djava.version=${{ matrix.java }}
   lint:
     runs-on: ubuntu-latest
     name: Linters
