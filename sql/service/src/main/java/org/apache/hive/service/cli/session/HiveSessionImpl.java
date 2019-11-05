@@ -34,7 +34,6 @@ import org.apache.hadoop.hive.common.cli.HiveFileProcessor;
 import org.apache.hadoop.hive.common.cli.IHiveFileProcessor;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
-import org.apache.hadoop.hive.conf.VariableSubstitution;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.exec.Utilities;
@@ -42,8 +41,6 @@ import org.apache.hadoop.hive.ql.history.HiveHistory;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
-import org.apache.hadoop.hive.serde2.SerDeUtils;
-import org.apache.hadoop.hive.serde2.thrift.ThriftFormatter;
 import org.apache.hadoop.hive.shims.ShimLoader;
 import org.apache.hive.common.util.HiveVersionInfo;
 import org.apache.hive.service.auth.HiveAuthFactory;
@@ -70,6 +67,7 @@ import org.apache.hive.service.cli.operation.Operation;
 import org.apache.hive.service.cli.operation.OperationManager;
 import org.apache.hive.service.rpc.thrift.TProtocolVersion;
 import org.apache.hive.service.server.ThreadWithGarbageCleanup;
+import org.apache.hive.service.utils.VariableSubstitution;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -123,8 +121,6 @@ public class HiveSessionImpl implements HiveSession {
     hiveConf.set(ConfVars.HIVESESSIONID.varname,
         sessionHandle.getHandleIdentifier().toString());
     // Use thrift transportable formatter
-    hiveConf.set(SerDeUtils.LIST_SINK_OUTPUT_FORMATTER, ThriftFormatter.class.getName());
-    hiveConf.setInt(SerDeUtils.LIST_SINK_OUTPUT_PROTOCOL, protocol.getValue());
   }
 
   @Override
@@ -142,14 +138,6 @@ public class HiveSessionImpl implements HiveSession {
     sessionState.setUserIpAddress(ipAddress);
     sessionState.setIsHiveServerQuery(true);
     SessionState.start(sessionState);
-    try {
-      sessionState.loadAuxJars();
-      sessionState.loadReloadableAuxJars();
-    } catch (IOException e) {
-      String msg = "Failed to load reloadable jar file path: " + e;
-      LOG.error(msg, e);
-      throw new HiveSQLException(msg, e);
-    }
     // Process global init file: .hiverc
     processGlobalInitFile();
     if (sessionConfMap != null) {
@@ -233,7 +221,7 @@ public class HiveSessionImpl implements HiveSession {
   // setConf(varname, propName, varvalue, true) when varname.startsWith(HIVECONF_PREFIX)
   public static int setVariable(String varname, String varvalue) throws Exception {
     SessionState ss = SessionState.get();
-    VariableSubstitution substitution = new VariableSubstitution(() -> ss.getHiveVariables());
+    VariableSubstitution substitution = new VariableSubstitution(ss.getHiveVariables());
     if (varvalue.contains("\n")){
       ss.err.println("Warning: Value had a \\n character in it.");
     }
@@ -264,7 +252,7 @@ public class HiveSessionImpl implements HiveSession {
   private static void setConf(String varname, String key, String varvalue, boolean register)
           throws IllegalArgumentException {
     VariableSubstitution substitution =
-        new VariableSubstitution(() -> SessionState.get().getHiveVariables());
+        new VariableSubstitution(SessionState.get().getHiveVariables());
     HiveConf conf = SessionState.get().getConf();
     String value = substitution.substitute(conf, varvalue);
     if (conf.getBoolVar(HiveConf.ConfVars.HIVECONFVALIDATION)) {

@@ -29,7 +29,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.hadoop.hive.common.JvmPauseMonitor;
 import org.apache.hadoop.hive.common.LogUtils;
 import org.apache.hadoop.hive.common.LogUtils.LogInitializationException;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -124,12 +123,6 @@ public class HiveServer2 extends CompositeService {
         server = new HiveServer2();
         server.init(hiveConf);
         server.start();
-        try {
-          JvmPauseMonitor pauseMonitor = new JvmPauseMonitor(hiveConf);
-          pauseMonitor.start();
-        } catch (Throwable t) {
-          LOG.warn("Could not initiate the JvmPauseMonitor thread.", t);
-        }
         break;
       } catch (Throwable throwable) {
         if (server != null) {
@@ -166,7 +159,6 @@ public class HiveServer2 extends CompositeService {
       // before any of the other core hive classes are loaded
       String initLog4jMessage = LogUtils.initHiveLog4j();
       LOG.debug(initLog4jMessage);
-      HiveStringUtils.startupShutdownMessage(HiveServer2.class, args, LOG);
 
       // Log debug message from "oproc" after log4j initialize properly
       LOG.debug(oproc.getDebugMessage().toString());

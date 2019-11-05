@@ -23,7 +23,6 @@ import java.util.List;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Schema;
-import org.apache.hadoop.hive.serde2.thrift.Type;
 import org.apache.hive.service.rpc.thrift.TColumnDesc;
 import org.apache.hive.service.rpc.thrift.TTableSchema;
 

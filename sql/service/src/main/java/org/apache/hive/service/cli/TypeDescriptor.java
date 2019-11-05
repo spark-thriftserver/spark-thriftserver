@@ -20,7 +20,6 @@ package org.apache.hive.service.cli;
 
 import java.util.List;
 
-import org.apache.hadoop.hive.serde2.thrift.Type;
 import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 import org.apache.hive.service.rpc.thrift.TPrimitiveTypeEntry;

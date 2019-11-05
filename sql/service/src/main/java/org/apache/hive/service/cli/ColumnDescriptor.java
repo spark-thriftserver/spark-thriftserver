@@ -18,7 +18,6 @@
 
 package org.apache.hive.service.cli;
 
-import org.apache.hadoop.hive.serde2.thrift.Type;
 import org.apache.hive.service.rpc.thrift.TColumnDesc;
 
 
