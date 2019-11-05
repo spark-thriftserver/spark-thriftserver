@@ -42,7 +42,6 @@ import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.shims.HadoopShims.KerberosNameShim;
 import org.apache.hadoop.hive.shims.ShimLoader;
 import org.apache.hadoop.hive.thrift.DBTokenStore;
-import org.apache.hadoop.hive.thrift.HiveDelegationTokenManager;
 import org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge;
 import org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge.Server.ServerMode;
 import org.apache.hadoop.security.SecurityUtil;
@@ -50,6 +49,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.ProxyUsers;
 import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.thrift.ThriftCLIService;
+import org.apache.spark.sql.hive.thriftserver.ReflectionUtils;
 import org.apache.thrift.TProcessorFactory;
 import org.apache.thrift.transport.TSSLTransportFactory;
 import org.apache.thrift.transport.TServerSocket;
@@ -161,7 +161,7 @@ public class HiveAuthFactory {
 
           delegationTokenManager.startDelegationTokenSecretManager(
               conf, rawStore, ServerMode.HIVESERVER2);
-          saslServer.setSecretManager(delegationTokenManager.getSecretManager());
+          ReflectionUtils.setSuperField(saslServer, "secretManager", delegationTokenManager);
         }
         catch (MetaException|IOException e) {
           throw new TTransportException("Failed to start token manager", e);
