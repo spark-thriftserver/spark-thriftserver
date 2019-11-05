@@ -32,7 +32,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.hive.common.LogUtils;
 import org.apache.hadoop.hive.common.LogUtils.LogInitializationException;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hive.common.util.HiveStringUtils;
 import org.apache.hive.service.CompositeService;
 import org.apache.hive.service.cli.CLIService;
 import org.apache.hive.service.cli.thrift.ThriftBinaryCLIService;

@@ -22,7 +22,6 @@ package org.apache.hive.service.auth;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.security.PrivilegedExceptionAction;
 
 import org.apache.commons.lang.StringUtils;
@@ -31,8 +30,6 @@ import org.apache.hadoop.hive.shims.Utils;
 import org.apache.hadoop.hive.thrift.*;
 import org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge.Server.ServerMode;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
-import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.apache.hadoop.security.authorize.ProxyUsers;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.util.ReflectionUtils;
@@ -41,7 +38,7 @@ public class HiveDelegationTokenManager {
 
   public static final String  DELEGATION_TOKEN_GC_INTERVAL =
           "hive.cluster.delegation.token.gc-interval";
-  private final static long DELEGATION_TOKEN_GC_INTERVAL_DEFAULT = 3600000; // 1 hour
+  private static long DELEGATION_TOKEN_GC_INTERVAL_DEFAULT = 3600000; // 1 hour
   // Delegation token related keys
   public static final String  DELEGATION_KEY_UPDATE_INTERVAL_KEY =
           "hive.cluster.delegation.key.update-interval";

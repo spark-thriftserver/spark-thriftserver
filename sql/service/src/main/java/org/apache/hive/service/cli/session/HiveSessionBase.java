@@ -21,8 +21,8 @@ package org.apache.hive.service.cli.session;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.SessionHandle;
-import org.apache.hive.service.cli.operation.OperationManager;
 import org.apache.hive.service.rpc.thrift.TProtocolVersion;
+import org.apache.spark.sql.hive.thriftserver.cli.operation.OperationManager;
 
 import java.io.File;
 

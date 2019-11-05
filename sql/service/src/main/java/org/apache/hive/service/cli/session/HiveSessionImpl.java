@@ -54,20 +54,14 @@ import org.apache.hive.service.cli.RowSet;
 import org.apache.hive.service.cli.SessionHandle;
 import org.apache.hive.service.cli.TableSchema;
 import org.apache.hive.service.cli.operation.ExecuteStatementOperation;
-import org.apache.hive.service.cli.operation.GetCatalogsOperation;
-import org.apache.hive.service.cli.operation.GetColumnsOperation;
-import org.apache.hive.service.cli.operation.GetCrossReferenceOperation;
-import org.apache.hive.service.cli.operation.GetFunctionsOperation;
-import org.apache.hive.service.cli.operation.GetPrimaryKeysOperation;
-import org.apache.hive.service.cli.operation.GetSchemasOperation;
-import org.apache.hive.service.cli.operation.GetTableTypesOperation;
-import org.apache.hive.service.cli.operation.GetTypeInfoOperation;
 import org.apache.hive.service.cli.operation.MetadataOperation;
 import org.apache.hive.service.cli.operation.Operation;
-import org.apache.hive.service.cli.operation.OperationManager;
 import org.apache.hive.service.rpc.thrift.TProtocolVersion;
 import org.apache.hive.service.server.ThreadWithGarbageCleanup;
 import org.apache.hive.service.utils.VariableSubstitution;
+import org.apache.spark.sql.hive.thriftserver.*;
+import org.apache.spark.sql.hive.thriftserver.cli.operation.OperationManager;
+import org.apache.spark.sql.hive.thriftserver.cli.operation.SparkMetadataOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -489,7 +483,7 @@ public class HiveSessionImpl implements HiveSession {
     acquire(true);
 
     OperationManager operationManager = getOperationManager();
-    GetTypeInfoOperation operation = operationManager.newGetTypeInfoOperation(getSession());
+    SparkGetTypeInfoOperation operation = operationManager.newGetTypeInfoOperation(getSession());
     OperationHandle opHandle = operation.getHandle();
     try {
       operation.run();
@@ -509,7 +503,7 @@ public class HiveSessionImpl implements HiveSession {
     acquire(true);
 
     OperationManager operationManager = getOperationManager();
-    GetCatalogsOperation operation = operationManager.newGetCatalogsOperation(getSession());
+    SparkGetCatalogsOperation operation = operationManager.newGetCatalogsOperation(getSession());
     OperationHandle opHandle = operation.getHandle();
     try {
       operation.run();
@@ -529,7 +523,7 @@ public class HiveSessionImpl implements HiveSession {
     acquire(true);
 
     OperationManager operationManager = getOperationManager();
-    GetSchemasOperation operation =
+    SparkGetSchemasOperation operation =
         operationManager.newGetSchemasOperation(getSession(), catalogName, schemaName);
     OperationHandle opHandle = operation.getHandle();
     try {
@@ -551,7 +545,7 @@ public class HiveSessionImpl implements HiveSession {
     acquire(true);
 
     OperationManager operationManager = getOperationManager();
-    MetadataOperation operation =
+    SparkMetadataOperation operation =
         operationManager.newGetTablesOperation(getSession(), catalogName, schemaName, tableName, tableTypes);
     OperationHandle opHandle = operation.getHandle();
     try {
@@ -572,7 +566,7 @@ public class HiveSessionImpl implements HiveSession {
     acquire(true);
 
     OperationManager operationManager = getOperationManager();
-    GetTableTypesOperation operation = operationManager.newGetTableTypesOperation(getSession());
+    SparkGetTableTypesOperation operation = operationManager.newGetTableTypesOperation(getSession());
     OperationHandle opHandle = operation.getHandle();
     try {
       operation.run();
@@ -596,7 +590,7 @@ public class HiveSessionImpl implements HiveSession {
        metastoreClient.setHiveAddedJars(addedJars);
     }
     OperationManager operationManager = getOperationManager();
-    GetColumnsOperation operation = operationManager.newGetColumnsOperation(getSession(),
+    SparkGetColumnsOperation operation = operationManager.newGetColumnsOperation(getSession(),
         catalogName, schemaName, tableName, columnName);
     OperationHandle opHandle = operation.getHandle();
     try {
@@ -617,7 +611,7 @@ public class HiveSessionImpl implements HiveSession {
     acquire(true);
 
     OperationManager operationManager = getOperationManager();
-    GetFunctionsOperation operation = operationManager
+    SparkGetFunctionsOperation operation = operationManager
         .newGetFunctionsOperation(getSession(), catalogName, schemaName, functionName);
     OperationHandle opHandle = operation.getHandle();
     try {
@@ -838,21 +832,7 @@ public class HiveSessionImpl implements HiveSession {
   public OperationHandle getPrimaryKeys(String catalog, String schema,
       String table) throws HiveSQLException {
     acquire(true);
-
-    OperationManager operationManager = getOperationManager();
-    GetPrimaryKeysOperation operation = operationManager
-        .newGetPrimaryKeysOperation(getSession(), catalog, schema, table);
-    OperationHandle opHandle = operation.getHandle();
-    try {
-      operation.run();
-      opHandleSet.add(opHandle);
-      return opHandle;
-    } catch (HiveSQLException e) {
-      operationManager.closeOperation(opHandle);
-      throw e;
-    } finally {
-      release(true);
-    }
+    throw new HiveSQLException("GetPrimaryKeys is not supported yet");
   }
 
   @Override
@@ -860,22 +840,6 @@ public class HiveSessionImpl implements HiveSession {
       String primarySchema, String primaryTable, String foreignCatalog,
       String foreignSchema, String foreignTable) throws HiveSQLException {
     acquire(true);
-
-    OperationManager operationManager = getOperationManager();
-    GetCrossReferenceOperation operation = operationManager
-      .newGetCrossReferenceOperation(getSession(), primaryCatalog,
-         primarySchema, primaryTable, foreignCatalog,
-         foreignSchema, foreignTable);
-    OperationHandle opHandle = operation.getHandle();
-    try {
-      operation.run();
-      opHandleSet.add(opHandle);
-      return opHandle;
-    } catch (HiveSQLException e) {
-      operationManager.closeOperation(opHandle);
-      throw e;
-    } finally {
-      release(true);
-    }
+    throw new HiveSQLException("GetCrossReference is not supported yet");
   }
 }

@@ -26,13 +26,13 @@ import org.apache.commons.lang3.exception.ExceptionUtils
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveOperationType
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObjectUtils
 import org.apache.hive.service.cli._
-import org.apache.hive.service.cli.operation.GetTablesOperation
 import org.apache.hive.service.cli.session.HiveSession
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.catalyst.catalog.CatalogTableType._
 import org.apache.spark.sql.hive.HiveUtils
+import org.apache.spark.sql.hive.thriftserver.cli.operation.SparkMetadataOperation
 import org.apache.spark.util.{Utils => SparkUtils}
 
 /**
@@ -52,10 +52,48 @@ private[hive] class SparkGetTablesOperation(
     schemaName: String,
     tableName: String,
     tableTypes: JList[String])
-  extends GetTablesOperation(parentSession, catalogName, schemaName, tableName, tableTypes)
-    with SparkMetadataOperationUtils with Logging {
+  extends SparkMetadataOperation(parentSession, OperationType.GET_TABLES)
+  with Logging {
 
   private var statementId: String = _
+
+  if (HiveUtils.isHive23) {
+    RESULT_SET_SCHEMA = new TableSchema()
+      .addStringColumn("TABLE_CAT",
+        "Catalog name. NULL if not applicable.")
+      .addStringColumn("TABLE_SCHEM",
+        "Schema name.")
+      .addStringColumn("TABLE_NAME",
+        "Table name.")
+      .addStringColumn("TABLE_TYPE",
+        "The table type, e.g. \"TABLE\", \"VIEW\", etc.")
+      .addStringColumn("REMARKS",
+        "Comments about the table.")
+      .addStringColumn("TYPE_CAT",
+        "The types catalog.")
+      .addStringColumn("TYPE_SCHEM",
+        "The types schema.")
+      .addStringColumn("TYPE_NAME",
+        "Type name.")
+      .addStringColumn("SELF_REFERENCING_COL_NAME",
+        "Name of the designated \"identifier\" column of a typed table.")
+      .addStringColumn("REF_GENERATION",
+        "Specifies how values in SELF_REFERENCING_COL_NAME are created.")
+  } else {
+    RESULT_SET_SCHEMA = new TableSchema()
+      .addStringColumn("TABLE_CAT",
+        "Catalog name. NULL if not applicable.")
+      .addStringColumn("TABLE_SCHEM",
+        "Schema name.")
+      .addStringColumn("TABLE_NAME",
+        "Table name.")
+      .addStringColumn("TABLE_TYPE",
+        "The table type, e.g. \"TABLE\", \"VIEW\", etc.")
+      .addStringColumn("REMARKS",
+        "Comments about the table.")
+  }
+
+  private val rowSet: RowSet = RowSetFactory.create(RESULT_SET_SCHEMA, getProtocolVersion, false)
 
   override def close(): Unit = {
     super.close()
@@ -154,5 +192,19 @@ private[hive] class SparkGetTablesOperation(
     } else {
       rowSet.addRow(rowData)
     }
+  }
+
+  override def getResultSetSchema: TableSchema = {
+    assertState(OperationState.FINISHED)
+    RESULT_SET_SCHEMA
+  }
+
+  override def getNextRowSet(orientation: FetchOrientation, maxRows: Long): RowSet = {
+    assertState(OperationState.FINISHED)
+    validateDefaultFetchOrientation(orientation)
+    if (orientation == FetchOrientation.FETCH_FIRST) {
+      rowSet.setStartOffset(0)
+    }
+    rowSet.extractSubset(maxRows.toInt)
   }
 }

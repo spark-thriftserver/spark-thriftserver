@@ -21,12 +21,12 @@ import java.util.UUID
 
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveOperationType
-import org.apache.hive.service.cli.{HiveSQLException, OperationState}
-import org.apache.hive.service.cli.operation.GetTypeInfoOperation
+import org.apache.hive.service.cli._
 import org.apache.hive.service.cli.session.HiveSession
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.hive.thriftserver.cli.operation.SparkMetadataOperation
 import org.apache.spark.util.{Utils => SparkUtils}
 
 /**
@@ -38,9 +38,50 @@ import org.apache.spark.util.{Utils => SparkUtils}
 private[hive] class SparkGetTypeInfoOperation(
     sqlContext: SQLContext,
     parentSession: HiveSession)
-  extends GetTypeInfoOperation(parentSession) with Logging {
+  extends SparkMetadataOperation(parentSession, OperationType.GET_TYPE_INFO) with Logging {
 
   private var statementId: String = _
+
+
+  RESULT_SET_SCHEMA = new TableSchema()
+    .addPrimitiveColumn("TYPE_NAME", Type.STRING_TYPE,
+      "Type name")
+    .addPrimitiveColumn("DATA_TYPE", Type.INT_TYPE,
+      "SQL data type from java.sql.Types")
+    .addPrimitiveColumn("PRECISION", Type.INT_TYPE,
+      "Maximum precision")
+    .addPrimitiveColumn("LITERAL_PREFIX", Type.STRING_TYPE,
+      "Prefix used to quote a literal (may be null)")
+    .addPrimitiveColumn("LITERAL_SUFFIX", Type.STRING_TYPE,
+      "Suffix used to quote a literal (may be null)")
+    .addPrimitiveColumn("CREATE_PARAMS", Type.STRING_TYPE,
+      "Parameters used in creating the type (may be null)")
+    .addPrimitiveColumn("NULLABLE", Type.SMALLINT_TYPE,
+      "Can you use NULL for this type")
+    .addPrimitiveColumn("CASE_SENSITIVE", Type.BOOLEAN_TYPE,
+      "Is it case sensitive")
+    .addPrimitiveColumn("SEARCHABLE", Type.SMALLINT_TYPE,
+      "Can you use \"WHERE\" based on this type")
+    .addPrimitiveColumn("UNSIGNED_ATTRIBUTE", Type.BOOLEAN_TYPE,
+      "Is it unsigned")
+    .addPrimitiveColumn("FIXED_PREC_SCALE", Type.BOOLEAN_TYPE,
+      "Can it be a money value")
+    .addPrimitiveColumn("AUTO_INCREMENT", Type.BOOLEAN_TYPE,
+      "Can it be used for an auto-increment value")
+    .addPrimitiveColumn("LOCAL_TYPE_NAME", Type.STRING_TYPE,
+      "Localized version of type name (may be null)")
+    .addPrimitiveColumn("MINIMUM_SCALE", Type.SMALLINT_TYPE,
+      "Minimum scale supported")
+    .addPrimitiveColumn("MAXIMUM_SCALE", Type.SMALLINT_TYPE,
+      "Maximum scale supported")
+    .addPrimitiveColumn("SQL_DATA_TYPE", Type.INT_TYPE,
+      "Unused")
+    .addPrimitiveColumn("SQL_DATETIME_SUB", Type.INT_TYPE,
+      "Unused")
+    .addPrimitiveColumn("NUM_PREC_RADIX", Type.INT_TYPE,
+      "Usually 2 or 10");
+
+  private val rowSet: RowSet = RowSetFactory.create(RESULT_SET_SCHEMA, getProtocolVersion, false)
 
   override def close(): Unit = {
     super.close()
@@ -109,5 +150,19 @@ private[hive] class SparkGetTypeInfoOperation(
         }
     }
     HiveThriftServer2.listener.onStatementFinish(statementId)
+  }
+
+  override def getResultSetSchema: TableSchema = {
+    assertState(OperationState.FINISHED)
+    RESULT_SET_SCHEMA
+  }
+
+  override def getNextRowSet(orientation: FetchOrientation, maxRows: Long): RowSet = {
+    assertState(OperationState.FINISHED)
+    validateDefaultFetchOrientation(orientation)
+    if (orientation == FetchOrientation.FETCH_FIRST) {
+      rowSet.setStartOffset(0)
+    }
+    rowSet.extractSubset(maxRows.toInt)
   }
 }

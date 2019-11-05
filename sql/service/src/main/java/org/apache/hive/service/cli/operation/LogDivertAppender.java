@@ -35,6 +35,7 @@ import org.apache.log4j.spi.Filter;
 import org.apache.log4j.spi.LoggingEvent;
 
 import com.google.common.base.Joiner;
+import org.apache.spark.sql.hive.thriftserver.cli.operation.OperationManager;
 
 /**
  * An Appender to divert logs from individual threads to the LogObject they belong to.

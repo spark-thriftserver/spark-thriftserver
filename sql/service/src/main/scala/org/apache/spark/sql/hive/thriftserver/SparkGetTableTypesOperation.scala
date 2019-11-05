@@ -22,12 +22,12 @@ import java.util.UUID
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveOperationType
 import org.apache.hive.service.cli._
-import org.apache.hive.service.cli.operation.GetTableTypesOperation
 import org.apache.hive.service.cli.session.HiveSession
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.catalyst.catalog.CatalogTableType
+import org.apache.spark.sql.hive.thriftserver.cli.operation.SparkMetadataOperation
 import org.apache.spark.util.{Utils => SparkUtils}
 
 /**
@@ -39,9 +39,15 @@ import org.apache.spark.util.{Utils => SparkUtils}
 private[hive] class SparkGetTableTypesOperation(
     sqlContext: SQLContext,
     parentSession: HiveSession)
-  extends GetTableTypesOperation(parentSession) with SparkMetadataOperationUtils with Logging {
+  extends SparkMetadataOperation(parentSession, OperationType.GET_TABLE_TYPES)
+  with Logging {
 
   private var statementId: String = _
+
+  RESULT_SET_SCHEMA = new TableSchema()
+    .addStringColumn("TABLE_TYPE", "Table type name.")
+
+  private val rowSet: RowSet = RowSetFactory.create(RESULT_SET_SCHEMA, getProtocolVersion, false)
 
   override def close(): Unit = {
     super.close()
@@ -91,5 +97,19 @@ private[hive] class SparkGetTableTypesOperation(
         }
     }
     HiveThriftServer2.listener.onStatementFinish(statementId)
+  }
+
+  override def getResultSetSchema: TableSchema = {
+    assertState(OperationState.FINISHED)
+    RESULT_SET_SCHEMA
+  }
+
+  override def getNextRowSet(orientation: FetchOrientation, maxRows: Long): RowSet = {
+    assertState(OperationState.FINISHED)
+    validateDefaultFetchOrientation(orientation)
+    if (orientation == FetchOrientation.FETCH_FIRST) {
+      rowSet.setStartOffset(0)
+    }
+    rowSet.extractSubset(maxRows.toInt)
   }
 }

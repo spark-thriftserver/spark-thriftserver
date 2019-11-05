@@ -26,7 +26,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.ql.QueryState;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.OperationLog;
 import org.apache.hive.service.cli.FetchOrientation;
@@ -61,8 +60,6 @@ public abstract class Operation {
   private long operationTimeout;
   private long lastAccessTime;
 
-  protected final QueryState queryState;
-
   protected static final EnumSet<FetchOrientation> DEFAULT_FETCH_ORIENTATION_SET =
       EnumSet.of(
           FetchOrientation.FETCH_NEXT,
@@ -87,7 +84,6 @@ public abstract class Operation {
     lastAccessTime = System.currentTimeMillis();
     operationTimeout = HiveConf.getTimeVar(parentSession.getHiveConf(),
         HiveConf.ConfVars.HIVE_SERVER2_IDLE_OPERATION_TIMEOUT, TimeUnit.MILLISECONDS);
-    queryState = new QueryState(parentSession.getHiveConf(), confOverlay, runInBackground);
   }
 
   public Future<?> getBackgroundHandle() {

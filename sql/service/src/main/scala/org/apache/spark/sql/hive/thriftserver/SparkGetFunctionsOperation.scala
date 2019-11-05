@@ -25,12 +25,11 @@ import scala.collection.JavaConverters.seqAsJavaListConverter
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.apache.hadoop.hive.ql.security.authorization.plugin.{HiveOperationType, HivePrivilegeObjectUtils}
 import org.apache.hive.service.cli._
-import org.apache.hive.service.cli.operation.GetFunctionsOperation
-import org.apache.hive.service.cli.operation.MetadataOperation.DEFAULT_HIVE_CATALOG
 import org.apache.hive.service.cli.session.HiveSession
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.hive.thriftserver.cli.operation.SparkMetadataOperation
 import org.apache.spark.util.{Utils => SparkUtils}
 
 /**
@@ -48,9 +47,25 @@ private[hive] class SparkGetFunctionsOperation(
     catalogName: String,
     schemaName: String,
     functionName: String)
-  extends GetFunctionsOperation(parentSession, catalogName, schemaName, functionName) with Logging {
+  extends SparkMetadataOperation(parentSession, OperationType.GET_FUNCTIONS) with Logging {
 
   private var statementId: String = _
+
+  RESULT_SET_SCHEMA = new TableSchema()
+    .addPrimitiveColumn("FUNCTION_CAT", Type.STRING_TYPE,
+      "Function catalog (may be null)")
+    .addPrimitiveColumn("FUNCTION_SCHEM", Type.STRING_TYPE,
+      "Function schema (may be null)")
+    .addPrimitiveColumn("FUNCTION_NAME", Type.STRING_TYPE,
+      "Function name. This is the name used to invoke the function")
+    .addPrimitiveColumn("REMARKS", Type.STRING_TYPE,
+      "Explanatory comment on the function")
+    .addPrimitiveColumn("FUNCTION_TYPE", Type.INT_TYPE,
+      "Kind of function.")
+    .addPrimitiveColumn("SPECIFIC_NAME", Type.STRING_TYPE,
+      "The name which uniquely identifies this function within its schema")
+
+  private val rowSet: RowSet = RowSetFactory.create(RESULT_SET_SCHEMA, getProtocolVersion, false)
 
   override def close(): Unit = {
     super.close()
@@ -121,5 +136,19 @@ private[hive] class SparkGetFunctionsOperation(
         }
     }
     HiveThriftServer2.listener.onStatementFinish(statementId)
+  }
+
+  override def getResultSetSchema: TableSchema = {
+    assertState(OperationState.FINISHED)
+    RESULT_SET_SCHEMA
+  }
+
+  override def getNextRowSet(orientation: FetchOrientation, maxRows: Long): RowSet = {
+    assertState(OperationState.FINISHED)
+    validateDefaultFetchOrientation(orientation)
+    if (orientation == FetchOrientation.FETCH_FIRST) {
+      rowSet.setStartOffset(0)
+    }
+    rowSet.extractSubset(maxRows.toInt)
   }
 }
