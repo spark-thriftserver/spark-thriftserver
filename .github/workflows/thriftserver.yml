@@ -1,12 +1,12 @@
-name: Test thriftserver module
+name: Test new thrift server module
 
 on:
   push:
     branches:
-      - thriftserver
+      - master
   pull_request:
     branches:
-      - thriftserver
+      - master
 
 jobs:
   build:
