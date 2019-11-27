@@ -69,7 +69,7 @@ private[hive] class SparkGetFunctionsOperation(
 
   override def close(): Unit = {
     super.close()
-    HiveThriftServer2.listener.onOperationClosed(statementId)
+    SparkThriftServer2.listener.onOperationClosed(statementId)
   }
 
   override def runInternal(): Unit = {
@@ -96,7 +96,7 @@ private[hive] class SparkGetFunctionsOperation(
       authorizeMetaGets(HiveOperationType.GET_FUNCTIONS, privObjs, cmdStr)
     }
 
-    HiveThriftServer2.listener.onStatementStart(
+    SparkThriftServer2.listener.onStatementStart(
       statementId,
       parentSession.getSessionHandle.getSessionId.toString,
       logMsg,
@@ -125,17 +125,17 @@ private[hive] class SparkGetFunctionsOperation(
         setState(OperationState.ERROR)
         e match {
           case hiveException: HiveSQLException =>
-            HiveThriftServer2.listener.onStatementError(
+            SparkThriftServer2.listener.onStatementError(
               statementId, hiveException.getMessage, SparkUtils.exceptionString(hiveException))
             throw hiveException
           case _ =>
             val root = ExceptionUtils.getRootCause(e)
-            HiveThriftServer2.listener.onStatementError(
+            SparkThriftServer2.listener.onStatementError(
               statementId, root.getMessage, SparkUtils.exceptionString(root))
             throw new HiveSQLException("Error getting functions: " + root.toString, root)
         }
     }
-    HiveThriftServer2.listener.onStatementFinish(statementId)
+    SparkThriftServer2.listener.onStatementFinish(statementId)
   }
 
   override def getResultSetSchema: TableSchema = {

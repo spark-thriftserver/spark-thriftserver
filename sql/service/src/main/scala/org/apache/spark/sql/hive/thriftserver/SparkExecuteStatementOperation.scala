@@ -77,7 +77,7 @@ private[hive] class SparkExecuteStatementOperation(
     // RDDs will be cleaned automatically upon garbage collection.
     logInfo(s"Close statement with $statementId")
     cleanup(OperationState.CLOSED)
-    HiveThriftServer2.listener.onOperationClosed(statementId)
+    SparkThriftServer2.listener.onOperationClosed(statementId)
   }
 
   def addNonNullColumnValue(from: SparkRow, to: ArrayBuffer[Any], ordinal: Int): Unit = {
@@ -121,7 +121,7 @@ private[hive] class SparkExecuteStatementOperation(
     assertState(OperationState.FINISHED)
     setHasResultSet(true)
     val resultRowSet: RowSet =
-      ThriftserverShimUtils.resultRowSet(getResultSetSchema, getProtocolVersion)
+      RowSetFactory.create(getResultSetSchema, getProtocolVersion, false)
 
     // Reset iter when FETCH_FIRST or FETCH_PRIOR
     if ((order.equals(FetchOrientation.FETCH_FIRST) ||
@@ -195,7 +195,7 @@ private[hive] class SparkExecuteStatementOperation(
     setState(OperationState.PENDING)
     statementId = UUID.randomUUID().toString
     logInfo(s"Submitting query '$statement' with $statementId")
-    HiveThriftServer2.listener.onStatementStart(
+    SparkThriftServer2.listener.onStatementStart(
       statementId,
       parentSession.getSessionHandle.getSessionId.toString,
       statement,
@@ -245,14 +245,14 @@ private[hive] class SparkExecuteStatementOperation(
         case rejected: RejectedExecutionException =>
           logError("Error submitting query in background, query rejected", rejected)
           setState(OperationState.ERROR)
-          HiveThriftServer2.listener.onStatementError(
+          SparkThriftServer2.listener.onStatementError(
             statementId, rejected.getMessage, SparkUtils.exceptionString(rejected))
           throw new HiveSQLException("The background threadpool cannot accept" +
             " new task for execution, please retry the operation", rejected)
         case NonFatal(e) =>
           logError(s"Error executing query in background", e)
           setState(OperationState.ERROR)
-          HiveThriftServer2.listener.onStatementError(
+          SparkThriftServer2.listener.onStatementError(
             statementId, e.getMessage, SparkUtils.exceptionString(e))
           throw new HiveSQLException(e)
       }
@@ -284,7 +284,7 @@ private[hive] class SparkExecuteStatementOperation(
             "in this session.")
         case _ =>
       }
-      HiveThriftServer2.listener.onStatementParsed(statementId, result.queryExecution.toString())
+      SparkThriftServer2.listener.onStatementParsed(statementId, result.queryExecution.toString())
       iter = {
         if (sqlContext.getConf(SQLConf.THRIFTSERVER_INCREMENTAL_COLLECT.key).toBoolean) {
           resultList = None
@@ -315,12 +315,12 @@ private[hive] class SparkExecuteStatementOperation(
           setState(OperationState.ERROR)
           e match {
             case hiveException: HiveSQLException =>
-              HiveThriftServer2.listener.onStatementError(
+              SparkThriftServer2.listener.onStatementError(
                 statementId, hiveException.getMessage, SparkUtils.exceptionString(hiveException))
               throw hiveException
             case _ =>
               val root = ExceptionUtils.getRootCause(e)
-              HiveThriftServer2.listener.onStatementError(
+              SparkThriftServer2.listener.onStatementError(
                 statementId, root.getMessage, SparkUtils.exceptionString(root))
               throw new HiveSQLException("Error running query: " + root.toString, root)
           }
@@ -329,7 +329,7 @@ private[hive] class SparkExecuteStatementOperation(
       synchronized {
         if (!getStatus.getState.isTerminal) {
           setState(OperationState.FINISHED)
-          HiveThriftServer2.listener.onStatementFinish(statementId)
+          SparkThriftServer2.listener.onStatementFinish(statementId)
         }
       }
       sqlContext.sparkContext.clearJobGroup()
@@ -341,7 +341,7 @@ private[hive] class SparkExecuteStatementOperation(
       if (!getStatus.getState.isTerminal) {
         logInfo(s"Cancel query with $statementId")
         cleanup(OperationState.CANCELED)
-        HiveThriftServer2.listener.onStatementCanceled(statementId)
+        SparkThriftServer2.listener.onStatementCanceled(statementId)
       }
     }
   }

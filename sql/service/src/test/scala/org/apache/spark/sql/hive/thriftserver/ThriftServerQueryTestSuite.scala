@@ -47,7 +47,7 @@ import org.apache.spark.sql.types._
  */
 class ThriftServerQueryTestSuite extends SQLQueryTestSuite {
 
-  private var hiveServer2: HiveThriftServer2 = _
+  private var hiveServer2: SparkThriftServer2 = _
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -286,7 +286,7 @@ class ThriftServerQueryTestSuite extends SQLQueryTestSuite {
     logInfo(s"Trying to start HiveThriftServer2: port=$port, attempt=$attempt")
     val sqlContext = spark.newSession().sqlContext
     sqlContext.setConf(ConfVars.HIVE_SERVER2_THRIFT_PORT.varname, port.toString)
-    hiveServer2 = HiveThriftServer2.startWithContext(sqlContext)
+    hiveServer2 = SparkThriftServer2.startWithContext(sqlContext)
   }
 
   private def withJdbcStatement(fs: (Statement => Unit)*): Unit = {

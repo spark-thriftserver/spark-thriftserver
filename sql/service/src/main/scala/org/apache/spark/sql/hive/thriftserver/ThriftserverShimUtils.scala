@@ -38,19 +38,6 @@ private[thriftserver] object ThriftserverShimUtils {
   private[thriftserver] type TExecuteStatementReq =
     org.apache.hive.service.rpc.thrift.TExecuteStatementReq
 
-  private[thriftserver] def getConsole: LogHelper = {
-    val LOG = LoggerFactory.getLogger(classOf[SparkSQLCLIDriver])
-    new LogHelper(LOG)
-  }
-
-  private[thriftserver] def resultRowSet(
-                                          getResultSetSchema: TableSchema,
-                                          getProtocolVersion: TProtocolVersion): RowSet = {
-    RowSetFactory.create(getResultSetSchema, getProtocolVersion, false)
-  }
-
-  private[thriftserver] def toJavaSQLType(s: String): Int = Type.getType(s).toJavaSQLType
-
   private[thriftserver] def supportedType(): Seq[Type] = {
     Seq(NULL_TYPE, BOOLEAN_TYPE, STRING_TYPE, BINARY_TYPE,
       TINYINT_TYPE, SMALLINT_TYPE, INT_TYPE, BIGINT_TYPE,
