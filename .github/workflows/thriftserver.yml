@@ -29,7 +29,8 @@ jobs:
           java-version: ${{ matrix.java }}
       - name: Test thriftserver with Sbt
         run: |
-          ./build/sbt  "service/test-only" -Pspark-thriftserver -P${{ matrix.hadoop }} -Djava.version=${{ matrix.java }}
+          ./build/sbt "service/test-only" -Pspark-thriftserver -P${{ matrix.hadoop }} -Djava.version=${{ matrix.java }} |
+          ./build/sbt "jdbc/test-only" -Pspark-thriftserver -P${{ matrix.hadoop }} -Djava.version=${{ matrix.java }}
   lint:
     runs-on: ubuntu-latest
     name: Linters
