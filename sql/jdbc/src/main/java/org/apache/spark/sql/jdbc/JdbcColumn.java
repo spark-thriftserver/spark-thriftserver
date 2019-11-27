@@ -27,8 +27,7 @@ import java.sql.Types;
 import org.apache.hadoop.hive.common.type.HiveIntervalDayTime;
 import org.apache.hadoop.hive.common.type.HiveIntervalYearMonth;
 import org.apache.hadoop.hive.serde.serdeConstants;
-import org.apache.hadoop.hive.serde2.thrift.Type;
-
+import org.apache.hive.service.cli.Type;
 
 /**
  * Column metadata.

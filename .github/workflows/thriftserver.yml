@@ -27,31 +27,9 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: ${{ matrix.java }}
-      - name: Test thriftserver with Sbt
+      - name: Test thrift server service module with Sbt
         run: |
-          ./build/sbt "service/test-only" -Pspark-thriftserver -P${{ matrix.hadoop }} -Djava.version=${{ matrix.java }} |
+          ./build/sbt "service/test-only" -Pspark-thriftserver -P${{ matrix.hadoop }} -Djava.version=${{ matrix.java }}
+      - name: Test thrift server jdbc module with Sbt
+        run: |
           ./build/sbt "jdbc/test-only" -Pspark-thriftserver -P${{ matrix.hadoop }} -Djava.version=${{ matrix.java }}
-  lint:
-    runs-on: ubuntu-latest
-    name: Linters
-    steps:
-      - uses: actions/checkout@master
-      - uses: actions/setup-java@v1
-        with:
-          java-version: '11'
-      - uses: actions/setup-python@v1
-        with:
-          python-version: '3.x'
-          architecture: 'x64'
-      - name: Scala
-        run: ./dev/lint-scala
-      - name: Java
-        run: ./dev/lint-java
-      - name: Python
-        run: |
-          pip install flake8 sphinx numpy
-          ./dev/lint-python
-      - name: License
-        run: ./dev/check-license
-      - name: Dependencies
-        run: ./dev/test-dependencies.sh
