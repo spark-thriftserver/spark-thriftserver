@@ -20,7 +20,6 @@ package org.apache.spark.sql.jdbc;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
@@ -69,8 +68,8 @@ public abstract class HttpRequestInterceptorBase implements HttpRequestIntercept
           (cookieStore == null || (cookieStore != null &&
           Utils.needToSendCredentials(cookieStore, cookieName, isSSL)))) ||
           (httpContext.getAttribute(Utils.HIVE_SERVER2_RETRY_KEY) != null &&
-          httpContext.getAttribute(Utils.HIVE_SERVER2_RETRY_KEY).
-          equals(Utils.HIVE_SERVER2_RETRY_TRUE)))) {
+          httpContext.getAttribute(Utils.HIVE_SERVER2_RETRY_KEY)
+              .equals(Utils.HIVE_SERVER2_RETRY_TRUE)))) {
         addHttpAuthHeader(httpRequest, httpContext);
       }
       if (isCookieEnabled) {

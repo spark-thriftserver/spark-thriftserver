@@ -22,10 +22,10 @@ class JdbcColumnAttributes {
   public int precision = 0;
   public int scale = 0;
 
-  public JdbcColumnAttributes() {
+  JdbcColumnAttributes() {
   }
 
-  public JdbcColumnAttributes(int precision, int scale) {
+  JdbcColumnAttributes(int precision, int scale) {
     this.precision = precision;
     this.scale = scale;
   }

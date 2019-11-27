@@ -55,7 +55,7 @@ public class HttpKerberosRequestInterceptor extends HttpRequestInterceptorBase {
   @Override
   protected void addHttpAuthHeader(HttpRequest httpRequest,
     HttpContext httpContext) throws Exception {
-	try {
+    try {
       // Generate the service ticket for sending to the server.
       // Locking ensures the tokens are unique in case of concurrent requests
       kerberosLock.lock();

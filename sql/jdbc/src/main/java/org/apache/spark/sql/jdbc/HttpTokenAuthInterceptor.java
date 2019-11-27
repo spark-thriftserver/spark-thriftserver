@@ -31,8 +31,8 @@ import org.apache.http.protocol.HttpContext;
  */
 public class HttpTokenAuthInterceptor extends HttpRequestInterceptorBase {
   private String tokenStr;
-  private static final String HIVE_DELEGATION_TOKEN_HEADER =  "X-Hive-Delegation-Token";
-  
+  private static final String HIVE_DELEGATION_TOKEN_HEADER = "X-Hive-Delegation-Token";
+
   public HttpTokenAuthInterceptor(String tokenStr, CookieStore cookieStore, String cn,
       boolean isSSL, Map<String, String> additionalHeaders) {
     super(cookieStore, cn, isSSL, additionalHeaders);

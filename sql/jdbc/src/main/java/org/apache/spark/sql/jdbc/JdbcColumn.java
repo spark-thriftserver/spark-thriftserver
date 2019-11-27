@@ -41,8 +41,8 @@ public class JdbcColumn {
   private final String comment;
   private final int ordinalPos;
 
-  JdbcColumn(String columnName, String tableName, String tableCatalog
-          , String type, String comment, int ordinalPos) {
+  JdbcColumn(String columnName, String tableName, String tableCatalog,
+      String type, String comment, int ordinalPos) {
     this.columnName = columnName;
     this.tableName = tableName;
     this.tableCatalog = tableCatalog;

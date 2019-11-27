@@ -26,9 +26,10 @@ public abstract class HiveMetaDataResultSet<M> extends HiveBaseResultSet {
   protected final List<M> data;
 
   @SuppressWarnings("unchecked")
-  public HiveMetaDataResultSet(final List<String> columnNames
-          , final List<String> columnTypes
-          , final List<M> data) throws SQLException {
+  public HiveMetaDataResultSet(
+      final List<String> columnNames,
+      final List<String> columnTypes,
+      final List<M> data) throws SQLException {
     if (data!=null) {
       this.data = new ArrayList<M>(data);
     } else {

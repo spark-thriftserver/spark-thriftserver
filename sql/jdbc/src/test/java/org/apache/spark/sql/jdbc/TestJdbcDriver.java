@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import static org.junit.Assert.assertEquals;
+import scala.math.BigDecimal;
 
 @RunWith(Parameterized.class)
 public class TestJdbcDriver {
@@ -86,7 +87,8 @@ public class TestJdbcDriver {
       bw = new BufferedWriter(new FileWriter(file));
       bw.write(input);
       bw.flush();
-      assertEquals(Arrays.asList(expected.split(",")), HiveConnection.parseInitFile(file.toString()));
+      assertEquals(Arrays.asList(expected.split(",")),
+          HiveConnection.parseInitFile(file.toString()));
     } catch(Exception e) {
       Assert.fail("Test was failed due to " + e);
     } finally {

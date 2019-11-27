@@ -58,7 +58,8 @@ public class Utils {
 
   private static final String URI_HIVE_PREFIX = "hive2:";
 
-  // This value is set to true by the setServiceUnavailableRetryStrategy() when the server returns 401
+  // This value is set to true by the setServiceUnavailableRetryStrategy()
+  // when the server returns 401
   static final String HIVE_SERVER2_RETRY_KEY = "hive.server2.retryserver";
   static final String HIVE_SERVER2_RETRY_TRUE = "true";
   static final String HIVE_SERVER2_RETRY_FALSE = "false";
@@ -131,7 +132,7 @@ public class Utils {
     static final String SSL_KEY_STORE_TYPE = "JKS";
     static final String SUNX509_ALGORITHM_STRING = "SunX509";
     static final String SUNJSSE_ALGORITHM_STRING = "SunJSSE";
-   // --------------- End 2 way ssl options ----------------------------
+    // --------------- End 2 way ssl options ----------------------------
 
     // Non-configurable params:
     // Currently supports JKS keystore format
@@ -276,19 +277,23 @@ public class Utils {
    * The new format of the URL is:
    * jdbc:spark://<host1>:<port1>,<host2>:<port2>/dbName;sess_var_list?hive_conf_list#hive_var_list
    * where the optional sess, conf and var lists are semicolon separated <key>=<val> pairs.
-   * For utilizing dynamic service discovery with HiveServer2 multiple comma separated host:port pairs can
-   * be specified as shown above.
+   * For utilizing dynamic service discovery with HiveServer2 multiple comma separated host:port
+   * pairs can be specified as shown above.
    * The JDBC driver resolves the list of uris and picks a specific server instance to connect to.
-   * Currently, dynamic service discovery using ZooKeeper is supported, in which case the host:port pairs represent a ZooKeeper ensemble.
+   * Currently, dynamic service discovery using ZooKeeper is supported, in which case the host:port
+   * pairs represent a ZooKeeper ensemble.
    *
    * As before, if the host/port is not specified, it the driver runs an embedded hive.
    * examples -
-   *  jdbc:spark://ubuntu:11000/db2?hive.cli.conf.printheader=true;hive.exec.mode.local.auto.inputbytes.max=9999#stab=salesTable;icol=customerID
-   *  jdbc:spark://?hive.cli.conf.printheader=true;hive.exec.mode.local.auto.inputbytes.max=9999#stab=salesTable;icol=customerID
+   *  jdbc:spark://ubuntu:11000/db2?hive.cli.conf.printheader=true;
+   *      hive.exec.mode.local.auto.inputbytes.max=9999#stab=salesTable;icol=customerID
+   *  jdbc:spark://?hive.cli.conf.printheader=true;hive.exec.mode.local.auto.inputbytes.max=9999
+   *      #stab=salesTable;icol=customerID
    *  jdbc:spark://ubuntu:11000/db2;user=foo;password=bar
    *
    *  Connect to http://server:10001/hs2, with specified basicAuth credentials and initial database:
-   *  jdbc:spark://server:10001/db;user=foo;password=bar?hive.server2.transport.mode=http;hive.server2.thrift.http.path=hs2
+   *  jdbc:spark://server:10001/db;user=foo;password=bar?hive.server2.transport.mode=http;
+   *      hive.server2.thrift.http.path=hs2
    *
    * @param uri
    * @return
@@ -350,7 +355,8 @@ public class Utils {
         if (sessVars != null) {
           Matcher sessMatcher = pattern.matcher(sessVars);
           while (sessMatcher.find()) {
-            if (connParams.getSessionVars().put(sessMatcher.group(1), sessMatcher.group(2)) != null) {
+            if (connParams.getSessionVars()
+                .put(sessMatcher.group(1), sessMatcher.group(2)) != null) {
               throw new JdbcUriParseException("Bad URL format: Multiple values for property "
                   + sessMatcher.group(1));
             }
@@ -379,7 +385,7 @@ public class Utils {
         connParams.getHiveVars().put(varMatcher.group(1), varMatcher.group(2));
       }
     }
-    
+
     // Apply configs supplied in the JDBC connection properties object
     for (Map.Entry<Object, Object> kv : info.entrySet()) {
       if ((kv.getKey() instanceof String)) {

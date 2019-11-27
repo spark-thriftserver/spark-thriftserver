@@ -367,10 +367,10 @@ public class HiveConnection implements java.sql.Connection {
             new HttpTokenAuthInterceptor(tokenStr, cookieStore, cookieName, useSsl,
                 additionalHttpHeaders);
       } else {
-      /**
-       * Add an interceptor to pass username/password in the header.
-       * In https mode, the entire information is encrypted
-       */
+        /**
+         * Add an interceptor to pass username/password in the header.
+         * In https mode, the entire information is encrypted
+         */
         requestInterceptor =
             new HttpBasicAuthInterceptor(getUserName(), getPassword(), cookieStore, cookieName,
                 useSsl, additionalHttpHeaders);
@@ -461,7 +461,7 @@ public class HiveConnection implements java.sql.Connection {
               new SSLConnectionSocketFactory(sslContext, new DefaultHostnameVerifier(null));
         }
         final Registry<ConnectionSocketFactory> registry =
-            RegistryBuilder.<ConnectionSocketFactory> create().register("https", socketFactory)
+            RegistryBuilder.<ConnectionSocketFactory>create().register("https", socketFactory)
                 .build();
         httpClientBuilder.setConnectionManager(new BasicHttpClientConnectionManager(registry));
       } catch (Exception e) {
@@ -522,7 +522,8 @@ public class HiveConnection implements java.sql.Connection {
     try {
       TTransport socketTransport = createUnderlyingTransport();
       // handle secure connection if specified
-      if (!JdbcConnectionParams.AUTH_SIMPLE.equals(sessConfMap.get(JdbcConnectionParams.AUTH_TYPE))) {
+      if (!JdbcConnectionParams.AUTH_SIMPLE.equals(
+          sessConfMap.get(JdbcConnectionParams.AUTH_TYPE))) {
         // If Kerberos
         Map<String, String> saslProps = new HashMap<String, String>();
         SaslQOP saslQOP = SaslQOP.AUTH;
@@ -617,10 +618,12 @@ public class HiveConnection implements java.sql.Connection {
   private String getClientDelegationToken(Map<String, String> jdbcConnConf)
       throws SQLException {
     String tokenStr = null;
-    if (JdbcConnectionParams.AUTH_TOKEN.equalsIgnoreCase(jdbcConnConf.get(JdbcConnectionParams.AUTH_TYPE))) {
+    if (JdbcConnectionParams.AUTH_TOKEN.equalsIgnoreCase(
+        jdbcConnConf.get(JdbcConnectionParams.AUTH_TYPE))) {
       // check delegation token in job conf if any
       try {
-        tokenStr = org.apache.hadoop.hive.shims.Utils.getTokenStrForm(HiveAuthFactory.HS2_CLIENT_TOKEN);
+        tokenStr = org.apache.hadoop.hive.shims.Utils
+            .getTokenStrForm(HiveAuthFactory.HS2_CLIENT_TOKEN);
       } catch (IOException e) {
         throw new SQLException("Error reading token ", e);
       }
@@ -1389,7 +1392,8 @@ public class HiveConnection implements java.sql.Connection {
       throw new SQLException("Connection is closed");
     }
     // Per JDBC spec, the request defines a hint to the driver to enable database optimizations.
-    // The read-only mode for this connection is disabled and cannot be enabled (isReadOnly always returns false).
+    // The read-only mode for this connection is disabled and cannot be enabled
+    // (isReadOnly always returns false).
     // The most correct behavior is to throw only if the request tries to enable the read-only mode.
     if(readOnly) {
       throw new SQLException("Enabling read-only mode not supported");

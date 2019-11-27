@@ -94,7 +94,8 @@ class ZooKeeperHiveClientHelper {
         applyConfs(dataStr, connParams);
       }
     } catch (Exception e) {
-      throw new ZooKeeperHiveClientException("Unable to read HiveServer2 configs from ZooKeeper", e);
+      throw new ZooKeeperHiveClientException(
+          "Unable to read HiveServer2 configs from ZooKeeper", e);
     } finally {
       // Close the client connection with ZooKeeper
       if (zooKeeperClient != null) {
@@ -166,8 +167,8 @@ class ZooKeeperHiveClientHelper {
         if (matcher.group(1).equals("hive.server2.authentication")) {
           // NOSASL
           if (matcher.group(2).equalsIgnoreCase("NOSASL")
-              && !(connParams.getSessionVars().containsKey(JdbcConnectionParams.AUTH_TYPE) && connParams
-                  .getSessionVars().get(JdbcConnectionParams.AUTH_TYPE)
+              && !(connParams.getSessionVars().containsKey(JdbcConnectionParams.AUTH_TYPE)
+              && connParams.getSessionVars().get(JdbcConnectionParams.AUTH_TYPE)
                   .equalsIgnoreCase(JdbcConnectionParams.AUTH_SIMPLE))) {
             connParams.getSessionVars().put(JdbcConnectionParams.AUTH_TYPE,
                 JdbcConnectionParams.AUTH_SIMPLE);
@@ -176,8 +177,8 @@ class ZooKeeperHiveClientHelper {
         // KERBEROS
         // If delegation token is passed from the client side, do not set the principal
         if (matcher.group(1).equalsIgnoreCase("hive.server2.authentication.kerberos.principal")
-            && !(connParams.getSessionVars().containsKey(JdbcConnectionParams.AUTH_TYPE) && connParams
-                .getSessionVars().get(JdbcConnectionParams.AUTH_TYPE)
+            && !(connParams.getSessionVars().containsKey(JdbcConnectionParams.AUTH_TYPE)
+            && connParams.getSessionVars().get(JdbcConnectionParams.AUTH_TYPE)
                 .equalsIgnoreCase(JdbcConnectionParams.AUTH_TOKEN))
             && !(connParams.getSessionVars().containsKey(JdbcConnectionParams.AUTH_PRINCIPAL))) {
           connParams.getSessionVars().put(JdbcConnectionParams.AUTH_PRINCIPAL, matcher.group(2));

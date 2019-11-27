@@ -129,11 +129,13 @@ public class HivePreparedStatement extends HiveStatement implements PreparedStat
    * @param sql
    * @param parameters
    * @return updated SQL string
-   * @throws SQLException 
+   * @throws SQLException
    */
-  private String updateSql(final String sql, HashMap<Integer, String> parameters) throws SQLException {
+  private String updateSql(
+      final String sql,
+      HashMap<Integer, String> parameters) throws SQLException {
     List<String>  parts=splitSqlStatement(sql);
-    
+
     StringBuilder newSql = new StringBuilder(parts.get(0));
     for(int i=1;i<parts.size();i++){
       if(!parameters.containsKey(i)){
@@ -145,15 +147,15 @@ public class HivePreparedStatement extends HiveStatement implements PreparedStat
     return newSql.toString();
 
   }
-  
+
   /**
    * Splits the parametered sql statement at parameter boundaries.
-   * 
+   *
    * taking into account ' and \ escaping.
-   * 
+   *
    * output for: 'select 1 from ? where a = ?'
    *  ['select 1 from ',' where a = ','']
-   * 
+   *
    * @param sql
    * @return
    */
@@ -624,7 +626,8 @@ public class HivePreparedStatement extends HiveStatement implements PreparedStat
       throw new SQLException(
           MessageFormat
               .format(
-                  "Can''t infer the SQL type to use for an instance of {0}. Use setObject() with an explicit Types value to specify the type to use.",
+                  "Can''t infer the SQL type to use for an instance of {0}. Use setObject() " +
+                          "with an explicit Types value to specify the type to use.",
                   x.getClass().getName()));
     }
   }

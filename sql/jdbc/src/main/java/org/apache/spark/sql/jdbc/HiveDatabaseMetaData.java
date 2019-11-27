@@ -31,7 +31,6 @@ import java.util.jar.Attributes;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hive.service.cli.GetInfoType;
 import org.apache.hive.service.rpc.thrift.TCLIService;
-import org.apache.hive.service.rpc.thrift.TCLIService.Iface;
 import org.apache.hive.service.rpc.thrift.TGetCatalogsReq;
 import org.apache.hive.service.rpc.thrift.TGetCatalogsResp;
 import org.apache.hive.service.rpc.thrift.TGetColumnsReq;
@@ -341,8 +340,10 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
     throw new SQLFeatureNotSupportedException("Method not supported");
   }
 
-  public ResultSet getFunctions(String catalogName, String schemaPattern, String functionNamePattern)
-      throws SQLException {
+  public ResultSet getFunctions(
+      String catalogName,
+      String schemaPattern,
+      String functionNamePattern) throws SQLException {
     TGetFunctionsResp funcResp;
     TGetFunctionsReq getFunctionsReq = new TGetFunctionsReq();
     getFunctionsReq.setSessionHandle(sessHandle);
@@ -542,17 +543,17 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
       throws SQLException {
     // Hive doesn't support primary keys
     // using local schema with empty resultset
-    return new HiveQueryResultSet.Builder(connection).setClient(client).setEmptyResultSet(true).
-                  setSchema(
-                    Arrays.asList("PROCEDURE_CAT", "PROCEDURE_SCHEM", "PROCEDURE_NAME", "COLUMN_NAME", "COLUMN_TYPE",
-                              "DATA_TYPE", "TYPE_NAME", "PRECISION", "LENGTH", "SCALE", "RADIX", "NULLABLE", "REMARKS",
-                              "COLUMN_DEF", "SQL_DATA_TYPE", "SQL_DATETIME_SUB", "CHAR_OCTET_LENGTH", "ORDINAL_POSITION",
-                              "IS_NULLABLE", "SPECIFIC_NAME"),
-                    Arrays.asList("STRING", "STRING", "STRING", "STRING", "SMALLINT", "INT",
-                              "STRING", "INT", "INT", "SMALLINT", "SMALLINT", "SMALLINT", "STRING", "STRING",
-                              "INT", "INT", "INT", "INT",
-                              "STRING", "STRING"))
-                  .build();
+    return new HiveQueryResultSet.Builder(connection).setClient(client).setEmptyResultSet(true)
+        .setSchema(
+          Arrays.asList("PROCEDURE_CAT", "PROCEDURE_SCHEM", "PROCEDURE_NAME", "COLUMN_NAME",
+              "COLUMN_TYPE", "DATA_TYPE", "TYPE_NAME", "PRECISION", "LENGTH", "SCALE", "RADIX",
+              "NULLABLE", "REMARKS", "COLUMN_DEF", "SQL_DATA_TYPE", "SQL_DATETIME_SUB",
+              "CHAR_OCTET_LENGTH", "ORDINAL_POSITION", "IS_NULLABLE", "SPECIFIC_NAME"),
+          Arrays.asList("STRING", "STRING", "STRING", "STRING", "SMALLINT", "INT",
+              "STRING", "INT", "INT", "SMALLINT", "SMALLINT", "SMALLINT", "STRING", "STRING",
+              "INT", "INT", "INT", "INT",
+              "STRING", "STRING"))
+        .build();
   }
 
   public String getProcedureTerm() throws SQLException {
@@ -563,13 +564,12 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
       String procedureNamePattern) throws SQLException {
     // Hive doesn't support primary keys
     // using local schema with empty resultset
-    return new HiveQueryResultSet.Builder(connection).setClient(client).setEmptyResultSet(true).
-                  setSchema(
-                    Arrays.asList("PROCEDURE_CAT", "PROCEDURE_SCHEM", "PROCEDURE_NAME", "RESERVERD", "RESERVERD",
-                                  "RESERVERD", "REMARKS", "PROCEDURE_TYPE", "SPECIFIC_NAME"),
-                    Arrays.asList("STRING", "STRING", "STRING", "STRING", "STRING",
-                                  "STRING", "STRING", "SMALLINT", "STRING"))
-                  .build();
+    return new HiveQueryResultSet.Builder(connection).setClient(client).setEmptyResultSet(true)
+        .setSchema(
+             Arrays.asList("PROCEDURE_CAT", "PROCEDURE_SCHEM", "PROCEDURE_NAME", "RESERVERD",
+                 "RESERVERD", "RESERVERD", "REMARKS", "PROCEDURE_TYPE", "SPECIFIC_NAME"),
+             Arrays.asList("STRING", "STRING", "STRING", "STRING", "STRING",
+                 "STRING", "STRING", "SMALLINT", "STRING")).build();
   }
 
   public int getResultSetHoldability() throws SQLException {
@@ -672,7 +672,8 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
                              String tableNamePattern, String[] types) throws SQLException {
     TGetTablesResp getTableResp;
     if (schemaPattern == null) {
-      // if schemaPattern is null it means that the schemaPattern value should not be used to narrow the search
+      // if schemaPattern is null it means that the schemaPattern value should not be
+      // used to narrow the search
       schemaPattern = "%";
     }
     TGetTablesReq getTableReq = new TGetTablesReq(sessHandle);
@@ -729,8 +730,8 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
       return "VIEW";
     } else if (hivetabletype.equals(TableType.EXTERNAL_TABLE.toString())) {
       return "EXTERNAL TABLE";
-//    } else if (hivetabletype.equals(TableType.MATERIALIZED_VIEW.toString())) {
-//      return "MATERIALIZED VIEW";
+    // } else if (hivetabletype.equals(TableType.MATERIALIZED_VIEW.toString())) {
+    //   return "MATERIALIZED VIEW";
     } else {
       return hivetabletype;
     }
@@ -761,10 +762,9 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
       String typeNamePattern, int[] types) throws SQLException {
 
     return new HiveMetaDataResultSet(
-            Arrays.asList("TYPE_CAT", "TYPE_SCHEM", "TYPE_NAME", "CLASS_NAME", "DATA_TYPE"
-                    , "REMARKS", "BASE_TYPE")
-            , Arrays.asList("STRING", "STRING", "STRING", "STRING", "INT", "STRING", "INT")
-            , null) {
+            Arrays.asList("TYPE_CAT", "TYPE_SCHEM", "TYPE_NAME", "CLASS_NAME", "DATA_TYPE",
+                    "REMARKS", "BASE_TYPE"),
+            Arrays.asList("STRING", "STRING", "STRING", "STRING", "INT", "STRING", "INT"), null) {
 
       public boolean next() throws SQLException {
         return false;
