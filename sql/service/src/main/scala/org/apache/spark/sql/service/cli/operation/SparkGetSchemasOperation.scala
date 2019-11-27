@@ -48,7 +48,7 @@ private[service] class SparkGetSchemasOperation(
   private var statementId: String = _
 
   RESULT_SET_SCHEMA = new TableSchema()
-    .addPrimitiveColumn("TABLE_SCHEMA", Type.STRING_TYPE,
+    .addPrimitiveColumn("TABLE_SCHEM", Type.STRING_TYPE,
       "Schema name.")
     .addPrimitiveColumn("TABLE_CATALOG", Type.STRING_TYPE,
       "Catalog name.")
