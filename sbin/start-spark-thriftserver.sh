@@ -29,10 +29,10 @@ fi
 
 # NOTE: This exact class name is matched downstream by SparkSubmit.
 # Any changes need to be reflected there.
-CLASS="org.apache.spark.sql.hive.thriftserver.SparkThriftServer2"
+CLASS="org.apache.spark.sql.service.SparkThriftServer2"
 
 function usage {
-  echo "Usage: ./sbin/start-thriftserver [options] [thrift server options]"
+  echo "Usage: ./sbin/start-spark-thriftserver [options] [thrift server options]"
   pattern="usage"
   pattern+="\|Spark assembly has been built with Hive"
   pattern+="\|NOTE: SPARK_PREPEND_CLASSES is set"
