@@ -48,18 +48,10 @@ private[service] class SparkGetSchemasOperation(
   private var statementId: String = _
 
   RESULT_SET_SCHEMA = new TableSchema()
-    .addPrimitiveColumn("FUNCTION_CAT", Type.STRING_TYPE,
-      "Function catalog (may be null)")
-    .addPrimitiveColumn("FUNCTION_SCHEM", Type.STRING_TYPE,
-      "Function schema (may be null)")
-    .addPrimitiveColumn("FUNCTION_NAME", Type.STRING_TYPE,
-      "Function name. This is the name used to invoke the function")
-    .addPrimitiveColumn("REMARKS", Type.STRING_TYPE,
-      "Explanatory comment on the function")
-    .addPrimitiveColumn("FUNCTION_TYPE", Type.INT_TYPE,
-      "Kind of function.")
-    .addPrimitiveColumn("SPECIFIC_NAME", Type.STRING_TYPE,
-      "The name which uniquely identifies this function within its schema")
+    .addPrimitiveColumn("TABLE_SCHEMA", Type.STRING_TYPE,
+      "Schema name.")
+    .addPrimitiveColumn("TABLE_CATALOG", Type.STRING_TYPE,
+      "Catalog name.")
 
   private val rowSet: RowSet = RowSetFactory.create(RESULT_SET_SCHEMA, getProtocolVersion, false)
 
