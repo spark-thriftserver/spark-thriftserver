@@ -32,7 +32,6 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.catalyst.TableIdentifier
 import org.apache.spark.sql.catalyst.catalog.SessionCatalog
-import org.apache.spark.sql.hive.thriftserver.ThriftserverShimUtils.toJavaSQLType
 import org.apache.spark.sql.hive.thriftserver.cli.operation.SparkMetadataOperation
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.util.{Utils => SparkUtils}
@@ -137,7 +136,7 @@ private[hive] class SparkGetColumnsOperation(
 
   override def close(): Unit = {
     super.close()
-    HiveThriftServer2.listener.onOperationClosed(statementId)
+    SparkThriftServer2.listener.onOperationClosed(statementId)
   }
 
   override def runInternal(): Unit = {
@@ -152,7 +151,7 @@ private[hive] class SparkGetColumnsOperation(
     val executionHiveClassLoader = sqlContext.sharedState.jarClassLoader
     Thread.currentThread().setContextClassLoader(executionHiveClassLoader)
 
-    HiveThriftServer2.listener.onStatementStart(
+    SparkThriftServer2.listener.onStatementStart(
       statementId,
       parentSession.getSessionHandle.getSessionId.toString,
       logMsg,
@@ -209,17 +208,17 @@ private[hive] class SparkGetColumnsOperation(
         setState(OperationState.ERROR)
         e match {
           case hiveException: HiveSQLException =>
-            HiveThriftServer2.listener.onStatementError(
+            SparkThriftServer2.listener.onStatementError(
               statementId, hiveException.getMessage, SparkUtils.exceptionString(hiveException))
             throw hiveException
           case _ =>
             val root = ExceptionUtils.getRootCause(e)
-            HiveThriftServer2.listener.onStatementError(
+            SparkThriftServer2.listener.onStatementError(
               statementId, root.getMessage, SparkUtils.exceptionString(root))
             throw new HiveSQLException("Error getting columns: " + root.toString, root)
         }
     }
-    HiveThriftServer2.listener.onStatementFinish(statementId)
+    SparkThriftServer2.listener.onStatementFinish(statementId)
   }
 
   private def addToRowSet(
@@ -235,7 +234,7 @@ private[hive] class SparkGetColumnsOperation(
           dbName, // TABLE_SCHEM
           tableName, // TABLE_NAME
           column.name, // COLUMN_NAME
-          toJavaSQLType(column.dataType.sql).asInstanceOf[AnyRef], // DATA_TYPE
+          Type.getType(column.dataType.sql).toJavaSQLType.asInstanceOf[AnyRef], // DATA_TYPE
           column.dataType.sql, // TYPE_NAME
           null, // COLUMN_SIZE
           null, // BUFFER_LENGTH, unused

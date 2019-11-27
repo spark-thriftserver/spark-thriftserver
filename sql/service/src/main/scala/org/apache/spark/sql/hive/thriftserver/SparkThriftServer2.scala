@@ -44,17 +44,17 @@ import org.apache.spark.util.{ShutdownHookManager, Utils}
  * The main entry point for the Spark SQL port of HiveServer2.  Starts up a `SparkSQLContext` and a
  * `HiveThriftServer2` thrift server.
  */
-object HiveThriftServer2 extends Logging {
+object SparkThriftServer2 extends Logging {
   var uiTab: Option[ThriftServerTab] = None
-  var listener: HiveThriftServer2Listener = _
+  var listener: SparkThriftServer2Listener = _
 
   /**
    * :: DeveloperApi ::
    * Starts a new thrift server with the given context.
    */
   @DeveloperApi
-  def startWithContext(sqlContext: SQLContext): HiveThriftServer2 = {
-    val server = new HiveThriftServer2(sqlContext)
+  def startWithContext(sqlContext: SQLContext): SparkThriftServer2 = {
+    val server = new SparkThriftServer2(sqlContext)
 
     val executionHive = HiveUtils.newClientForExecution(
       sqlContext.sparkContext.conf,
@@ -62,7 +62,7 @@ object HiveThriftServer2 extends Logging {
 
     server.init(executionHive.conf)
     server.start()
-    listener = new HiveThriftServer2Listener(server, sqlContext.conf)
+    listener = new SparkThriftServer2Listener(server, sqlContext.conf)
     sqlContext.sparkContext.addSparkListener(listener)
     uiTab = if (sqlContext.sparkContext.getConf.get(UI_ENABLED)) {
       Some(new ThriftServerTab(sqlContext.sparkContext))
@@ -97,11 +97,11 @@ object HiveThriftServer2 extends Logging {
       SparkSQLEnv.sqlContext.sessionState.newHadoopConf())
 
     try {
-      val server = new HiveThriftServer2(SparkSQLEnv.sqlContext)
+      val server = new SparkThriftServer2(SparkSQLEnv.sqlContext)
       server.init(executionHive.conf)
       server.start()
       logInfo("HiveThriftServer2 started")
-      listener = new HiveThriftServer2Listener(server, SparkSQLEnv.sqlContext.conf)
+      listener = new SparkThriftServer2Listener(server, SparkSQLEnv.sqlContext.conf)
       SparkSQLEnv.sparkContext.addSparkListener(listener)
       uiTab = if (SparkSQLEnv.sparkContext.getConf.get(UI_ENABLED)) {
         Some(new ThriftServerTab(SparkSQLEnv.sparkContext))
@@ -167,7 +167,7 @@ object HiveThriftServer2 extends Logging {
   /**
    * An inner sparkListener called in sc.stop to clean up the HiveThriftServer2
    */
-  private[thriftserver] class HiveThriftServer2Listener(
+  private[thriftserver] class SparkThriftServer2Listener(
       val server: HiveServer2,
       val conf: SQLConf) extends SparkListener {
 
@@ -296,7 +296,7 @@ object HiveThriftServer2 extends Logging {
   }
 }
 
-private[hive] class HiveThriftServer2(sqlContext: SQLContext)
+private[hive] class SparkThriftServer2(sqlContext: SQLContext)
   extends HiveServer2
   with ReflectedCompositeService {
   // state is tracked internally so that the server only attempts to shut down if it successfully

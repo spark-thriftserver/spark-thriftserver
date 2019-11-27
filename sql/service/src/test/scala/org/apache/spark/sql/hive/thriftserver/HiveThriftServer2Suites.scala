@@ -915,7 +915,7 @@ object ServerMode extends Enumeration {
   val binary, http = Value
 }
 
-abstract class HiveThriftJdbcTest extends HiveThriftServer2Test {
+abstract class HiveThriftJdbcTest extends SparkThriftServer2Test {
   Utils.classForName(classOf[HiveDriver].getCanonicalName)
 
   private def jdbcUri = if (mode == ServerMode.http) {
@@ -971,14 +971,16 @@ abstract class HiveThriftJdbcTest extends HiveThriftServer2Test {
   }
 }
 
-abstract class HiveThriftServer2Test extends SparkFunSuite with BeforeAndAfterAll with Logging {
+abstract class SparkThriftServer2Test extends SparkFunSuite with BeforeAndAfterAll with Logging {
   def mode: ServerMode.Value
 
-  private val CLASS_NAME = HiveThriftServer2.getClass.getCanonicalName.stripSuffix("$")
+  private val CLASS_NAME = SparkThriftServer2.getClass.getCanonicalName.stripSuffix("$")
   private val LOG_FILE_MARK = s"starting $CLASS_NAME, logging to "
 
-  protected val startScript = "../../sbin/start-thriftserver.sh".split("/").mkString(File.separator)
-  protected val stopScript = "../../sbin/stop-thriftserver.sh".split("/").mkString(File.separator)
+  protected val startScript =
+    "../../sbin/start-spark-thriftserver.sh".split("/").mkString(File.separator)
+  protected val stopScript =
+    "../../sbin/stop-spark-thriftserver.sh".split("/").mkString(File.separator)
 
   private var listeningPort: Int = _
   protected def serverPort: Int = listeningPort
