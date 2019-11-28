@@ -83,7 +83,7 @@ class CliSuite extends SparkFunSuite with BeforeAndAfterAll with Logging {
     val queriesString = queries.map(_ + "\n").mkString
 
     val command = {
-      val cliScript = "../../bin/spark-sql".split("/").mkString(File.separator)
+      val cliScript = "../../bin/spark-service-sql".split("/").mkString(File.separator)
       val jdbcUrl = s"jdbc:derby:;databaseName=$metastorePath;create=true"
       s"""$cliScript
          |  --master local
