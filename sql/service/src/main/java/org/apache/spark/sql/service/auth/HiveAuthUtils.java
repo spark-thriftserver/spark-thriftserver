@@ -54,7 +54,8 @@ public class HiveAuthUtils {
   }
 
   public static TTransport getSSLSocket(String host, int port, int loginTimeout,
-                                        String trustStorePath, String trustStorePassWord) throws TTransportException {
+                                        String trustStorePath, String trustStorePassWord)
+      throws TTransportException {
     TSSLTransportFactory.TSSLTransportParameters params =
             new TSSLTransportFactory.TSSLTransportParameters();
     params.setTrustStore(trustStorePath, trustStorePassWord);
@@ -88,7 +89,9 @@ public class HiveAuthUtils {
   }
 
   public static TServerSocket getServerSSLSocket(String hiveHost, int portNum, String keyStorePath,
-                                                 String keyStorePassWord, List<String> sslVersionBlacklist) throws TTransportException,
+                                                 String keyStorePassWord,
+                                                 List<String> sslVersionBlacklist)
+      throws TTransportException,
           UnknownHostException {
     TSSLTransportFactory.TSSLTransportParameters params =
             new TSSLTransportFactory.TSSLTransportParameters();

@@ -81,13 +81,17 @@ public class HiveDelegationTokenManager {
   public void startDelegationTokenSecretManager(Configuration conf, Object hms, ServerMode smode)
           throws IOException {
     long secretKeyInterval =
-            conf.getLong(DELEGATION_KEY_UPDATE_INTERVAL_KEY, DELEGATION_KEY_UPDATE_INTERVAL_DEFAULT);
+            conf.getLong(DELEGATION_KEY_UPDATE_INTERVAL_KEY,
+                DELEGATION_KEY_UPDATE_INTERVAL_DEFAULT);
     long tokenMaxLifetime =
-            conf.getLong(DELEGATION_TOKEN_MAX_LIFETIME_KEY, DELEGATION_TOKEN_MAX_LIFETIME_DEFAULT);
+            conf.getLong(DELEGATION_TOKEN_MAX_LIFETIME_KEY,
+                DELEGATION_TOKEN_MAX_LIFETIME_DEFAULT);
     long tokenRenewInterval =
-            conf.getLong(DELEGATION_TOKEN_RENEW_INTERVAL_KEY, DELEGATION_TOKEN_RENEW_INTERVAL_DEFAULT);
+            conf.getLong(DELEGATION_TOKEN_RENEW_INTERVAL_KEY,
+                DELEGATION_TOKEN_RENEW_INTERVAL_DEFAULT);
     long tokenGcInterval =
-            conf.getLong(DELEGATION_TOKEN_GC_INTERVAL, DELEGATION_TOKEN_GC_INTERVAL_DEFAULT);
+            conf.getLong(DELEGATION_TOKEN_GC_INTERVAL,
+                DELEGATION_TOKEN_GC_INTERVAL_DEFAULT);
 
     DelegationTokenStore dts = getTokenStore(conf);
     dts.setConf(conf);
@@ -126,7 +130,8 @@ public class HiveDelegationTokenManager {
     });
   }
 
-  public String getDelegationTokenWithService(String owner, String renewer, String service, String remoteAddr)
+  public String getDelegationTokenWithService(String owner, String renewer, String service,
+                                              String remoteAddr)
           throws IOException, InterruptedException {
     String token = getDelegationToken(owner, renewer, remoteAddr);
     return Utils.addServiceToToken(token, service);

@@ -235,7 +235,8 @@ public class HiveAuthFactory {
     if (principal.isEmpty() || keyTabFile.isEmpty()) {
       throw new IOException("HiveServer2 Kerberos principal or keytab is not correctly configured");
     } else {
-      UserGroupInformation.loginUserFromKeytab(SecurityUtil.getServerPrincipal(principal, "0.0.0.0"), keyTabFile);
+      UserGroupInformation.loginUserFromKeytab(
+          SecurityUtil.getServerPrincipal(principal, "0.0.0.0"), keyTabFile);
     }
   }
 
@@ -247,7 +248,8 @@ public class HiveAuthFactory {
     if (principal.isEmpty() || keyTabFile.isEmpty()) {
       throw new IOException("HiveServer2 SPNEGO principal or keytab is not correctly configured");
     } else {
-      return UserGroupInformation.loginUserFromKeytabAndReturnUGI(SecurityUtil.getServerPrincipal(principal, "0.0.0.0"), keyTabFile);
+      return UserGroupInformation.loginUserFromKeytabAndReturnUGI(
+          SecurityUtil.getServerPrincipal(principal, "0.0.0.0"), keyTabFile);
     }
   }
 

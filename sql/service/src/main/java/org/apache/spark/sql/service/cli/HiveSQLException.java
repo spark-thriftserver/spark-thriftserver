@@ -197,7 +197,8 @@ public class HiveSQLException extends SQLException {
     return toStackTrace(details, null, 0);
   }
 
-  private static Throwable toStackTrace(List<String> details, StackTraceElement[] parent, int index) {
+  private static Throwable toStackTrace(List<String> details,
+      StackTraceElement[] parent, int index) {
     String detail = details.get(index++);
     if (!detail.startsWith("*")) {
       return null;  // should not be happened. ignore remaining

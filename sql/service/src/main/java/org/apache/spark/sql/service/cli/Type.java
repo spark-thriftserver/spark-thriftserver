@@ -111,7 +111,8 @@ public enum Type {
   private final boolean isComplex;
   private final boolean isCollection;
 
-  Type(String name, int javaSQLType, TTypeId tType, boolean isQualified, boolean isComplex, boolean isCollection) {
+  Type(String name, int javaSQLType, TTypeId tType, boolean isQualified,
+       boolean isComplex, boolean isCollection) {
     this.name = name;
     this.javaSQLType = javaSQLType;
     this.tType = tType;

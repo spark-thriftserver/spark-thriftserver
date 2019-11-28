@@ -39,7 +39,8 @@ import org.slf4j.LoggerFactory;
  */
 public class TSetIpAddressProcessor<I extends Iface> extends TCLIService.Processor<Iface> {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(TSetIpAddressProcessor.class.getName());
+  private static final Logger LOGGER =
+      LoggerFactory.getLogger(TSetIpAddressProcessor.class.getName());
 
   public TSetIpAddressProcessor(Iface iface) {
     super(iface);

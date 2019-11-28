@@ -333,7 +333,7 @@ public class ThriftHttpServlet extends TServlet {
         AuthMethods authMethod = AuthMethods.getValidAuthMethod(authType);
         PasswdAuthenticationProvider provider =
             AuthenticationProviderFactory.getAuthenticationProvider(authMethod);
-        provider.Authenticate(userName, getPassword(request, authType));
+        provider.authenticate(userName, getPassword(request, authType));
 
       } catch (Exception e) {
         throw new HttpAuthenticationException(e);
@@ -423,7 +423,7 @@ public class ThriftHttpServlet extends TServlet {
         String serviceTicketBase64 = getAuthHeader(request, authType);
         byte[] inToken = Base64.decodeBase64(serviceTicketBase64.getBytes());
         gssContext.acceptSecContext(inToken, 0, inToken.length);
-        // Authenticate or deny based on its context completion
+        // authenticate or deny based on its context completion
         if (!gssContext.isEstablished()) {
           throw new HttpAuthenticationException("Kerberos authentication failed: " +
               "unable to establish context with the service ticket " +

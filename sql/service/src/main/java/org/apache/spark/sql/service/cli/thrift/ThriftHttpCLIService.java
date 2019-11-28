@@ -65,8 +65,9 @@ public class ThriftHttpCLIService extends ThriftCLIService {
       // Server thread pool
       // Start with minWorkerThreads, expand till maxWorkerThreads and reject subsequent requests
       String threadPoolName = "HiveServer2-HttpHandler-Pool";
-      ThreadPoolExecutor executorService = new ThreadPoolExecutor(minWorkerThreads, maxWorkerThreads,
-          workerKeepAliveTime, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
+      ThreadPoolExecutor executorService =
+          new ThreadPoolExecutor(minWorkerThreads, maxWorkerThreads,
+              workerKeepAliveTime, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
           new ThreadFactoryWithGarbageCleanup(threadPoolName));
       ExecutorThreadPool threadPool = new ExecutorThreadPool(executorService);
 
@@ -88,8 +89,10 @@ public class ThriftHttpCLIService extends ThriftCLIService {
               + " Not configured for SSL connection");
         }
         SslContextFactory sslContextFactory = new SslContextFactory.Server();
-        String[] excludedProtocols = hiveConf.getVar(ConfVars.HIVE_SSL_PROTOCOL_BLACKLIST).split(",");
-        LOG.info("HTTP Server SSL: adding excluded protocols: " + Arrays.toString(excludedProtocols));
+        String[] excludedProtocols =
+           hiveConf.getVar(ConfVars.HIVE_SSL_PROTOCOL_BLACKLIST).split(",");
+        LOG.info("HTTP Server SSL: adding excluded protocols: " +
+             Arrays.toString(excludedProtocols));
         sslContextFactory.addExcludeProtocols(excludedProtocols);
         LOG.info("HTTP Server SSL: SslContextFactory.getExcludeProtocols = " +
           Arrays.toString(sslContextFactory.getExcludeProtocols()));
@@ -158,7 +161,8 @@ public class ThriftHttpCLIService extends ThriftCLIService {
   }
 
   /**
-   * The config parameter can be like "path", "/path", "/path/", "path/*", "/path1/path2/*" and so on.
+   * The config parameter can be like "path", "/path", "/path/", "path/*", "/path1/path2/*"
+   * and so on.
    * httpPath should end up as "/*", "/path/*" or "/path1/../pathN/*"
    * @param httpPath
    * @return

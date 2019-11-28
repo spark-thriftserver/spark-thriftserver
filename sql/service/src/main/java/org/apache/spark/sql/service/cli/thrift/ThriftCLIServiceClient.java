@@ -98,7 +98,8 @@ public class ThriftCLIServiceClient extends CLIServiceClient {
       throws HiveSQLException {
     try {
       // FIXME extract the right info type
-      TGetInfoReq req = new TGetInfoReq(sessionHandle.toTSessionHandle(), infoType.toTGetInfoType());
+      TGetInfoReq req =
+          new TGetInfoReq(sessionHandle.toTSessionHandle(), infoType.toTGetInfoType());
       TGetInfoResp resp = cliService.GetInfo(req);
       checkStatus(resp.getStatus());
       return new GetInfoValue(resp.getInfoValue());
@@ -217,7 +218,11 @@ public class ThriftCLIServiceClient extends CLIServiceClient {
   }
 
   /* (non-Javadoc)
-   * @see ICLIService#getTables(SessionHandle, java.lang.String, java.lang.String, java.lang.String, java.util.List)
+   * @see ICLIService#getTables(SessionHandle,
+   *                            java.lang.String,
+   *                            java.lang.String,
+   *                            java.lang.String,
+   *                            java.util.List)
    */
   @Override
   public OperationHandle getTables(SessionHandle sessionHandle, String catalogName,
@@ -316,7 +321,8 @@ public class ThriftCLIServiceClient extends CLIServiceClient {
       OperationState opState = OperationState.getOperationState(resp.getOperationState());
       HiveSQLException opException = null;
       if (opState == OperationState.ERROR) {
-        opException = new HiveSQLException(resp.getErrorMessage(), resp.getSqlState(), resp.getErrorCode());
+        opException = new HiveSQLException(resp.getErrorMessage(),
+            resp.getSqlState(), resp.getErrorCode());
       }
       return new OperationStatus(opState, opException);
     } catch (HiveSQLException e) {

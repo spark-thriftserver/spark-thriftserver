@@ -345,8 +345,8 @@ public class HiveSessionImpl implements HiveSession {
   /**
    * 1. We'll remove the ThreadLocal SessionState as this thread might now serve
    * other requests.
-   * 2. We'll cache the ThreadLocal RawStore object for this background thread for an orderly cleanup
-   * when this thread is garbage collected later.
+   * 2. We'll cache the ThreadLocal RawStore object for this background thread
+   * for an orderly cleanup when this thread is garbage collected later.
    * @see ThreadWithGarbageCleanup#finalize()
    */
   protected synchronized void release(boolean userAccess) {
@@ -450,7 +450,8 @@ public class HiveSessionImpl implements HiveSession {
   }
 
   private OperationHandle executeStatementInternal(String statement,
-      Map<String, String> confOverlay, boolean runAsync, long queryTimeout) throws HiveSQLException {
+      Map<String, String> confOverlay, boolean runAsync,
+      long queryTimeout) throws HiveSQLException {
     acquire(true);
 
     OperationManager operationManager = getOperationManager();
@@ -462,9 +463,9 @@ public class HiveSessionImpl implements HiveSession {
       opHandleSet.add(opHandle);
       return opHandle;
     } catch (HiveSQLException e) {
-      // Referring to SQLOperation.java, there is no chance that a HiveSQLException throws and the asyn
-      // background operation submits to thread pool successfully at the same time. So, Cleanup
-      // opHandle directly when got HiveSQLException
+      // Referring to SQLOperation.java, there is no chance that a HiveSQLException throws
+      // and the asyn background operation submits to thread pool successfully at the same time.
+      // So, Cleanup opHandle directly when got HiveSQLException
       operationManager.closeOperation(opHandle);
       throw e;
     } finally {
@@ -541,7 +542,8 @@ public class HiveSessionImpl implements HiveSession {
 
     OperationManager operationManager = getOperationManager();
     SparkMetadataOperation operation =
-        operationManager.newGetTablesOperation(getSession(), catalogName, schemaName, tableName, tableTypes);
+        operationManager.newGetTablesOperation(getSession(), catalogName,
+            schemaName, tableName, tableTypes);
     OperationHandle opHandle = operation.getHandle();
     try {
       operation.run();
@@ -561,7 +563,8 @@ public class HiveSessionImpl implements HiveSession {
     acquire(true);
 
     OperationManager operationManager = getOperationManager();
-    SparkGetTableTypesOperation operation = operationManager.newGetTableTypesOperation(getSession());
+    SparkGetTableTypesOperation operation =
+        operationManager.newGetTableTypesOperation(getSession());
     OperationHandle opHandle = operation.getHandle();
     try {
       operation.run();
@@ -819,7 +822,8 @@ public class HiveSessionImpl implements HiveSession {
   }
 
   // extract the real user from the given token string
-  private String getUserFromToken(HiveAuthFactory authFactory, String tokenStr) throws HiveSQLException {
+  private String getUserFromToken(HiveAuthFactory authFactory, String tokenStr)
+      throws HiveSQLException {
     return authFactory.getUserFromToken(tokenStr);
   }
 

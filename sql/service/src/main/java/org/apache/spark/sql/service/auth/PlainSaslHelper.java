@@ -102,7 +102,7 @@ public final class PlainSaslHelper {
       }
       PasswdAuthenticationProvider provider =
         AuthenticationProviderFactory.getAuthenticationProvider(authMethod);
-      provider.Authenticate(username, password);
+      provider.authenticate(username, password);
       if (ac != null) {
         ac.setAuthorized(true);
       }

@@ -92,12 +92,14 @@ public class TableSchema {
   }
 
   public TableSchema addPrimitiveColumn(String columnName, Type columnType, String columnComment) {
-    columns.add(ColumnDescriptor.newPrimitiveColumnDescriptor(columnName, columnComment, columnType, columns.size() + 1));
+    columns.add(ColumnDescriptor.newPrimitiveColumnDescriptor(columnName, columnComment,
+        columnType, columns.size() + 1));
     return this;
   }
 
   public TableSchema addStringColumn(String columnName, String columnComment) {
-    columns.add(ColumnDescriptor.newPrimitiveColumnDescriptor(columnName, columnComment, Type.STRING_TYPE, columns.size() + 1));
+    columns.add(ColumnDescriptor.newPrimitiveColumnDescriptor(columnName, columnComment,
+        Type.STRING_TYPE, columns.size() + 1));
     return this;
   }
 }

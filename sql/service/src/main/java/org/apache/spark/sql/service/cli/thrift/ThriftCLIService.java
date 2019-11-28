@@ -50,7 +50,8 @@ import org.slf4j.LoggerFactory;
  * ThriftCLIService.
  *
  */
-public abstract class ThriftCLIService extends AbstractService implements TCLIService.Iface, Runnable {
+public abstract class ThriftCLIService extends AbstractService
+    implements TCLIService.Iface, Runnable {
 
   public static final Logger LOG = LoggerFactory.getLogger(ThriftCLIService.class.getName());
 
@@ -450,7 +451,8 @@ public abstract class ThriftCLIService extends AbstractService implements TCLISe
   public TGetTypeInfoResp GetTypeInfo(TGetTypeInfoReq req) throws TException {
     TGetTypeInfoResp resp = new TGetTypeInfoResp();
     try {
-      OperationHandle operationHandle = cliService.getTypeInfo(new SessionHandle(req.getSessionHandle()));
+      OperationHandle operationHandle =
+          cliService.getTypeInfo(new SessionHandle(req.getSessionHandle()));
       resp.setOperationHandle(operationHandle.toTOperationHandle());
       resp.setStatus(OK_STATUS);
     } catch (Exception e) {
@@ -509,7 +511,8 @@ public abstract class ThriftCLIService extends AbstractService implements TCLISe
   public TGetTableTypesResp GetTableTypes(TGetTableTypesReq req) throws TException {
     TGetTableTypesResp resp = new TGetTableTypesResp();
     try {
-      OperationHandle opHandle = cliService.getTableTypes(new SessionHandle(req.getSessionHandle()));
+      OperationHandle opHandle =
+          cliService.getTableTypes(new SessionHandle(req.getSessionHandle()));
       resp.setOperationHandle(opHandle.toTOperationHandle());
       resp.setStatus(OK_STATUS);
     } catch (Exception e) {
@@ -606,7 +609,8 @@ public abstract class ThriftCLIService extends AbstractService implements TCLISe
       throws TException {
     TGetResultSetMetadataResp resp = new TGetResultSetMetadataResp();
     try {
-      TableSchema schema = cliService.getResultSetMetadata(new OperationHandle(req.getOperationHandle()));
+      TableSchema schema =
+          cliService.getResultSetMetadata(new OperationHandle(req.getOperationHandle()));
       resp.setSchema(schema.toTTableSchema());
       resp.setStatus(OK_STATUS);
     } catch (Exception e) {
@@ -692,7 +696,8 @@ public abstract class ThriftCLIService extends AbstractService implements TCLISe
       LOG.debug("Proxy user from query string: " + proxyUser);
     }
 
-    if (proxyUser == null && sessionConf != null && sessionConf.containsKey(HiveAuthFactory.HS2_PROXY_USER)) {
+    if (proxyUser == null && sessionConf != null &&
+        sessionConf.containsKey(HiveAuthFactory.HS2_PROXY_USER)) {
       String proxyUserFromThriftBody = sessionConf.get(HiveAuthFactory.HS2_PROXY_USER);
       LOG.debug("Proxy user from thrift body: " + proxyUserFromThriftBody);
       proxyUser = proxyUserFromThriftBody;

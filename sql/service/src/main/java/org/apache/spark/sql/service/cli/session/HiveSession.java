@@ -67,7 +67,8 @@ public interface HiveSession extends HiveSessionBase {
    * @return
    * @throws HiveSQLException
    */
-  OperationHandle executeStatementAsync(String statement, Map<String, String> confOverlay) throws HiveSQLException;
+  OperationHandle executeStatementAsync(String statement, Map<String, String> confOverlay)
+      throws HiveSQLException;
 
   /**
    * execute operation handler

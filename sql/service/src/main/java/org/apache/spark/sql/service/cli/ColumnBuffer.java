@@ -320,16 +320,17 @@ public class ColumnBuffer extends AbstractList {
                 nullMasks));
         break;
       case INT_TYPE:
-        value.setI32Val(new TI32Column(Ints.asList(Arrays.copyOfRange(intVars, 0, size)), nullMasks));
+        value.setI32Val(new TI32Column(
+            Ints.asList(Arrays.copyOfRange(intVars, 0, size)), nullMasks));
         break;
       case BIGINT_TYPE:
-        value
-                .setI64Val(new TI64Column(Longs.asList(Arrays.copyOfRange(longVars, 0, size)), nullMasks));
+        value.setI64Val(new TI64Column(
+            Longs.asList(Arrays.copyOfRange(longVars, 0, size)), nullMasks));
         break;
       case FLOAT_TYPE:
       case DOUBLE_TYPE:
-        value.setDoubleVal(new TDoubleColumn(Doubles.asList(Arrays.copyOfRange(doubleVars, 0, size)),
-                nullMasks));
+        value.setDoubleVal(new TDoubleColumn(
+            Doubles.asList(Arrays.copyOfRange(doubleVars, 0, size)), nullMasks));
         break;
       case STRING_TYPE:
         value.setStringVal(new TStringColumn(stringVars, nullMasks));

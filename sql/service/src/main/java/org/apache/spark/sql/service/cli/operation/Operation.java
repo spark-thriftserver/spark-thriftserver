@@ -227,7 +227,8 @@ public abstract class Operation {
 
       // create OperationLog object with above log file
       try {
-        operationLog = new OperationLog(opHandle.toString(), operationLogFile, parentSession.getHiveConf());
+        operationLog =
+            new OperationLog(opHandle.toString(), operationLogFile, parentSession.getHiveConf());
       } catch (FileNotFoundException e) {
         LOG.warn("Unable to instantiate OperationLog object for operation: " +
             opHandle, e);
@@ -298,7 +299,8 @@ public abstract class Operation {
 
   public abstract TableSchema getResultSetSchema() throws HiveSQLException;
 
-  public abstract RowSet getNextRowSet(FetchOrientation orientation, long maxRows) throws HiveSQLException;
+  public abstract RowSet getNextRowSet(FetchOrientation orientation, long maxRows)
+      throws HiveSQLException;
 
   public RowSet getNextRowSet() throws HiveSQLException {
     return getNextRowSet(FetchOrientation.FETCH_NEXT, DEFAULT_FETCH_MAX_ROWS);

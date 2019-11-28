@@ -38,19 +38,20 @@ public abstract class CLIServiceClient implements ICLIService {
   @Override
   public RowSet fetchResults(OperationHandle opHandle) throws HiveSQLException {
     // TODO: provide STATIC default value
-    return fetchResults(opHandle, FetchOrientation.FETCH_NEXT, DEFAULT_MAX_ROWS, FetchType.QUERY_OUTPUT);
+    return fetchResults(opHandle, FetchOrientation.FETCH_NEXT,
+        DEFAULT_MAX_ROWS, FetchType.QUERY_OUTPUT);
   }
 
   @Override
-  public abstract String getDelegationToken(SessionHandle sessionHandle, HiveAuthFactory authFactory,
-      String owner, String renewer) throws HiveSQLException;
+  public abstract String getDelegationToken(SessionHandle sessionHandle,
+      HiveAuthFactory authFactory, String owner, String renewer) throws HiveSQLException;
 
   @Override
-  public abstract void cancelDelegationToken(SessionHandle sessionHandle, HiveAuthFactory authFactory,
-      String tokenStr) throws HiveSQLException;
+  public abstract void cancelDelegationToken(SessionHandle sessionHandle,
+      HiveAuthFactory authFactory, String tokenStr) throws HiveSQLException;
 
   @Override
-  public abstract void renewDelegationToken(SessionHandle sessionHandle, HiveAuthFactory authFactory,
-      String tokenStr) throws HiveSQLException;
+  public abstract void renewDelegationToken(SessionHandle sessionHandle,
+      HiveAuthFactory authFactory, String tokenStr) throws HiveSQLException;
 
 }

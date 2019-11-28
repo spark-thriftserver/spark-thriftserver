@@ -84,7 +84,8 @@ public class ColumnBasedSet implements RowSet {
     startOffset = tRowSet.getStartRowOffset();
   }
 
-  private ColumnBasedSet(TypeDescriptor[] descriptors, List<ColumnBuffer> columns, long startOffset) {
+  private ColumnBasedSet(TypeDescriptor[] descriptors,
+      List<ColumnBuffer> columns, long startOffset) {
     this.descriptors = descriptors;
     this.columns = columns;
     this.startOffset = startOffset;
