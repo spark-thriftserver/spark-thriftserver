@@ -477,6 +477,8 @@ object SparkParallelTestGrouping {
     "org.apache.spark.sql.SQLQueryTestSuite",
     "org.apache.spark.sql.hive.thriftserver.ThriftServerQueryTestSuite",
     "org.apache.spark.sql.hive.thriftserver.SparkSQLEnvSuite"
+    "org.apache.spark.sql.service.ThriftServerQueryTestSuite",
+    "org.apache.spark.sql.service.SparkSQLEnvSuite"
   )
 
   private val DEFAULT_TEST_GROUP = "default_test_group"
