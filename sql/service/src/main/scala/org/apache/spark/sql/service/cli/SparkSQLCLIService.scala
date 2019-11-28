@@ -114,10 +114,6 @@ private[service] trait ReflectedCompositeService { this: AbstractService =>
     invoke(classOf[AbstractService], this, "ensureCurrentState", classOf[STATE] -> STATE.NOTINITED)
     setAncestorField(this, 3, "hiveConf", hiveConf)
     invoke(classOf[AbstractService], this, "changeState", classOf[STATE] -> STATE.INITED)
-    if (HiveUtils.isHive23) {
-      getAncestorField[Logger](this, 3, "LOG").info(s"Service: $getName is inited.")
-    } else {
-      getAncestorField[Log](this, 3, "LOG").info(s"Service: $getName is inited.")
-    }
+    getAncestorField[Logger](this, 3, "LOG").info(s"Service: $getName is inited.")
   }
 }
