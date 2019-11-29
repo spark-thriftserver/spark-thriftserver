@@ -22,7 +22,7 @@ import java.sql.DriverManager
 import org.apache.spark.util.{Utils => SparkUtils}
 
 class JdbcConnectionUriSuite extends SparkThriftServer2Test {
-  SparkUtils.classForName(classOf[HiveDriver].getCanonicalName)
+  SparkUtils.classForName(classOf[SparkDriver].getCanonicalName)
 
   override def mode: ServerMode.Value = ServerMode.binary
 

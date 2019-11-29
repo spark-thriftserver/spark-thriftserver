@@ -27,15 +27,15 @@ import java.util.logging.Logger;
 import javax.sql.DataSource;
 
 /**
- * HiveDataSource.
+ * SparkDataSource.
  *
  */
-public class HiveDataSource implements DataSource {
+public class SparkDataSource implements DataSource {
 
   /**
    *
    */
-  public HiveDataSource() {
+  public SparkDataSource() {
     // TODO Auto-generated constructor stub
   }
 
@@ -60,9 +60,9 @@ public class HiveDataSource implements DataSource {
   public Connection getConnection(String username, String password)
       throws SQLException {
     try {
-      return new HiveConnection("", null);
+      return new SparkConnection("", null);
     } catch (Exception ex) {
-      throw new SQLException("Error in getting HiveConnection",ex);
+      throw new SQLException("Error in getting SparkConnection",ex);
     }
   }
 

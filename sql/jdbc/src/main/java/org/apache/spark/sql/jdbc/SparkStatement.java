@@ -53,13 +53,13 @@ import org.slf4j.LoggerFactory;
 import org.apache.spark.sql.jdbc.logs.InPlaceUpdateStream;
 
 /**
- * HiveStatement.
+ * SparkStatement.
  *
  */
-public class HiveStatement implements java.sql.Statement {
-  public static final Logger LOG = LoggerFactory.getLogger(HiveStatement.class.getName());
+public class SparkStatement implements java.sql.Statement {
+  public static final Logger LOG = LoggerFactory.getLogger(SparkStatement.class.getName());
   public static final int DEFAULT_FETCH_SIZE = 1000;
-  private final HiveConnection connection;
+  private final SparkConnection connection;
   private TCLIService.Iface client;
   private TOperationHandle stmtHandle = null;
   private final TSessionHandle sessHandle;
@@ -118,23 +118,23 @@ public class HiveStatement implements java.sql.Statement {
 
   private InPlaceUpdateStream inPlaceUpdateStream = InPlaceUpdateStream.NO_OP;
 
-  public HiveStatement(HiveConnection connection, TCLIService.Iface client,
-      TSessionHandle sessHandle) {
+  public SparkStatement(SparkConnection connection, TCLIService.Iface client,
+                        TSessionHandle sessHandle) {
     this(connection, client, sessHandle, false, DEFAULT_FETCH_SIZE);
   }
 
-  public HiveStatement(HiveConnection connection, TCLIService.Iface client,
-      TSessionHandle sessHandle, int fetchSize) {
+  public SparkStatement(SparkConnection connection, TCLIService.Iface client,
+                        TSessionHandle sessHandle, int fetchSize) {
     this(connection, client, sessHandle, false, fetchSize);
   }
 
-  public HiveStatement(HiveConnection connection, TCLIService.Iface client,
-                       TSessionHandle sessHandle, boolean isScrollableResultset) {
+  public SparkStatement(SparkConnection connection, TCLIService.Iface client,
+                        TSessionHandle sessHandle, boolean isScrollableResultset) {
     this(connection, client, sessHandle, isScrollableResultset, DEFAULT_FETCH_SIZE);
   }
 
-  public HiveStatement(HiveConnection connection, TCLIService.Iface client,
-      TSessionHandle sessHandle, boolean isScrollableResultset, int fetchSize) {
+  public SparkStatement(SparkConnection connection, TCLIService.Iface client,
+                        TSessionHandle sessHandle, boolean isScrollableResultset, int fetchSize) {
     this.connection = connection;
     this.client = client;
     this.sessHandle = sessHandle;
@@ -258,7 +258,8 @@ public class HiveStatement implements java.sql.Statement {
     if (!status.isHasResultSet() && !stmtHandle.isHasResultSet()) {
       return false;
     }
-    resultSet =  new HiveQueryResultSet.Builder(this).setClient(client).setSessionHandle(sessHandle)
+    resultSet =  new SparkQueryResultSet.Builder(this)
+        .setClient(client).setSessionHandle(sessHandle)
         .setStmtHandle(stmtHandle).setMaxRows(maxRows).setFetchSize(fetchSize)
         .setScrollable(isScrollableResultset)
         .build();
@@ -287,7 +288,7 @@ public class HiveStatement implements java.sql.Statement {
       return false;
     }
     resultSet =
-        new HiveQueryResultSet.Builder(this).setClient(client).setSessionHandle(sessHandle)
+        new SparkQueryResultSet.Builder(this).setClient(client).setSessionHandle(sessHandle)
             .setStmtHandle(stmtHandle).setMaxRows(maxRows).setFetchSize(fetchSize)
             .setScrollable(isScrollableResultset).build();
     return true;
@@ -876,7 +877,7 @@ public class HiveStatement implements java.sql.Statement {
    * This method is a public API for usage outside of Hive, although it is not part of the
    * interface java.sql.Statement.
    * This method gets the incremental logs during SQL execution, and uses fetchSize holden by
-   * HiveStatement object.
+   * SparkStatement object.
    * @return a list of logs. It can be empty if there are no new logs to be retrieved at that time.
    * @throws SQLException
    * @throws ClosedOrCancelledStatementException if statement has been cancelled or closed
