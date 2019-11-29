@@ -17,7 +17,7 @@
  */
 package org.apache.spark.sql.jdbc.logs;
 
-import org.apache.hive.service.rpc.thrift.TProgressUpdateResp;
+import org.apache.spark.sql.service.rpc.thrift.TProgressUpdateResp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

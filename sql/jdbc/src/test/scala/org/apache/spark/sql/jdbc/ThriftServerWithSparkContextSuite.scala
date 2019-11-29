@@ -24,12 +24,12 @@ import scala.util.{Random, Try}
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars
 
 import org.apache.spark.sql.QueryTest
-import org.apache.spark.sql.hive.thriftserver.HiveThriftServer2
+import org.apache.spark.sql.service.SparkThriftServer2
 import org.apache.spark.sql.test.SharedSparkSession
 
 class ThriftServerWithSparkContextSuite extends QueryTest with SharedSparkSession {
 
-  private var hiveServer2: HiveThriftServer2 = _
+  private var hiveServer2: SparkThriftServer2 = _
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -69,7 +69,7 @@ class ThriftServerWithSparkContextSuite extends QueryTest with SharedSparkSessio
     logInfo(s"Trying to start HiveThriftServer2: port=$port, attempt=$attempt")
     val sqlContext = spark.newSession().sqlContext
     sqlContext.setConf(ConfVars.HIVE_SERVER2_THRIFT_PORT.varname, port.toString)
-    hiveServer2 = HiveThriftServer2.startWithContext(sqlContext)
+    hiveServer2 = SparkThriftServer2.startWithContext(sqlContext)
   }
 
   private def withJdbcStatement(fs: (Statement => Unit)*): Unit = {

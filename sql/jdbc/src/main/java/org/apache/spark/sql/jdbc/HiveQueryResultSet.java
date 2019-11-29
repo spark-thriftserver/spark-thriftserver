@@ -18,7 +18,7 @@
 
 package org.apache.spark.sql.jdbc;
 
-import static org.apache.hive.service.rpc.thrift.TCLIServiceConstants.TYPE_NAMES;
+import static org.apache.spark.sql.service.rpc.thrift.TCLIServiceConstants.TYPE_NAMES;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -32,27 +32,27 @@ import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.hadoop.hive.common.type.HiveDecimal;
-import org.apache.hive.service.cli.RowSet;
-import org.apache.hive.service.cli.RowSetFactory;
-import org.apache.hive.service.cli.TableSchema;
-import org.apache.hive.service.rpc.thrift.TCLIService;
-import org.apache.hive.service.rpc.thrift.TCLIServiceConstants;
-import org.apache.hive.service.rpc.thrift.TCloseOperationReq;
-import org.apache.hive.service.rpc.thrift.TCloseOperationResp;
-import org.apache.hive.service.rpc.thrift.TColumnDesc;
-import org.apache.hive.service.rpc.thrift.TFetchOrientation;
-import org.apache.hive.service.rpc.thrift.TFetchResultsReq;
-import org.apache.hive.service.rpc.thrift.TFetchResultsResp;
-import org.apache.hive.service.rpc.thrift.TGetResultSetMetadataReq;
-import org.apache.hive.service.rpc.thrift.TGetResultSetMetadataResp;
-import org.apache.hive.service.rpc.thrift.TOperationHandle;
-import org.apache.hive.service.rpc.thrift.TPrimitiveTypeEntry;
-import org.apache.hive.service.rpc.thrift.TProtocolVersion;
-import org.apache.hive.service.rpc.thrift.TRowSet;
-import org.apache.hive.service.rpc.thrift.TSessionHandle;
-import org.apache.hive.service.rpc.thrift.TTableSchema;
-import org.apache.hive.service.rpc.thrift.TTypeQualifierValue;
-import org.apache.hive.service.rpc.thrift.TTypeQualifiers;
+import org.apache.spark.sql.service.cli.RowSet;
+import org.apache.spark.sql.service.cli.RowSetFactory;
+import org.apache.spark.sql.service.cli.TableSchema;
+import org.apache.spark.sql.service.rpc.thrift.TCLIService;
+import org.apache.spark.sql.service.rpc.thrift.TCLIServiceConstants;
+import org.apache.spark.sql.service.rpc.thrift.TCloseOperationReq;
+import org.apache.spark.sql.service.rpc.thrift.TCloseOperationResp;
+import org.apache.spark.sql.service.rpc.thrift.TColumnDesc;
+import org.apache.spark.sql.service.rpc.thrift.TFetchOrientation;
+import org.apache.spark.sql.service.rpc.thrift.TFetchResultsReq;
+import org.apache.spark.sql.service.rpc.thrift.TFetchResultsResp;
+import org.apache.spark.sql.service.rpc.thrift.TGetResultSetMetadataReq;
+import org.apache.spark.sql.service.rpc.thrift.TGetResultSetMetadataResp;
+import org.apache.spark.sql.service.rpc.thrift.TOperationHandle;
+import org.apache.spark.sql.service.rpc.thrift.TPrimitiveTypeEntry;
+import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
+import org.apache.spark.sql.service.rpc.thrift.TRowSet;
+import org.apache.spark.sql.service.rpc.thrift.TSessionHandle;
+import org.apache.spark.sql.service.rpc.thrift.TTableSchema;
+import org.apache.spark.sql.service.rpc.thrift.TTypeQualifierValue;
+import org.apache.spark.sql.service.rpc.thrift.TTypeQualifiers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

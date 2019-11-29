@@ -297,7 +297,7 @@ object SparkThriftServer2 extends Logging {
   }
 }
 
-private[spark] class HiveThriftServer2(sqlContext: SQLContext)
+private[spark] class SparkThriftServer2(sqlContext: SQLContext)
   extends HiveServer2
   with ReflectedCompositeService {
   // state is tracked internally so that the server only attempts to shut down if it successfully

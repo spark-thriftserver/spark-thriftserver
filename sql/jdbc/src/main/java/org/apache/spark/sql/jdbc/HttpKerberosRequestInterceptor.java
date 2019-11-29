@@ -21,7 +21,7 @@ package org.apache.spark.sql.jdbc;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.apache.hive.service.auth.HttpAuthUtils;
+import org.apache.spark.sql.service.auth.HttpAuthUtils;
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.client.CookieStore;

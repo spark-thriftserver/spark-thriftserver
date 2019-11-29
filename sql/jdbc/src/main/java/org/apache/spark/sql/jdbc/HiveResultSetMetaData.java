@@ -23,7 +23,7 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.List;
 
-import org.apache.hive.service.cli.Type;
+import org.apache.spark.sql.service.cli.Type;
 
 /**
  * HiveResultSetMetaData.

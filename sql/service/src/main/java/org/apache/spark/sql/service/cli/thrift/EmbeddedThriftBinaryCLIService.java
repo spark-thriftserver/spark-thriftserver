@@ -16,11 +16,11 @@
  * limitations under the License.
  */
 
-package org.apache.hive.service.cli.thrift;
+package org.apache.spark.sql.service.cli.thrift;
 
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hive.service.cli.CLIService;
-import org.apache.hive.service.cli.ICLIService;
+import org.apache.spark.sql.service.cli.CLIService;
+import org.apache.spark.sql.service.cli.ICLIService;
 
 
 /**

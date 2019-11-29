@@ -30,22 +30,22 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.hive.service.cli.RowSet;
-import org.apache.hive.service.cli.RowSetFactory;
-import org.apache.hive.service.rpc.thrift.TCLIService;
-import org.apache.hive.service.rpc.thrift.TCancelOperationReq;
-import org.apache.hive.service.rpc.thrift.TCancelOperationResp;
-import org.apache.hive.service.rpc.thrift.TCloseOperationReq;
-import org.apache.hive.service.rpc.thrift.TCloseOperationResp;
-import org.apache.hive.service.rpc.thrift.TExecuteStatementReq;
-import org.apache.hive.service.rpc.thrift.TExecuteStatementResp;
-import org.apache.hive.service.rpc.thrift.TFetchOrientation;
-import org.apache.hive.service.rpc.thrift.TFetchResultsReq;
-import org.apache.hive.service.rpc.thrift.TFetchResultsResp;
-import org.apache.hive.service.rpc.thrift.TGetOperationStatusReq;
-import org.apache.hive.service.rpc.thrift.TGetOperationStatusResp;
-import org.apache.hive.service.rpc.thrift.TOperationHandle;
-import org.apache.hive.service.rpc.thrift.TSessionHandle;
+import org.apache.spark.sql.service.cli.RowSet;
+import org.apache.spark.sql.service.cli.RowSetFactory;
+import org.apache.spark.sql.service.rpc.thrift.TCLIService;
+import org.apache.spark.sql.service.rpc.thrift.TCancelOperationReq;
+import org.apache.spark.sql.service.rpc.thrift.TCancelOperationResp;
+import org.apache.spark.sql.service.rpc.thrift.TCloseOperationReq;
+import org.apache.spark.sql.service.rpc.thrift.TCloseOperationResp;
+import org.apache.spark.sql.service.rpc.thrift.TExecuteStatementReq;
+import org.apache.spark.sql.service.rpc.thrift.TExecuteStatementResp;
+import org.apache.spark.sql.service.rpc.thrift.TFetchOrientation;
+import org.apache.spark.sql.service.rpc.thrift.TFetchResultsReq;
+import org.apache.spark.sql.service.rpc.thrift.TFetchResultsResp;
+import org.apache.spark.sql.service.rpc.thrift.TGetOperationStatusReq;
+import org.apache.spark.sql.service.rpc.thrift.TGetOperationStatusResp;
+import org.apache.spark.sql.service.rpc.thrift.TOperationHandle;
+import org.apache.spark.sql.service.rpc.thrift.TSessionHandle;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -959,7 +959,7 @@ public class HiveStatement implements java.sql.Statement {
   public String getYarnATSGuid() {
     if (stmtHandle != null) {
       // Set on the server side.
-      // @see org.apache.hive.service.cli.operation.SQLOperation#prepare
+      // @see org.apache.spark.sql.service.cli.operation.SQLOperation#prepare
       String guid64 =
           Base64.encodeBase64URLSafeString(stmtHandle.getOperationId().getGuid()).trim();
       return guid64;

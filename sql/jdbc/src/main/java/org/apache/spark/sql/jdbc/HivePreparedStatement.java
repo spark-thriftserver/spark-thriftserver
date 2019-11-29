@@ -46,8 +46,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 
-import org.apache.hive.service.rpc.thrift.TCLIService;
-import org.apache.hive.service.rpc.thrift.TSessionHandle;
+import org.apache.spark.sql.service.rpc.thrift.TCLIService;
+import org.apache.spark.sql.service.rpc.thrift.TSessionHandle;
 
 /**
  * HivePreparedStatement.
