@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.spark.sql.service
+package org.apache.spark.sql.jdbc
 
 import java.io.File
 import java.sql.{DriverManager, SQLException, Statement, Timestamp}
@@ -33,6 +33,7 @@ import org.apache.spark.sql.catalyst.analysis.NoSuchTableException
 import org.apache.spark.sql.catalyst.util.fileToString
 import org.apache.spark.sql.execution.HiveResult
 import org.apache.spark.sql.internal.SQLConf
+import org.apache.spark.sql.service.SparkThriftServer2
 import org.apache.spark.sql.types._
 
 /**
@@ -293,7 +294,7 @@ class ThriftServerQueryTestSuite extends SQLQueryTestSuite {
 
     val serverPort = hiveServer2.getHiveConf.get(ConfVars.HIVE_SERVER2_THRIFT_PORT.varname)
     val connections =
-      fs.map { _ => DriverManager.getConnection(s"jdbc:hive2://localhost:$serverPort", user, "") }
+      fs.map { _ => DriverManager.getConnection(s"jdbc:spark://localhost:$serverPort", user, "") }
     val statements = connections.map(_.createStatement())
 
     try {

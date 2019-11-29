@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.spark.sql.service
+package org.apache.spark.sql.jdbc
 
 import java.io.{File, FilenameFilter}
 import java.net.URL
@@ -33,7 +33,6 @@ import scala.util.{Random, Try}
 
 import com.google.common.io.Files
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars
-import org.apache.hive.jdbc.HiveDriver
 import org.apache.thrift.protocol.TBinaryProtocol
 import org.apache.thrift.transport.TSocket
 import org.scalatest.BeforeAndAfterAll
@@ -43,10 +42,17 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.sql.hive.HiveUtils
 import org.apache.spark.sql.hive.test.HiveTestJars
 import org.apache.spark.sql.internal.StaticSQLConf.HIVE_THRIFT_SERVER_SINGLESESSION
+import org.apache.spark.sql.service.SparkThriftServer2
+import org.apache.spark.sql.service.auth.PlainSaslHelper
+import org.apache.spark.sql.service.cli.FetchOrientation
+import org.apache.spark.sql.service.cli.FetchType
+import org.apache.spark.sql.service.cli.GetInfoType
+import org.apache.spark.sql.service.cli.RowSet
 import org.apache.spark.sql.service.cli.thrift.ThriftCLIServiceClient
 import org.apache.spark.sql.service.rpc.thrift.TCLIService.Client
 import org.apache.spark.sql.test.ProcessTestUtils.ProcessOutputCapturer
-import org.apache.spark.util.{ThreadUtils, Utils}
+import org.apache.spark.util.{Utils => SparkUtils}
+import org.apache.spark.util.ThreadUtils
 
 object TestData {
   def getTestDataFilePath(name: String): URL = {
@@ -64,7 +70,7 @@ class HiveThriftBinaryServerSuite extends HiveThriftJdbcTest {
     // Transport creation logic below mimics HiveConnection.createBinaryTransport
     val rawTransport = new TSocket("localhost", serverPort)
     val user = System.getProperty("user.name")
-    val transport = auth.PlainSaslHelper.getPlainTransport(user, "anonymous", rawTransport)
+    val transport = PlainSaslHelper.getPlainTransport(user, "anonymous", rawTransport)
     val protocol = new TBinaryProtocol(transport)
     val client = new ThriftCLIServiceClient(new Client(protocol))
 
@@ -78,15 +84,15 @@ class HiveThriftBinaryServerSuite extends HiveThriftJdbcTest {
       val sessionHandle = client.openSession(user, "")
 
       assertResult("Spark SQL", "Wrong GetInfo(CLI_DBMS_NAME) result") {
-        client.getInfo(sessionHandle, cli.GetInfoType.CLI_DBMS_NAME).getStringValue
+        client.getInfo(sessionHandle, GetInfoType.CLI_DBMS_NAME).getStringValue
       }
 
       assertResult("Spark SQL", "Wrong GetInfo(CLI_SERVER_NAME) result") {
-        client.getInfo(sessionHandle, cli.GetInfoType.CLI_SERVER_NAME).getStringValue
+        client.getInfo(sessionHandle, GetInfoType.CLI_SERVER_NAME).getStringValue
       }
 
       assertResult(true, "Spark version shouldn't be \"Unknown\"") {
-        val version = client.getInfo(sessionHandle, cli.GetInfoType.CLI_DBMS_VER).getStringValue
+        val version = client.getInfo(sessionHandle, GetInfoType.CLI_DBMS_VER).getStringValue
         logInfo(s"Spark version: $version")
         version != "Unknown"
       }
@@ -115,9 +121,9 @@ class HiveThriftBinaryServerSuite extends HiveThriftJdbcTest {
 
           val rows_next = client.fetchResults(
             operationHandle,
-            cli.FetchOrientation.FETCH_NEXT,
+            FetchOrientation.FETCH_NEXT,
             1000,
-            cli.FetchType.QUERY_OUTPUT)
+            FetchType.QUERY_OUTPUT)
 
           rows_next.numRows()
         }
@@ -127,9 +133,9 @@ class HiveThriftBinaryServerSuite extends HiveThriftJdbcTest {
 
           val rows_first = client.fetchResults(
             operationHandle,
-            cli.FetchOrientation.FETCH_FIRST,
+            FetchOrientation.FETCH_FIRST,
             1000,
-            cli.FetchType.QUERY_OUTPUT)
+            FetchType.QUERY_OUTPUT)
 
           rows_first.numRows()
         }
@@ -621,7 +627,7 @@ class HiveThriftBinaryServerSuite extends HiveThriftJdbcTest {
     val expectedLine =
       "Operation log root directory is created: " + operationLogPath.getAbsoluteFile
     val bufferSrc = Source.fromFile(logPath)
-    Utils.tryWithSafeFinally {
+    SparkUtils.tryWithSafeFinally {
       assert(bufferSrc.getLines().exists(_.contains(expectedLine)))
     } {
       bufferSrc.close()
@@ -686,7 +692,7 @@ class HiveThriftBinaryServerSuite extends HiveThriftJdbcTest {
   }
 
   test("ThriftCLIService FetchResults FETCH_FIRST, FETCH_NEXT, FETCH_PRIOR") {
-    def checkResult(rows: cli.RowSet, start: Long, end: Long): Unit = {
+    def checkResult(rows: RowSet, start: Long, end: Long): Unit = {
       assert(rows.getStartOffset() == start)
       assert(rows.numRows() == end - start)
       rows.iterator.asScala.zip((start until end).iterator).foreach { case (row, v) =>
@@ -703,67 +709,67 @@ class HiveThriftBinaryServerSuite extends HiveThriftJdbcTest {
         sessionHandle,
         "SELECT * FROM range(10)",
         confOverlay) // 10 rows result with sequence 0, 1, 2, ..., 9
-      var rows: cli.RowSet = null
+      var rows: RowSet = null
 
       // Fetch 5 rows with FETCH_NEXT
       rows = client.fetchResults(
-        operationHandle, cli.FetchOrientation.FETCH_NEXT, 5, cli.FetchType.QUERY_OUTPUT)
+        operationHandle, FetchOrientation.FETCH_NEXT, 5, FetchType.QUERY_OUTPUT)
       checkResult(rows, 0, 5) // fetched [0, 5)
 
       // Fetch another 2 rows with FETCH_NEXT
       rows = client.fetchResults(
-        operationHandle, cli.FetchOrientation.FETCH_NEXT, 2, cli.FetchType.QUERY_OUTPUT)
+        operationHandle, FetchOrientation.FETCH_NEXT, 2, FetchType.QUERY_OUTPUT)
       checkResult(rows, 5, 7) // fetched [5, 7)
 
       // FETCH_PRIOR 3 rows
       rows = client.fetchResults(
-        operationHandle, cli.FetchOrientation.FETCH_PRIOR, 3, cli.FetchType.QUERY_OUTPUT)
+        operationHandle, FetchOrientation.FETCH_PRIOR, 3, FetchType.QUERY_OUTPUT)
       checkResult(rows, 2, 5) // fetched [2, 5)
 
       // FETCH_PRIOR again will scroll back to 0, and then the returned result
       // may overlap the results of previous FETCH_PRIOR
       rows = client.fetchResults(
-        operationHandle, cli.FetchOrientation.FETCH_PRIOR, 3, cli.FetchType.QUERY_OUTPUT)
+        operationHandle, FetchOrientation.FETCH_PRIOR, 3, FetchType.QUERY_OUTPUT)
       checkResult(rows, 0, 3) // fetched [0, 3)
 
       // FETCH_PRIOR again will stay at 0
       rows = client.fetchResults(
-        operationHandle, cli.FetchOrientation.FETCH_PRIOR, 4, cli.FetchType.QUERY_OUTPUT)
+        operationHandle, FetchOrientation.FETCH_PRIOR, 4, FetchType.QUERY_OUTPUT)
       checkResult(rows, 0, 4) // fetched [0, 4)
 
       // FETCH_NEXT will continue moving forward from offset 4
       rows = client.fetchResults(
-        operationHandle, cli.FetchOrientation.FETCH_NEXT, 10, cli.FetchType.QUERY_OUTPUT)
+        operationHandle, FetchOrientation.FETCH_NEXT, 10, FetchType.QUERY_OUTPUT)
       checkResult(rows, 4, 10) // fetched [4, 10) until the end of results
 
       // FETCH_NEXT is at end of results
       rows = client.fetchResults(
-        operationHandle, cli.FetchOrientation.FETCH_NEXT, 5, cli.FetchType.QUERY_OUTPUT)
+        operationHandle, FetchOrientation.FETCH_NEXT, 5, FetchType.QUERY_OUTPUT)
       checkResult(rows, 10, 10) // fetched empty [10, 10) (at end of results)
 
       // FETCH_NEXT is at end of results again
       rows = client.fetchResults(
-        operationHandle, cli.FetchOrientation.FETCH_NEXT, 2, cli.FetchType.QUERY_OUTPUT)
+        operationHandle, FetchOrientation.FETCH_NEXT, 2, FetchType.QUERY_OUTPUT)
       checkResult(rows, 10, 10) // fetched empty [10, 10) (at end of results)
 
       // FETCH_PRIOR 1 rows yet again
       rows = client.fetchResults(
-        operationHandle, cli.FetchOrientation.FETCH_PRIOR, 1, cli.FetchType.QUERY_OUTPUT)
+        operationHandle, FetchOrientation.FETCH_PRIOR, 1, FetchType.QUERY_OUTPUT)
       checkResult(rows, 9, 10) // fetched [9, 10)
 
       // FETCH_NEXT will return 0 yet again
       rows = client.fetchResults(
-        operationHandle, cli.FetchOrientation.FETCH_NEXT, 5, cli.FetchType.QUERY_OUTPUT)
+        operationHandle, FetchOrientation.FETCH_NEXT, 5, FetchType.QUERY_OUTPUT)
       checkResult(rows, 10, 10) // fetched empty [10, 10) (at end of results)
 
       // FETCH_FIRST results from first row
       rows = client.fetchResults(
-        operationHandle, cli.FetchOrientation.FETCH_FIRST, 3, cli.FetchType.QUERY_OUTPUT)
+        operationHandle, FetchOrientation.FETCH_FIRST, 3, FetchType.QUERY_OUTPUT)
       checkResult(rows, 0, 3) // fetch [0, 3)
 
       // Fetch till the end rows with FETCH_NEXT"
       rows = client.fetchResults(
-        operationHandle, cli.FetchOrientation.FETCH_NEXT, 1000, cli.FetchType.QUERY_OUTPUT)
+        operationHandle, FetchOrientation.FETCH_NEXT, 1000, FetchType.QUERY_OUTPUT)
       checkResult(rows, 3, 10) // fetched [3, 10)
 
       client.closeOperation(operationHandle)
@@ -915,17 +921,17 @@ object ServerMode extends Enumeration {
 }
 
 abstract class HiveThriftJdbcTest extends SparkThriftServer2Test {
-  Utils.classForName(classOf[HiveDriver].getCanonicalName)
+  SparkUtils.classForName(classOf[HiveDriver].getCanonicalName)
 
   private def jdbcUri = if (mode == ServerMode.http) {
-    s"""jdbc:hive2://localhost:$serverPort/
+    s"""jdbc:spark://localhost:$serverPort/
        |default?
        |hive.server2.transport.mode=http;
        |hive.server2.thrift.http.path=cliservice;
        |${hiveConfList}#${hiveVarList}
      """.stripMargin.split("\n").mkString.trim
   } else {
-    s"jdbc:hive2://localhost:$serverPort/?${hiveConfList}#${hiveVarList}"
+    s"jdbc:spark://localhost:$serverPort/?${hiveConfList}#${hiveVarList}"
   }
 
   def withMultipleConnectionJdbcStatement(tableNames: String*)(fs: (Statement => Unit)*): Unit = {
@@ -992,7 +998,7 @@ abstract class SparkThriftServer2Test extends SparkFunSuite with BeforeAndAfterA
   protected var metastorePath: File = _
   protected def metastoreJdbcUri = s"jdbc:derby:;databaseName=$metastorePath;create=true"
 
-  private val pidDir: File = Utils.createTempDir(namePrefix = "thriftserver-pid")
+  private val pidDir: File = SparkUtils.createTempDir(namePrefix = "thriftserver-pid")
   protected var logPath: File = _
   protected var operationLogPath: File = _
   protected var lScratchDir: File = _
@@ -1011,7 +1017,7 @@ abstract class SparkThriftServer2Test extends SparkFunSuite with BeforeAndAfterA
     val driverClassPath = {
       // Writes a temporary log4j.properties and prepend it to driver classpath, so that it
       // overrides all other potential log4j configurations contained in other dependency jar files.
-      val tempLog4jConf = Utils.createTempDir().getCanonicalPath
+      val tempLog4jConf = SparkUtils.createTempDir().getCanonicalPath
 
       Files.write(
         """log4j.rootCategory=DEBUG, console
@@ -1057,13 +1063,13 @@ abstract class SparkThriftServer2Test extends SparkFunSuite with BeforeAndAfterA
   val SERVER_STARTUP_TIMEOUT = 3.minutes
 
   private def startThriftServer(port: Int, attempt: Int) = {
-    warehousePath = Utils.createTempDir()
+    warehousePath = SparkUtils.createTempDir()
     warehousePath.delete()
-    metastorePath = Utils.createTempDir()
+    metastorePath = SparkUtils.createTempDir()
     metastorePath.delete()
-    operationLogPath = Utils.createTempDir()
+    operationLogPath = SparkUtils.createTempDir()
     operationLogPath.delete()
-    lScratchDir = Utils.createTempDir()
+    lScratchDir = SparkUtils.createTempDir()
     lScratchDir.delete()
     logPath = null
     logTailingProcess = null
@@ -1081,7 +1087,7 @@ abstract class SparkThriftServer2Test extends SparkFunSuite with BeforeAndAfterA
     logInfo(s"Trying to start HiveThriftServer2: port=$port, mode=$mode, attempt=$attempt")
 
     logPath = {
-      val lines = Utils.executeAndGetOutput(
+      val lines = SparkUtils.executeAndGetOutput(
         command = command,
         extraEnvironment = Map(
           // Disables SPARK_TESTING to exclude log4j.properties in test directories.
@@ -1134,7 +1140,7 @@ abstract class SparkThriftServer2Test extends SparkFunSuite with BeforeAndAfterA
 
   private def stopThriftServer(): Unit = {
     // The `spark-daemon.sh' script uses kill, which is not synchronous, have to wait for a while.
-    Utils.executeAndGetOutput(
+    SparkUtils.executeAndGetOutput(
       command = Seq(stopScript),
       extraEnvironment = Map("SPARK_PID_DIR" -> pidDir.getCanonicalPath))
     Thread.sleep(3.seconds.toMillis)

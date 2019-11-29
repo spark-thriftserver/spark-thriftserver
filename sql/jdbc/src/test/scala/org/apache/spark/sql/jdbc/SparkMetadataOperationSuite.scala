@@ -15,9 +15,11 @@
  * limitations under the License.
  */
 
-package org.apache.spark.sql.service
+package org.apache.spark.sql.jdbc
 
 import java.sql.{DatabaseMetaData, ResultSet}
+
+import org.apache.spark.sql.service.ThriftserverShimUtils
 
 class SparkMetadataOperationSuite extends HiveThriftJdbcTest {
 

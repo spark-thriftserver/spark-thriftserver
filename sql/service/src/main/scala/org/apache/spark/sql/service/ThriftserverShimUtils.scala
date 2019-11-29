@@ -24,9 +24,9 @@ import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion._
 /**
  * Various utilities for hive-thriftserver used to upgrade the built-in Hive.
  */
-private[service] object ThriftserverShimUtils {
+private[spark] object ThriftserverShimUtils {
 
-  private[service] def supportedType(): Seq[Type] = {
+  private[spark] def supportedType(): Seq[Type] = {
     Seq(NULL_TYPE, BOOLEAN_TYPE, STRING_TYPE, BINARY_TYPE,
       TINYINT_TYPE, SMALLINT_TYPE, INT_TYPE, BIGINT_TYPE,
       FLOAT_TYPE, DOUBLE_TYPE, DECIMAL_TYPE,
@@ -34,7 +34,7 @@ private[service] object ThriftserverShimUtils {
       ARRAY_TYPE, MAP_TYPE, STRUCT_TYPE)
   }
 
-  private[service] val testedProtocolVersions = Seq(
+  private[spark] val testedProtocolVersions = Seq(
     HIVE_CLI_SERVICE_PROTOCOL_V1,
     HIVE_CLI_SERVICE_PROTOCOL_V2,
     HIVE_CLI_SERVICE_PROTOCOL_V3,

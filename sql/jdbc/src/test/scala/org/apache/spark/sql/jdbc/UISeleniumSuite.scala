@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.spark.sql.service
+package org.apache.spark.sql.jdbc
 
 import scala.util.Random
 
@@ -27,6 +27,7 @@ import org.scalatest.concurrent.Eventually._
 import org.scalatest.time.SpanSugar._
 import org.scalatestplus.selenium.WebBrowser
 
+import org.apache.spark.sql.service.SparkThriftServer2
 import org.apache.spark.ui.SparkUICssErrorHandler
 
 class UISeleniumSuite
