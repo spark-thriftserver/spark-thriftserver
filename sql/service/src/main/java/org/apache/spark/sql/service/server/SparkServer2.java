@@ -43,17 +43,17 @@ import org.slf4j.LoggerFactory;
 import org.apache.spark.util.ShutdownHookManager;
 
 /**
- * HiveServer2.
+ * SparkServer2.
  *
  */
-public class HiveServer2 extends CompositeService {
-  private static final Logger LOG = LoggerFactory.getLogger(HiveServer2.class);
+public class SparkServer2 extends CompositeService {
+  private static final Logger LOG = LoggerFactory.getLogger(SparkServer2.class);
 
   private CLIService cliService;
   private ThriftCLIService thriftCLIService;
 
-  public HiveServer2() {
-    super(HiveServer2.class.getSimpleName());
+  public SparkServer2() {
+    super(SparkServer2.class.getSimpleName());
     HiveConf.setLoadHiveServer2Config(true);
   }
 
@@ -107,19 +107,19 @@ public class HiveServer2 extends CompositeService {
 
   @Override
   public synchronized void stop() {
-    LOG.info("Shutting down HiveServer2");
+    LOG.info("Shutting down SparkServer2");
     super.stop();
   }
 
-  private static void startHiveServer2() throws Throwable {
+  private static void startSparkServer2() throws Throwable {
     long attempts = 0, maxAttempts = 1;
     while (true) {
-      LOG.info("Starting HiveServer2");
+      LOG.info("Starting SparkServer2");
       HiveConf hiveConf = new HiveConf();
       maxAttempts = hiveConf.getLongVar(HiveConf.ConfVars.HIVE_SERVER2_MAX_START_ATTEMPTS);
-      HiveServer2 server = null;
+      SparkServer2 server = null;
       try {
-        server = new HiveServer2();
+        server = new SparkServer2();
         server.init(hiveConf);
         server.start();
         break;
@@ -128,7 +128,7 @@ public class HiveServer2 extends CompositeService {
           try {
             server.stop();
           } catch (Throwable t) {
-            LOG.info("Exception caught when calling stop of HiveServer2 before retrying start", t);
+            LOG.info("Exception caught when calling stop of SparkServer2 before retrying start", t);
           } finally {
             server = null;
           }
@@ -136,7 +136,7 @@ public class HiveServer2 extends CompositeService {
         if (++attempts >= maxAttempts) {
           throw new Error("Max start attempts " + maxAttempts + " exhausted", throwable);
         } else {
-          LOG.warn("Error starting HiveServer2 on attempt " + attempts
+          LOG.warn("Error starting SparkServer2 on attempt " + attempts
               + ", will retry in 60 seconds", throwable);
           try {
             Thread.sleep(60L * 1000L);
@@ -151,7 +151,7 @@ public class HiveServer2 extends CompositeService {
   public static void main(String[] args) {
     HiveConf.setLoadHiveServer2Config(true);
     try {
-      ServerOptionsProcessor oproc = new ServerOptionsProcessor("hiveserver2");
+      ServerOptionsProcessor oproc = new ServerOptionsProcessor("sparkserver2");
       ServerOptionsProcessorResponse oprocResponse = oproc.parse(args);
 
       // NOTE: It is critical to do this here so that log4j is reinitialized
@@ -172,7 +172,7 @@ public class HiveServer2 extends CompositeService {
 
   /**
    * ServerOptionsProcessor.
-   * Process arguments given to HiveServer2 (-hiveconf property=value)
+   * Process arguments given to SparkServer2 (-hiveconf property=value)
    * Set properties in System properties
    * Create an appropriate response object,
    * which has executor to execute the appropriate command based on the parsed options.
@@ -215,7 +215,7 @@ public class HiveServer2 extends CompositeService {
         }
       } catch (ParseException e) {
         // Error out & exit - we were not able to parse the args successfully
-        System.err.println("Error starting HiveServer2 with given arguments: ");
+        System.err.println("Error starting SparkServer2 with given arguments: ");
         System.err.println(e.getMessage());
         System.exit(-1);
       }
@@ -244,7 +244,7 @@ public class HiveServer2 extends CompositeService {
   }
 
   /**
-   * The executor interface for running the appropriate HiveServer2 command based on parsed options
+   * The executor interface for running the appropriate SparkServer2 command based on parsed options
    */
   interface ServerOptionsExecutor {
     void execute();
@@ -270,16 +270,16 @@ public class HiveServer2 extends CompositeService {
   }
 
   /**
-   * StartOptionExecutor: starts HiveServer2.
+   * StartOptionExecutor: starts SparkServer2.
    * This is the default executor, when no option is specified.
    */
   static class StartOptionExecutor implements ServerOptionsExecutor {
     @Override
     public void execute() {
       try {
-        startHiveServer2();
+        startSparkServer2();
       } catch (Throwable t) {
-        LOG.error("Error starting HiveServer2", t);
+        LOG.error("Error starting SparkServer2", t);
         System.exit(-1);
       }
     }

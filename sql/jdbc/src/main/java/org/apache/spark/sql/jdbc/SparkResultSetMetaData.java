@@ -26,17 +26,17 @@ import java.util.List;
 import org.apache.spark.sql.service.cli.Type;
 
 /**
- * HiveResultSetMetaData.
+ * SparkResultSetMetaData.
  *
  */
-public class HiveResultSetMetaData implements java.sql.ResultSetMetaData {
+public class SparkResultSetMetaData implements java.sql.ResultSetMetaData {
   private final List<String> columnNames;
   private final List<String> columnTypes;
   private final List<JdbcColumnAttributes> columnAttributes;
 
-  public HiveResultSetMetaData(List<String> columnNames,
-      List<String> columnTypes,
-      List<JdbcColumnAttributes> columnAttributes) {
+  public SparkResultSetMetaData(List<String> columnNames,
+                                List<String> columnTypes,
+                                List<JdbcColumnAttributes> columnAttributes) {
     this.columnNames = columnNames;
     this.columnTypes = columnTypes;
     this.columnAttributes = columnAttributes;

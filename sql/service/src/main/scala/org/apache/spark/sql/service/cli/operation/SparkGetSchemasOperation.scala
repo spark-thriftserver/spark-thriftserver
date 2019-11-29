@@ -27,20 +27,20 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.service.SparkThriftServer2
 import org.apache.spark.sql.service.cli._
-import org.apache.spark.sql.service.cli.session.HiveSession
+import org.apache.spark.sql.service.cli.session.ServiceSession
 import org.apache.spark.util.{Utils => SparkUtils}
 
 /**
  * Spark's own GetSchemasOperation
  *
  * @param sqlContext SQLContext to use
- * @param parentSession a HiveSession from SessionManager
+ * @param parentSession a ServiceSession from SessionManager
  * @param catalogName catalog name. null if not applicable.
  * @param schemaName database name, null or a concrete database name
  */
 private[service] class SparkGetSchemasOperation(
     sqlContext: SQLContext,
-    parentSession: HiveSession,
+    parentSession: ServiceSession,
     catalogName: String,
     schemaName: String)
   extends SparkMetadataOperation(parentSession, OperationType.GET_SCHEMAS) with Logging {
@@ -99,7 +99,7 @@ private[service] class SparkGetSchemasOperation(
         logError(s"Error executing get schemas operation with $statementId", e)
         setState(OperationState.ERROR)
         e match {
-          case hiveException: HiveSQLException =>
+          case hiveException: ServiceSQLException =>
             SparkThriftServer2.listener.onStatementError(
               statementId, hiveException.getMessage, SparkUtils.exceptionString(hiveException))
             throw hiveException
@@ -107,7 +107,7 @@ private[service] class SparkGetSchemasOperation(
             val root = ExceptionUtils.getRootCause(e)
             SparkThriftServer2.listener.onStatementError(
               statementId, root.getMessage, SparkUtils.exceptionString(root))
-            throw new HiveSQLException("Error getting schemas: " + root.toString, root)
+            throw new ServiceSQLException("Error getting schemas: " + root.toString, root)
         }
     }
     SparkThriftServer2.listener.onStatementFinish(statementId)

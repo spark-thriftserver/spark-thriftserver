@@ -28,21 +28,15 @@ import java.util.concurrent.TimeUnit;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.OperationLog;
-import org.apache.spark.sql.service.cli.FetchOrientation;
-import org.apache.spark.sql.service.cli.HiveSQLException;
-import org.apache.spark.sql.service.cli.OperationHandle;
-import org.apache.spark.sql.service.cli.OperationState;
-import org.apache.spark.sql.service.cli.OperationStatus;
-import org.apache.spark.sql.service.cli.OperationType;
-import org.apache.spark.sql.service.cli.RowSet;
-import org.apache.spark.sql.service.cli.TableSchema;
-import org.apache.spark.sql.service.cli.session.HiveSession;
+import org.apache.spark.sql.service.cli.*;
+import org.apache.spark.sql.service.cli.ServiceSQLException;
+import org.apache.spark.sql.service.cli.session.ServiceSession;
 import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class Operation {
-  protected final HiveSession parentSession;
+  protected final ServiceSession parentSession;
   private OperationState state = OperationState.INITIALIZED;
   private final OperationHandle opHandle;
   private HiveConf configuration;
@@ -50,7 +44,7 @@ public abstract class Operation {
   public static final FetchOrientation DEFAULT_FETCH_ORIENTATION = FetchOrientation.FETCH_NEXT;
   public static final long DEFAULT_FETCH_MAX_ROWS = 100;
   protected boolean hasResultSet;
-  protected volatile HiveSQLException operationException;
+  protected volatile ServiceSQLException operationException;
   protected final boolean runAsync;
   protected volatile Future<?> backgroundHandle;
   protected OperationLog operationLog;
@@ -66,17 +60,19 @@ public abstract class Operation {
           FetchOrientation.FETCH_FIRST,
           FetchOrientation.FETCH_PRIOR);
 
-  protected Operation(HiveSession parentSession, OperationType opType) {
+  protected Operation(ServiceSession parentSession, OperationType opType) {
     this(parentSession, null, opType);
   }
 
-  protected Operation(HiveSession parentSession, Map<String, String> confOverlay,
-      OperationType opType) {
+  protected Operation(ServiceSession parentSession, Map<String, String> confOverlay,
+                      OperationType opType) {
     this(parentSession, confOverlay, opType, false);
   }
 
-  protected Operation(HiveSession parentSession,
-      Map<String, String> confOverlay, OperationType opType, boolean runInBackground) {
+  protected Operation(ServiceSession parentSession,
+                      Map<String, String> confOverlay,
+                      OperationType opType,
+                      boolean runInBackground) {
     this.parentSession = parentSession;
     this.confOverlay = confOverlay;
     this.runAsync = runInBackground;
@@ -106,7 +102,7 @@ public abstract class Operation {
     return new HiveConf(configuration);
   }
 
-  public HiveSession getParentSession() {
+  public ServiceSession getParentSession() {
     return parentSession;
   }
 
@@ -139,7 +135,7 @@ public abstract class Operation {
     return operationLog;
   }
 
-  protected final OperationState setState(OperationState newState) throws HiveSQLException {
+  protected final OperationState setState(OperationState newState) throws ServiceSQLException {
     state.validateTransition(newState);
     this.state = newState;
     this.lastAccessTime = System.currentTimeMillis();
@@ -169,13 +165,13 @@ public abstract class Operation {
     this.operationTimeout = operationTimeout;
   }
 
-  protected void setOperationException(HiveSQLException operationException) {
+  protected void setOperationException(ServiceSQLException operationException) {
     this.operationException = operationException;
   }
 
-  protected final void assertState(OperationState state) throws HiveSQLException {
+  protected final void assertState(OperationState state) throws ServiceSQLException {
     if (this.state != state) {
-      throw new HiveSQLException("Expected state " + state + ", but found " + this.state);
+      throw new ServiceSQLException("Expected state " + state + ", but found " + this.state);
     }
     this.lastAccessTime = System.currentTimeMillis();
   }
@@ -265,11 +261,11 @@ public abstract class Operation {
 
   /**
    * Implemented by subclass of Operation class to execute specific behaviors.
-   * @throws HiveSQLException
+   * @throws ServiceSQLException
    */
-  protected abstract void runInternal() throws HiveSQLException;
+  protected abstract void runInternal() throws ServiceSQLException;
 
-  public void run() throws HiveSQLException {
+  public void run() throws ServiceSQLException {
     beforeRun();
     try {
       runInternal();
@@ -290,29 +286,29 @@ public abstract class Operation {
   }
 
   // TODO: make this abstract and implement in subclasses.
-  public void cancel() throws HiveSQLException {
+  public void cancel() throws ServiceSQLException {
     setState(OperationState.CANCELED);
     throw new UnsupportedOperationException("SQLOperation.cancel()");
   }
 
-  public abstract void close() throws HiveSQLException;
+  public abstract void close() throws ServiceSQLException;
 
-  public abstract TableSchema getResultSetSchema() throws HiveSQLException;
+  public abstract TableSchema getResultSetSchema() throws ServiceSQLException;
 
   public abstract RowSet getNextRowSet(FetchOrientation orientation, long maxRows)
-      throws HiveSQLException;
+      throws ServiceSQLException;
 
-  public RowSet getNextRowSet() throws HiveSQLException {
+  public RowSet getNextRowSet() throws ServiceSQLException {
     return getNextRowSet(FetchOrientation.FETCH_NEXT, DEFAULT_FETCH_MAX_ROWS);
   }
 
   /**
    * Verify if the given fetch orientation is part of the default orientation types.
    * @param orientation
-   * @throws HiveSQLException
+   * @throws ServiceSQLException
    */
   protected void validateDefaultFetchOrientation(FetchOrientation orientation)
-      throws HiveSQLException {
+      throws ServiceSQLException {
     validateFetchOrientation(orientation, DEFAULT_FETCH_ORIENTATION_SET);
   }
 
@@ -320,18 +316,18 @@ public abstract class Operation {
    * Verify if the given fetch orientation is part of the supported orientation types.
    * @param orientation
    * @param supportedOrientations
-   * @throws HiveSQLException
+   * @throws ServiceSQLException
    */
   protected void validateFetchOrientation(FetchOrientation orientation,
-      EnumSet<FetchOrientation> supportedOrientations) throws HiveSQLException {
+      EnumSet<FetchOrientation> supportedOrientations) throws ServiceSQLException {
     if (!supportedOrientations.contains(orientation)) {
-      throw new HiveSQLException("The fetch type " + orientation.toString() +
+      throw new ServiceSQLException("The fetch type " + orientation.toString() +
           " is not supported for this resultset", "HY106");
     }
   }
 
-  protected HiveSQLException toSQLException(String prefix, CommandProcessorResponse response) {
-    HiveSQLException ex = new HiveSQLException(prefix + ": " + response.getErrorMessage(),
+  protected ServiceSQLException toSQLException(String prefix, CommandProcessorResponse response) {
+    ServiceSQLException ex = new ServiceSQLException(prefix + ": " + response.getErrorMessage(),
         response.getSQLState(), response.getResponseCode());
     if (response.getException() != null) {
       ex.initCause(response.getException());

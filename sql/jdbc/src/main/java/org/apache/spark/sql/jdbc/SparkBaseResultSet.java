@@ -55,7 +55,7 @@ import org.apache.spark.sql.service.cli.TableSchema;
  * Data independent base class which implements the common part of
  * all Hive result sets.
  */
-public abstract class HiveBaseResultSet implements ResultSet {
+public abstract class SparkBaseResultSet implements ResultSet {
 
   protected Statement statement = null;
   protected SQLWarning warningChain = null;
@@ -382,7 +382,7 @@ public abstract class HiveBaseResultSet implements ResultSet {
   }
 
   public ResultSetMetaData getMetaData() throws SQLException {
-    return new HiveResultSetMetaData(columnNames, columnTypes, columnAttributes);
+    return new SparkResultSetMetaData(columnNames, columnTypes, columnAttributes);
   }
 
   public Reader getNCharacterStream(int arg0) throws SQLException {

@@ -28,9 +28,9 @@ import java.io.File;
 
 /**
  * Methods that don't need to be executed under a doAs
- * context are here. Rest of them in HiveSession interface
+ * context are here. Rest of them in ServiceSession interface
  */
-public interface HiveSessionBase {
+public interface ServiceSessionBase {
 
   TProtocolVersion getProtocolVersion();
 

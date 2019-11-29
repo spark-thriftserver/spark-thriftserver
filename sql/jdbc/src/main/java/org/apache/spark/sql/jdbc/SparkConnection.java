@@ -106,11 +106,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * HiveConnection.
+ * SparkConnection.
  *
  */
-public class HiveConnection implements java.sql.Connection {
-  public static final Logger LOG = LoggerFactory.getLogger(HiveConnection.class.getName());
+public class SparkConnection implements java.sql.Connection {
+  public static final Logger LOG = LoggerFactory.getLogger(SparkConnection.class.getName());
 
   private String jdbcUriString;
   private String host;
@@ -128,10 +128,10 @@ public class HiveConnection implements java.sql.Connection {
   private final List<TProtocolVersion> supportedProtocols = new LinkedList<TProtocolVersion>();
   private int loginTimeout = 0;
   private TProtocolVersion protocol;
-  private int fetchSize = HiveStatement.DEFAULT_FETCH_SIZE;
+  private int fetchSize = SparkStatement.DEFAULT_FETCH_SIZE;
   private String initFile = null;
 
-  public HiveConnection(String uri, Properties info) throws SQLException {
+  public SparkConnection(String uri, Properties info) throws SQLException {
     setupLoginTimeout();
     try {
       connParams = Utils.parseURL(uri, info);
@@ -493,14 +493,14 @@ public class HiveConnection implements java.sql.Connection {
         JdbcConnectionParams.SSL_TRUST_STORE_PASSWORD);
 
       if (sslTrustStore == null || sslTrustStore.isEmpty()) {
-        transport = HiveAuthUtils.getSSLSocket(host, port, loginTimeout);
+        transport = SparkAuthUtils.getSSLSocket(host, port, loginTimeout);
       } else {
-        transport = HiveAuthUtils.getSSLSocket(host, port, loginTimeout,
+        transport = SparkAuthUtils.getSSLSocket(host, port, loginTimeout,
             sslTrustStore, sslTrustStorePassword);
       }
     } else {
       // get non-SSL socket transport
-      transport = HiveAuthUtils.getSocketTransport(host, port, loginTimeout);
+      transport = SparkAuthUtils.getSocketTransport(host, port, loginTimeout);
     }
     return transport;
   }
@@ -623,7 +623,7 @@ public class HiveConnection implements java.sql.Connection {
       // check delegation token in job conf if any
       try {
         tokenStr = org.apache.hadoop.hive.shims.Utils
-            .getTokenStrForm(HiveAuthFactory.HS2_CLIENT_TOKEN);
+            .getTokenStrForm(SparkAuthFactory.HS2_CLIENT_TOKEN);
       } catch (IOException e) {
         throw new SQLException("Error reading token ", e);
       }
@@ -651,9 +651,9 @@ public class HiveConnection implements java.sql.Connection {
 
     // set the session configuration
     Map<String, String> sessVars = connParams.getSessionVars();
-    if (sessVars.containsKey(HiveAuthFactory.HS2_PROXY_USER)) {
-      openConf.put(HiveAuthFactory.HS2_PROXY_USER,
-          sessVars.get(HiveAuthFactory.HS2_PROXY_USER));
+    if (sessVars.containsKey(SparkAuthFactory.HS2_PROXY_USER)) {
+      openConf.put(SparkAuthFactory.HS2_PROXY_USER,
+          sessVars.get(SparkAuthFactory.HS2_PROXY_USER));
     }
     openReq.setConfiguration(openConf);
 
@@ -919,7 +919,7 @@ public class HiveConnection implements java.sql.Connection {
     if (isClosed) {
       throw new SQLException("Can't create Statement, connection is closed");
     }
-    return new HiveStatement(this, client, sessHandle, fetchSize);
+    return new SparkStatement(this, client, sessHandle, fetchSize);
   }
 
   /*
@@ -939,7 +939,7 @@ public class HiveConnection implements java.sql.Connection {
       throw new SQLException("Statement with resultset type " + resultSetType +
           " is not supported", "HYC00"); // Optional feature not implemented
     }
-    return new HiveStatement(this, client, sessHandle,
+    return new SparkStatement(this, client, sessHandle,
         resultSetType == ResultSet.TYPE_SCROLL_INSENSITIVE, fetchSize);
   }
 
@@ -1038,7 +1038,7 @@ public class HiveConnection implements java.sql.Connection {
     if (isClosed) {
       throw new SQLException("Connection is closed");
     }
-    return new HiveDatabaseMetaData(this, client, sessHandle);
+    return new SparkDatabaseMetaData(this, client, sessHandle);
   }
 
   public int getNetworkTimeout() throws SQLException {
@@ -1128,7 +1128,7 @@ public class HiveConnection implements java.sql.Connection {
     }
     boolean rc = false;
     try {
-      String productName = new HiveDatabaseMetaData(this, client, sessHandle)
+      String productName = new SparkDatabaseMetaData(this, client, sessHandle)
               .getDatabaseProductName();
       rc = true;
     } catch (SQLException e) {
@@ -1195,7 +1195,7 @@ public class HiveConnection implements java.sql.Connection {
 
   @Override
   public PreparedStatement prepareStatement(String sql) throws SQLException {
-    return new HivePreparedStatement(this, client, sessHandle, sql);
+    return new SparkPreparedStatement(this, client, sessHandle, sql);
   }
 
   /*
@@ -1207,7 +1207,7 @@ public class HiveConnection implements java.sql.Connection {
   @Override
   public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys)
       throws SQLException {
-    return new HivePreparedStatement(this, client, sessHandle, sql);
+    return new SparkPreparedStatement(this, client, sessHandle, sql);
   }
 
   /*
@@ -1246,7 +1246,7 @@ public class HiveConnection implements java.sql.Connection {
   @Override
   public PreparedStatement prepareStatement(String sql, int resultSetType,
       int resultSetConcurrency) throws SQLException {
-    return new HivePreparedStatement(this, client, sessHandle, sql);
+    return new SparkPreparedStatement(this, client, sessHandle, sql);
   }
 
   /*
@@ -1491,7 +1491,7 @@ public class HiveConnection implements java.sql.Connection {
   public static TCLIService.Iface newSynchronizedClient(
       TCLIService.Iface client) {
     return (TCLIService.Iface) Proxy.newProxyInstance(
-        HiveConnection.class.getClassLoader(),
+        SparkConnection.class.getClassLoader(),
       new Class [] { TCLIService.Iface.class },
       new SynchronizedHandler(client));
   }

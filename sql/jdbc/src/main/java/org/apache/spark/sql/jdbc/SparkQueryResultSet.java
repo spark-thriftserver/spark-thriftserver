@@ -57,12 +57,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * HiveQueryResultSet.
+ * SparkQueryResultSet.
  *
  */
-public class HiveQueryResultSet extends HiveBaseResultSet {
+public class SparkQueryResultSet extends SparkBaseResultSet {
 
-  public static final Logger LOG = LoggerFactory.getLogger(HiveQueryResultSet.class);
+  public static final Logger LOG = LoggerFactory.getLogger(SparkQueryResultSet.class);
 
   private TCLIService.Iface client;
   private TOperationHandle stmtHandle;
@@ -175,16 +175,16 @@ public class HiveQueryResultSet extends HiveBaseResultSet {
       return this;
     }
 
-    public HiveQueryResultSet build() throws SQLException {
-      return new HiveQueryResultSet(this);
+    public SparkQueryResultSet build() throws SQLException {
+      return new SparkQueryResultSet(this);
     }
 
     public TProtocolVersion getProtocolVersion() throws SQLException {
-      return ((HiveConnection)connection).getProtocol();
+      return ((SparkConnection)connection).getProtocol();
     }
   }
 
-  protected HiveQueryResultSet(Builder builder) throws SQLException {
+  protected SparkQueryResultSet(Builder builder) throws SQLException {
     this.statement = builder.statement;
     this.client = builder.client;
     this.stmtHandle = builder.stmtHandle;
@@ -305,11 +305,11 @@ public class HiveQueryResultSet extends HiveBaseResultSet {
 
   @Override
   public void close() throws SQLException {
-    if (this.statement != null && (this.statement instanceof HiveStatement)) {
-      HiveStatement s = (HiveStatement) this.statement;
+    if (this.statement != null && (this.statement instanceof SparkStatement)) {
+      SparkStatement s = (SparkStatement) this.statement;
       s.closeClientOperation();
     } else {
-      // for those stmtHandle passed from HiveDatabaseMetaData instead of Statement
+      // for those stmtHandle passed from SparkDatabaseMetaData instead of Statement
       closeOperationHandle(stmtHandle);
     }
 
@@ -351,11 +351,11 @@ public class HiveQueryResultSet extends HiveBaseResultSet {
 
     /**
      * Poll on the operation status, till the operation is complete.
-     * We need to wait only for HiveStatement to complete.
-     * HiveDatabaseMetaData which also uses this ResultSet returns only after the RPC is complete.
+     * We need to wait only for SparkStatement to complete.
+     * SparkDatabaseMetaData which also uses this ResultSet returns only after the RPC is complete.
      */
-    if ((statement != null) && (statement instanceof HiveStatement)) {
-      ((HiveStatement) statement).waitForOperationToComplete();
+    if ((statement != null) && (statement instanceof SparkStatement)) {
+      ((SparkStatement) statement).waitForOperationToComplete();
     }
 
     try {

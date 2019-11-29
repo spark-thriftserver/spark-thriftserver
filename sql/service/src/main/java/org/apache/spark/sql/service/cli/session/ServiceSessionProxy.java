@@ -19,7 +19,7 @@
 package org.apache.spark.sql.service.cli.session;
 
 /**
- * Proxy wrapper on HiveSession to execute operations
+ * Proxy wrapper on ServiceSession to execute operations
  * by impersonating given user
  */
 import java.lang.reflect.InvocationHandler;
@@ -31,35 +31,35 @@ import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.spark.sql.service.cli.HiveSQLException;
+import org.apache.spark.sql.service.cli.ServiceSQLException;
 
-public class HiveSessionProxy implements InvocationHandler {
-  private final HiveSession base;
+public class ServiceSessionProxy implements InvocationHandler {
+  private final ServiceSession base;
   private final UserGroupInformation ugi;
 
-  public HiveSessionProxy(HiveSession hiveSession, UserGroupInformation ugi) {
-    this.base = hiveSession;
+  public ServiceSessionProxy(ServiceSession serviceSession, UserGroupInformation ugi) {
+    this.base = serviceSession;
     this.ugi = ugi;
   }
 
-  public static HiveSession getProxy(HiveSession hiveSession, UserGroupInformation ugi)
-      throws IllegalArgumentException, HiveSQLException {
-    return (HiveSession)Proxy.newProxyInstance(HiveSession.class.getClassLoader(),
-        new Class<?>[] {HiveSession.class},
-        new HiveSessionProxy(hiveSession, ugi));
+  public static ServiceSession getProxy(ServiceSession serviceSession, UserGroupInformation ugi)
+      throws IllegalArgumentException, ServiceSQLException {
+    return (ServiceSession)Proxy.newProxyInstance(ServiceSession.class.getClassLoader(),
+        new Class<?>[] {ServiceSession.class},
+        new ServiceSessionProxy(serviceSession, ugi));
   }
 
   @Override
   public Object invoke(Object arg0, final Method method, final Object[] args)
       throws Throwable {
     try {
-      if (method.getDeclaringClass() == HiveSessionBase.class) {
+      if (method.getDeclaringClass() == ServiceSessionBase.class) {
         return invoke(method, args);
       }
       return ugi.doAs(
         new PrivilegedExceptionAction<Object>() {
           @Override
-          public Object run() throws HiveSQLException {
+          public Object run() throws ServiceSQLException {
             return invoke(method, args);
           }
         });
@@ -73,12 +73,12 @@ public class HiveSessionProxy implements InvocationHandler {
     }
   }
 
-  private Object invoke(final Method method, final Object[] args) throws HiveSQLException {
+  private Object invoke(final Method method, final Object[] args) throws ServiceSQLException {
     try {
       return method.invoke(base, args);
     } catch (InvocationTargetException e) {
-      if (e.getCause() instanceof HiveSQLException) {
-        throw (HiveSQLException)e.getCause();
+      if (e.getCause() instanceof ServiceSQLException) {
+        throw (ServiceSQLException)e.getCause();
       }
       throw new RuntimeException(e.getCause());
     } catch (IllegalArgumentException e) {

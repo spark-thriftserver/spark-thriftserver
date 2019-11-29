@@ -63,11 +63,11 @@ object TestData {
   val smallKvWithNull = getTestDataFilePath("small_kv_with_null.txt")
 }
 
-class HiveThriftBinaryServerSuite extends HiveThriftJdbcTest {
+class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
   override def mode: ServerMode.Value = ServerMode.binary
 
   private def withCLIServiceClient(f: ThriftCLIServiceClient => Unit): Unit = {
-    // Transport creation logic below mimics HiveConnection.createBinaryTransport
+    // Transport creation logic below mimics SparkConnection.createBinaryTransport
     val rawTransport = new TSocket("localhost", serverPort)
     val user = System.getProperty("user.name")
     val transport = PlainSaslHelper.getPlainTransport(user, "anonymous", rawTransport)
@@ -778,7 +778,7 @@ class HiveThriftBinaryServerSuite extends HiveThriftJdbcTest {
   }
 }
 
-class SingleSessionSuite extends HiveThriftJdbcTest {
+class SingleSessionSuite extends SparkThriftJdbcTest {
   override def mode: ServerMode.Value = ServerMode.binary
 
   override protected def extraConf: Seq[String] =
@@ -877,7 +877,7 @@ class SingleSessionSuite extends HiveThriftJdbcTest {
   }
 }
 
-class HiveThriftHttpServerSuite extends HiveThriftJdbcTest {
+class SparkThriftHttpServerSuite extends SparkThriftJdbcTest {
   override def mode: ServerMode.Value = ServerMode.http
 
   test("JDBC query execution") {
@@ -920,8 +920,8 @@ object ServerMode extends Enumeration {
   val binary, http = Value
 }
 
-abstract class HiveThriftJdbcTest extends SparkThriftServer2Test {
-  SparkUtils.classForName(classOf[HiveDriver].getCanonicalName)
+abstract class SparkThriftJdbcTest extends SparkThriftServer2Test {
+  SparkUtils.classForName(classOf[SparkDriver].getCanonicalName)
 
   private def jdbcUri = if (mode == ServerMode.http) {
     s"""jdbc:spark://localhost:$serverPort/
@@ -1079,12 +1079,12 @@ abstract class SparkThriftServer2Test extends SparkFunSuite with BeforeAndAfterA
     diagnosisBuffer ++=
       s"""
          |### Attempt $attempt ###
-         |HiveThriftServer2 command line: $command
+         |SparkThriftServer2 command line: $command
          |Listening port: $port
          |System user: $user
        """.stripMargin.split("\n")
 
-    logInfo(s"Trying to start HiveThriftServer2: port=$port, mode=$mode, attempt=$attempt")
+    logInfo(s"Trying to start SparkThriftServer2: port=$port, mode=$mode, attempt=$attempt")
 
     logPath = {
       val lines = SparkUtils.executeAndGetOutput(
@@ -1104,7 +1104,7 @@ abstract class SparkThriftServer2Test extends SparkFunSuite with BeforeAndAfterA
       lines.split("\n").collectFirst {
         case line if line.contains(LOG_FILE_MARK) => new File(line.drop(LOG_FILE_MARK.length))
       }.getOrElse {
-        throw new RuntimeException("Failed to find HiveThriftServer2 log file.")
+        throw new RuntimeException("Failed to find SparkThriftServer2 log file.")
       }
     }
 
@@ -1168,11 +1168,11 @@ abstract class SparkThriftServer2Test extends SparkFunSuite with BeforeAndAfterA
     logError(
       s"""
          |=====================================
-         |HiveThriftServer2Suite failure output
+         |SparkThriftServer2Suite failure output
          |=====================================
          |${diagnosisBuffer.mkString("\n")}
          |=========================================
-         |End HiveThriftServer2Suite failure output
+         |End SparkThriftServer2Suite failure output
          |=========================================
        """.stripMargin)
   }
@@ -1196,13 +1196,13 @@ abstract class SparkThriftServer2Test extends SparkFunSuite with BeforeAndAfterA
         throw cause
     }.get
 
-    logInfo(s"HiveThriftServer2 started successfully")
+    logInfo(s"SparkThriftServer2 started successfully")
   }
 
   override protected def afterAll(): Unit = {
     try {
       stopThriftServer()
-      logInfo("HiveThriftServer2 stopped")
+      logInfo("SparkThriftServer2 stopped")
     } finally {
       super.afterAll()
     }

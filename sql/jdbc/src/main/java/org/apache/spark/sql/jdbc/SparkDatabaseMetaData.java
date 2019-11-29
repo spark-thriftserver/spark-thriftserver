@@ -56,12 +56,12 @@ import org.apache.spark.sql.service.rpc.thrift.TSessionHandle;
 import org.apache.thrift.TException;
 
 /**
- * HiveDatabaseMetaData.
+ * SparkDatabaseMetaData.
  *
  */
-public class HiveDatabaseMetaData implements DatabaseMetaData {
+public class SparkDatabaseMetaData implements DatabaseMetaData {
 
-  private final HiveConnection connection;
+  private final SparkConnection connection;
   private final TCLIService.Iface client;
   private final TSessionHandle sessHandle;
   private static final String CATALOG_SEPARATOR = ".";
@@ -77,8 +77,8 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
   /**
    *
    */
-  public HiveDatabaseMetaData(HiveConnection connection, TCLIService.Iface client,
-      TSessionHandle sessHandle) {
+  public SparkDatabaseMetaData(SparkConnection connection, TCLIService.Iface client,
+                               TSessionHandle sessHandle) {
     this.connection = connection;
     this.client = client;
     this.sessHandle = sessHandle;
@@ -140,7 +140,7 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
     }
     Utils.verifySuccess(catalogResp.getStatus());
 
-    return new HiveQueryResultSet.Builder(connection)
+    return new SparkQueryResultSet.Builder(connection)
     .setClient(client)
     .setSessionHandle(sessHandle)
     .setStmtHandle(catalogResp.getOperationHandle())
@@ -224,7 +224,7 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
     }
     Utils.verifySuccess(colResp.getStatus());
     // build the resultset from response
-    return new HiveQueryResultSet.Builder(connection)
+    return new SparkQueryResultSet.Builder(connection)
     .setClient(client)
     .setSessionHandle(sessHandle)
     .setStmtHandle(colResp.getOperationHandle())
@@ -275,7 +275,7 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
    }
    Utils.verifySuccess(getFKResp.getStatus());
 
-   return new HiveQueryResultSet.Builder(connection)
+   return new SparkQueryResultSet.Builder(connection)
      .setClient(client)
      .setSessionHandle(sessHandle)
      .setStmtHandle(getFKResp.getOperationHandle())
@@ -310,19 +310,19 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
   }
 
   public int getDriverMajorVersion() {
-    return HiveDriver.getMajorDriverVersion();
+    return SparkDriver.getMajorDriverVersion();
   }
 
   public int getDriverMinorVersion() {
-    return HiveDriver.getMinorDriverVersion();
+    return SparkDriver.getMinorDriverVersion();
   }
 
   public String getDriverName() throws SQLException {
-    return HiveDriver.fetchManifestAttribute(Attributes.Name.IMPLEMENTATION_TITLE);
+    return SparkDriver.fetchManifestAttribute(Attributes.Name.IMPLEMENTATION_TITLE);
   }
 
   public String getDriverVersion() throws SQLException {
-    return HiveDriver.fetchManifestAttribute(Attributes.Name.IMPLEMENTATION_VERSION);
+    return SparkDriver.fetchManifestAttribute(Attributes.Name.IMPLEMENTATION_VERSION);
   }
 
   public ResultSet getExportedKeys(String catalog, String schema, String table)
@@ -358,7 +358,7 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
     }
     Utils.verifySuccess(funcResp.getStatus());
 
-    return new HiveQueryResultSet.Builder(connection)
+    return new SparkQueryResultSet.Builder(connection)
     .setClient(client)
     .setSessionHandle(sessHandle)
     .setStmtHandle(funcResp.getOperationHandle())
@@ -371,7 +371,7 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
 
   public ResultSet getImportedKeys(String catalog, String schema, String table)
       throws SQLException {
-    return new HiveQueryResultSet.Builder(connection)
+    return new SparkQueryResultSet.Builder(connection)
     .setClient(client)
     .setEmptyResultSet(true)
     .setSchema(
@@ -410,7 +410,7 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
 
   public ResultSet getIndexInfo(String catalog, String schema, String table,
       boolean unique, boolean approximate) throws SQLException {
-    return new HiveQueryResultSet.Builder(connection)
+    return new SparkQueryResultSet.Builder(connection)
         .setClient(client)
         .setEmptyResultSet(true)
         .setSchema(
@@ -531,7 +531,7 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
     }
     Utils.verifySuccess(getPKResp.getStatus());
 
-    return new HiveQueryResultSet.Builder(connection)
+    return new SparkQueryResultSet.Builder(connection)
     .setClient(client)
     .setSessionHandle(sessHandle)
     .setStmtHandle(getPKResp.getOperationHandle())
@@ -543,7 +543,7 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
       throws SQLException {
     // Hive doesn't support primary keys
     // using local schema with empty resultset
-    return new HiveQueryResultSet.Builder(connection).setClient(client).setEmptyResultSet(true)
+    return new SparkQueryResultSet.Builder(connection).setClient(client).setEmptyResultSet(true)
         .setSchema(
           Arrays.asList("PROCEDURE_CAT", "PROCEDURE_SCHEM", "PROCEDURE_NAME", "COLUMN_NAME",
               "COLUMN_TYPE", "DATA_TYPE", "TYPE_NAME", "PRECISION", "LENGTH", "SCALE", "RADIX",
@@ -564,7 +564,7 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
       String procedureNamePattern) throws SQLException {
     // Hive doesn't support primary keys
     // using local schema with empty resultset
-    return new HiveQueryResultSet.Builder(connection).setClient(client).setEmptyResultSet(true)
+    return new SparkQueryResultSet.Builder(connection).setClient(client).setEmptyResultSet(true)
         .setSchema(
              Arrays.asList("PROCEDURE_CAT", "PROCEDURE_SCHEM", "PROCEDURE_NAME", "RESERVERD",
                  "RESERVERD", "RESERVERD", "REMARKS", "PROCEDURE_TYPE", "SPECIFIC_NAME"),
@@ -617,7 +617,7 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
     }
     Utils.verifySuccess(schemaResp.getStatus());
 
-    return new HiveQueryResultSet.Builder(connection)
+    return new SparkQueryResultSet.Builder(connection)
     .setClient(client)
     .setSessionHandle(sessHandle)
     .setStmtHandle(schemaResp.getOperationHandle())
@@ -661,7 +661,7 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
     }
     Utils.verifySuccess(tableTypeResp.getStatus());
 
-    return new HiveQueryResultSet.Builder(connection)
+    return new SparkQueryResultSet.Builder(connection)
     .setClient(client)
     .setSessionHandle(sessHandle)
     .setStmtHandle(tableTypeResp.getOperationHandle())
@@ -693,7 +693,7 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
     }
     Utils.verifySuccess(getTableResp.getStatus());
 
-    return new HiveQueryResultSet.Builder(connection)
+    return new SparkQueryResultSet.Builder(connection)
     .setClient(client)
     .setSessionHandle(sessHandle)
     .setStmtHandle(getTableResp.getOperationHandle())
@@ -751,7 +751,7 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
       throw new SQLException(e.getMessage(), "08S01", e);
     }
     Utils.verifySuccess(getTypeInfoResp.getStatus());
-    return new HiveQueryResultSet.Builder(connection)
+    return new SparkQueryResultSet.Builder(connection)
     .setClient(client)
     .setSessionHandle(sessHandle)
     .setStmtHandle(getTypeInfoResp.getOperationHandle())
@@ -761,7 +761,7 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
   public ResultSet getUDTs(String catalog, String schemaPattern,
       String typeNamePattern, int[] types) throws SQLException {
 
-    return new HiveMetaDataResultSet(
+    return new SparkMetaDataResultSet(
             Arrays.asList("TYPE_CAT", "TYPE_SCHEM", "TYPE_NAME", "CLASS_NAME", "DATA_TYPE",
                     "REMARKS", "BASE_TYPE"),
             Arrays.asList("STRING", "STRING", "STRING", "STRING", "INT", "STRING", "INT"), null) {
@@ -1172,7 +1172,7 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
   }
 
   public static void main(String[] args) throws SQLException {
-    HiveDatabaseMetaData meta = new HiveDatabaseMetaData(null, null, null);
+    SparkDatabaseMetaData meta = new SparkDatabaseMetaData(null, null, null);
     System.out.println("DriverName: " + meta.getDriverName());
     System.out.println("DriverVersion: " + meta.getDriverVersion());
   }

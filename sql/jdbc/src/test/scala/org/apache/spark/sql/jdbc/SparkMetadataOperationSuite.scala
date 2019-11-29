@@ -21,7 +21,7 @@ import java.sql.{DatabaseMetaData, ResultSet}
 
 import org.apache.spark.sql.service.ThriftserverShimUtils
 
-class SparkMetadataOperationSuite extends HiveThriftJdbcTest {
+class SparkMetadataOperationSuite extends SparkThriftJdbcTest {
 
   override def mode: ServerMode.Value = ServerMode.binary
 

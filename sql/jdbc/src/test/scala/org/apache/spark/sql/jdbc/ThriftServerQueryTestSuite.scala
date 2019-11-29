@@ -47,7 +47,7 @@ import org.apache.spark.sql.types._
  */
 class ThriftServerQueryTestSuite extends SQLQueryTestSuite {
 
-  private var hiveServer2: SparkThriftServer2 = _
+  private var sparkServer2: SparkThriftServer2 = _
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -64,12 +64,12 @@ class ThriftServerQueryTestSuite extends SQLQueryTestSuite {
       case cause: Throwable =>
         throw cause
     }.get
-    logInfo("HiveThriftServer2 started successfully")
+    logInfo("SparkThriftServer2 started successfully")
   }
 
   override def afterAll(): Unit = {
     try {
-      hiveServer2.stop()
+      sparkServer2.stop()
     } finally {
       super.afterAll()
     }
@@ -283,16 +283,16 @@ class ThriftServerQueryTestSuite extends SQLQueryTestSuite {
   }
 
   private def startThriftServer(port: Int, attempt: Int): Unit = {
-    logInfo(s"Trying to start HiveThriftServer2: port=$port, attempt=$attempt")
+    logInfo(s"Trying to start SparkThriftServer2: port=$port, attempt=$attempt")
     val sqlContext = spark.newSession().sqlContext
     sqlContext.setConf(ConfVars.HIVE_SERVER2_THRIFT_PORT.varname, port.toString)
-    hiveServer2 = SparkThriftServer2.startWithContext(sqlContext)
+    sparkServer2 = SparkThriftServer2.startWithContext(sqlContext)
   }
 
   private def withJdbcStatement(fs: (Statement => Unit)*): Unit = {
     val user = System.getProperty("user.name")
 
-    val serverPort = hiveServer2.getHiveConf.get(ConfVars.HIVE_SERVER2_THRIFT_PORT.varname)
+    val serverPort = sparkServer2.getHiveConf.get(ConfVars.HIVE_SERVER2_THRIFT_PORT.varname)
     val connections =
       fs.map { _ => DriverManager.getConnection(s"jdbc:spark://localhost:$serverPort", user, "") }
     val statements = connections.map(_.createStatement())

@@ -43,16 +43,16 @@ import java.util.Calendar;
 import java.util.Map;
 
 /**
- * HiveCallableStatement.
+ * SparkCallableStatement.
  *
  */
-public class HiveCallableStatement implements java.sql.CallableStatement {
+public class SparkCallableStatement implements java.sql.CallableStatement {
   private final Connection connection;
 
   /**
    *
    */
-  public HiveCallableStatement(Connection connection) {
+  public SparkCallableStatement(Connection connection) {
     this.connection = connection;
   }
 
@@ -1389,7 +1389,7 @@ public class HiveCallableStatement implements java.sql.CallableStatement {
    */
 
   public ResultSet executeQuery() throws SQLException {
-    return new HiveQueryResultSet.Builder(this).build();
+    return new SparkQueryResultSet.Builder(this).build();
   }
 
   /*

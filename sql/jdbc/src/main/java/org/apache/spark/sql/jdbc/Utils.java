@@ -29,7 +29,7 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.spark.sql.service.cli.HiveSQLException;
+import org.apache.spark.sql.service.cli.ServiceSQLException;
 import org.apache.spark.sql.service.rpc.thrift.TStatus;
 import org.apache.spark.sql.service.rpc.thrift.TStatusCode;
 import org.apache.http.client.CookieStore;
@@ -68,7 +68,7 @@ public class Utils {
     // Note on client side parameter naming convention:
     // Prefer using a shorter camelCase param name instead of using the same name as the
     // corresponding
-    // HiveServer2 config.
+    // SparkServer2 config.
     // For a jdbc url: jdbc:spark://<host>:<port>/dbName;sess_var_list?hive_conf_list#hive_var_list,
     // client side params are specified in sess_var_list
 
@@ -265,7 +265,7 @@ public class Utils {
         (withInfo && status.getStatusCode() == TStatusCode.SUCCESS_WITH_INFO_STATUS)) {
       return;
     }
-    throw new HiveSQLException(status);
+    throw new ServiceSQLException(status);
   }
 
   public static JdbcConnectionParams parseURL(String uri) throws JdbcUriParseException,
@@ -277,7 +277,7 @@ public class Utils {
    * The new format of the URL is:
    * jdbc:spark://<host1>:<port1>,<host2>:<port2>/dbName;sess_var_list?hive_conf_list#hive_var_list
    * where the optional sess, conf and var lists are semicolon separated <key>=<val> pairs.
-   * For utilizing dynamic service discovery with HiveServer2 multiple comma separated host:port
+   * For utilizing dynamic service discovery with SparkServer2 multiple comma separated host:port
    * pairs can be specified as shown above.
    * The JDBC driver resolves the list of uris and picks a specific server instance to connect to.
    * Currently, dynamic service discovery using ZooKeeper is supported, in which case the host:port
@@ -315,7 +315,7 @@ public class Utils {
     }
 
     // The JDBC URI now supports specifying multiple host:port if dynamic service discovery is
-    // configured on HiveServer2 (like: host1:port1,host2:port2,host3:port3)
+    // configured on SparkServer2 (like: host1:port1,host2:port2,host3:port3)
     // We'll extract the authorities (host:port combo) from the URI, extract session vars, hive
     // confs & hive vars by parsing it as a Java URI.
     // To parse the intermediate URI as a Java URI, we'll give a dummy authority(dummy:00000).

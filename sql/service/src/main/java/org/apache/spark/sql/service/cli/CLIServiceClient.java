@@ -20,7 +20,7 @@ package org.apache.spark.sql.service.cli;
 
 import java.util.Collections;
 
-import org.apache.spark.sql.service.auth.HiveAuthFactory;
+import org.apache.spark.sql.service.auth.SparkAuthFactory;
 
 
 /**
@@ -31,12 +31,12 @@ public abstract class CLIServiceClient implements ICLIService {
   private static final long DEFAULT_MAX_ROWS = 1000;
 
   public SessionHandle openSession(String username, String password)
-      throws HiveSQLException {
+      throws ServiceSQLException {
     return openSession(username, password, Collections.<String, String>emptyMap());
   }
 
   @Override
-  public RowSet fetchResults(OperationHandle opHandle) throws HiveSQLException {
+  public RowSet fetchResults(OperationHandle opHandle) throws ServiceSQLException {
     // TODO: provide STATIC default value
     return fetchResults(opHandle, FetchOrientation.FETCH_NEXT,
         DEFAULT_MAX_ROWS, FetchType.QUERY_OUTPUT);
@@ -44,14 +44,18 @@ public abstract class CLIServiceClient implements ICLIService {
 
   @Override
   public abstract String getDelegationToken(SessionHandle sessionHandle,
-      HiveAuthFactory authFactory, String owner, String renewer) throws HiveSQLException;
+                                            SparkAuthFactory authFactory,
+                                            String owner,
+                                            String renewer) throws ServiceSQLException;
 
   @Override
   public abstract void cancelDelegationToken(SessionHandle sessionHandle,
-      HiveAuthFactory authFactory, String tokenStr) throws HiveSQLException;
+                                             SparkAuthFactory authFactory,
+                                             String tokenStr) throws ServiceSQLException;
 
   @Override
   public abstract void renewDelegationToken(SessionHandle sessionHandle,
-      HiveAuthFactory authFactory, String tokenStr) throws HiveSQLException;
+                                            SparkAuthFactory authFactory,
+                                            String tokenStr) throws ServiceSQLException;
 
 }

@@ -50,10 +50,10 @@ import org.apache.spark.sql.service.rpc.thrift.TCLIService;
 import org.apache.spark.sql.service.rpc.thrift.TSessionHandle;
 
 /**
- * HivePreparedStatement.
+ * SparkPreparedStatement.
  *
  */
-public class HivePreparedStatement extends HiveStatement implements PreparedStatement {
+public class SparkPreparedStatement extends SparkStatement implements PreparedStatement {
   private final String sql;
 
   /**
@@ -61,8 +61,8 @@ public class HivePreparedStatement extends HiveStatement implements PreparedStat
    */
   private final HashMap<Integer, String> parameters=new HashMap<Integer, String>();
 
-  public HivePreparedStatement(HiveConnection connection, TCLIService.Iface client,
-      TSessionHandle sessHandle, String sql) {
+  public SparkPreparedStatement(SparkConnection connection, TCLIService.Iface client,
+                                TSessionHandle sessHandle, String sql) {
     super(connection, client, sessHandle);
     this.sql = sql;
   }

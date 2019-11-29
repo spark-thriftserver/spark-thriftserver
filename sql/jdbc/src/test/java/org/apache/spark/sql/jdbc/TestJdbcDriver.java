@@ -87,7 +87,7 @@ public class TestJdbcDriver {
       bw.write(input);
       bw.flush();
       assertEquals(Arrays.asList(expected.split(",")),
-          HiveConnection.parseInitFile(file.toString()));
+          SparkConnection.parseInitFile(file.toString()));
     } catch(Exception e) {
       Assert.fail("Test was failed due to " + e);
     } finally {

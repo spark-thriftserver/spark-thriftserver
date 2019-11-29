@@ -27,18 +27,18 @@ import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.catalyst.catalog.CatalogTableType
 import org.apache.spark.sql.service.SparkThriftServer2
 import org.apache.spark.sql.service.cli._
-import org.apache.spark.sql.service.cli.session.HiveSession
+import org.apache.spark.sql.service.cli.session.ServiceSession
 import org.apache.spark.util.{Utils => SparkUtils}
 
 /**
  * Spark's own GetTableTypesOperation
  *
  * @param sqlContext SQLContext to use
- * @param parentSession a HiveSession from SessionManager
+ * @param parentSession a ServiceSession from SessionManager
  */
 private[service] class SparkGetTableTypesOperation(
     sqlContext: SQLContext,
-    parentSession: HiveSession)
+    parentSession: ServiceSession)
   extends SparkMetadataOperation(parentSession, OperationType.GET_TABLE_TYPES)
   with Logging {
 
@@ -85,7 +85,7 @@ private[service] class SparkGetTableTypesOperation(
         logError(s"Error executing get table types operation with $statementId", e)
         setState(OperationState.ERROR)
         e match {
-          case hiveException: HiveSQLException =>
+          case hiveException: ServiceSQLException =>
             SparkThriftServer2.listener.onStatementError(
               statementId, hiveException.getMessage, SparkUtils.exceptionString(hiveException))
             throw hiveException
@@ -93,7 +93,7 @@ private[service] class SparkGetTableTypesOperation(
             val root = ExceptionUtils.getRootCause(e)
             SparkThriftServer2.listener.onStatementError(
               statementId, root.getMessage, SparkUtils.exceptionString(root))
-            throw new HiveSQLException("Error getting table types: " + root.toString, root)
+            throw new ServiceSQLException("Error getting table types: " + root.toString, root)
         }
     }
     SparkThriftServer2.listener.onStatementFinish(statementId)

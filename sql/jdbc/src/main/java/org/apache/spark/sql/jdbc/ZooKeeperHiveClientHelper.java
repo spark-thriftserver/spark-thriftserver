@@ -67,7 +67,7 @@ class ZooKeeperHiveClientHelper {
       serverHosts.removeAll(connParams.getRejectedHostZnodePaths());
       if (serverHosts.isEmpty()) {
         throw new ZooKeeperHiveClientException(
-            "Tried all existing HiveServer2 uris from ZooKeeper.");
+            "Tried all existing SparkServer2 uris from ZooKeeper.");
       }
       // Now pick a server node randomly
       serverNode = serverHosts.get(randomizer.nextInt(serverHosts.size()));
@@ -85,7 +85,7 @@ class ZooKeeperHiveClientHelper {
       if ((dataStr != null) && (!matcher.find())) {
         String[] split = dataStr.split(":");
         if (split.length != 2) {
-          throw new ZooKeeperHiveClientException("Unable to read HiveServer2 uri from ZooKeeper: "
+          throw new ZooKeeperHiveClientException("Unable to read SparkServer2 uri from ZooKeeper: "
               + dataStr);
         }
         connParams.setHost(split[0]);
@@ -95,7 +95,7 @@ class ZooKeeperHiveClientHelper {
       }
     } catch (Exception e) {
       throw new ZooKeeperHiveClientException(
-          "Unable to read HiveServer2 configs from ZooKeeper", e);
+          "Unable to read SparkServer2 configs from ZooKeeper", e);
     } finally {
       // Close the client connection with ZooKeeper
       if (zooKeeperClient != null) {

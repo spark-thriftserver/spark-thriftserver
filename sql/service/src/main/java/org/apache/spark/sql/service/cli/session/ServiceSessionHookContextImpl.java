@@ -19,28 +19,34 @@
 package org.apache.spark.sql.service.cli.session;
 
 import org.apache.hadoop.hive.conf.HiveConf;
+
 /**
- * HiveSessionHookContext.
- * Interface passed to the HiveServer2 session hook execution. This enables
- * the hook implementation to access session config, user and session handle
+ *
+ * ServiceSessionHookContextImpl.
+ * Session hook context implementation which is created by session  manager
+ * and passed to hook invocation.
  */
-public interface HiveSessionHookContext {
+public class ServiceSessionHookContextImpl implements ServiceSessionHookContext {
 
-  /**
-   * Retrieve session conf
-   * @return
-   */
-  HiveConf getSessionConf();
+  private final ServiceSession serviceSession;
 
-  /**
-   * The get the username starting the session
-   * @return
-   */
-  String getSessionUser();
+  ServiceSessionHookContextImpl(ServiceSession serviceSession) {
+    this.serviceSession = serviceSession;
+  }
 
-  /**
-   * Retrieve handle for the session
-   * @return
-   */
-  String getSessionHandle();
+  @Override
+  public HiveConf getSessionConf() {
+    return serviceSession.getHiveConf();
+  }
+
+
+  @Override
+  public String getSessionUser() {
+    return serviceSession.getUserName();
+  }
+
+  @Override
+  public String getSessionHandle() {
+    return serviceSession.getSessionHandle().toString();
+  }
 }
