@@ -2982,6 +2982,7 @@
       <id>spark-thriftserver</id>
       <modules>
         <module>sql/service</module>
+        <module>sql/jdbc</module>
       </modules>
     </profile>
 

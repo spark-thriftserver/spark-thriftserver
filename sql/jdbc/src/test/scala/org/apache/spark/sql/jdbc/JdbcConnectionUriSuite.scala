@@ -15,16 +15,14 @@
  * limitations under the License.
  */
 
-package org.apache.spark.sql.service
+package org.apache.spark.sql.jdbc
 
 import java.sql.DriverManager
 
-import org.apache.hive.jdbc.HiveDriver
-
-import org.apache.spark.util.Utils
+import org.apache.spark.util.{Utils => SparkUtils}
 
 class JdbcConnectionUriSuite extends SparkThriftServer2Test {
-  Utils.classForName(classOf[HiveDriver].getCanonicalName)
+  SparkUtils.classForName(classOf[HiveDriver].getCanonicalName)
 
   override def mode: ServerMode.Value = ServerMode.binary
 
@@ -35,7 +33,7 @@ class JdbcConnectionUriSuite extends SparkThriftServer2Test {
   override protected def beforeAll(): Unit = {
     super.beforeAll()
 
-    val jdbcUri = s"jdbc:hive2://localhost:$serverPort/"
+    val jdbcUri = s"jdbc:spark://localhost:$serverPort/"
     val connection = DriverManager.getConnection(jdbcUri, USER, PASSWORD)
     val statement = connection.createStatement()
     statement.execute(s"CREATE DATABASE $JDBC_TEST_DATABASE")
@@ -44,7 +42,7 @@ class JdbcConnectionUriSuite extends SparkThriftServer2Test {
 
   override protected def afterAll(): Unit = {
     try {
-      val jdbcUri = s"jdbc:hive2://localhost:$serverPort/"
+      val jdbcUri = s"jdbc:spark://localhost:$serverPort/"
       val connection = DriverManager.getConnection(jdbcUri, USER, PASSWORD)
       val statement = connection.createStatement()
       statement.execute(s"DROP DATABASE $JDBC_TEST_DATABASE")
@@ -55,7 +53,7 @@ class JdbcConnectionUriSuite extends SparkThriftServer2Test {
   }
 
   test("SPARK-17819 Support default database in connection URIs") {
-    val jdbcUri = s"jdbc:hive2://localhost:$serverPort/$JDBC_TEST_DATABASE"
+    val jdbcUri = s"jdbc:spark://localhost:$serverPort/$JDBC_TEST_DATABASE"
     val connection = DriverManager.getConnection(jdbcUri, USER, PASSWORD)
     val statement = connection.createStatement()
     try {

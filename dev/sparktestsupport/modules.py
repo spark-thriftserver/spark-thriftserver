@@ -185,6 +185,21 @@ service = Module(
     ]
 )
 
+service = Module(
+    name="jdbc",
+    dependencies=[service],
+    source_file_regexes=[
+        "sql/jdbc",
+        "sbin/start-thriftserver.sh",
+    ],
+    build_profile_flags=[
+        "-Pspark-thriftserver",
+    ],
+    sbt_test_goals=[
+        "jdbc/test",
+    ]
+)
+
 avro = Module(
     name="avro",
     dependencies=[sql],
