@@ -608,7 +608,7 @@ private[hive] class TestHiveQueryExecution(
 }
 
 
-private[hive] object TestHiveContext {
+object TestHiveContext {
 
   /**
    * A map used to store all confs that need to be overridden in sql/hive unit tests.
@@ -648,7 +648,7 @@ private[sql] class TestHiveSessionStateBuilder(
   override protected def newBuilder: NewBuilder = new TestHiveSessionStateBuilder(_, _)
 }
 
-private[hive] object HiveTestJars {
+object HiveTestJars {
   private val repository = SQLConf.ADDITIONAL_REMOTE_REPOSITORIES.defaultValueString.split(",")(0)
   private val hiveTestJarsDir = Utils.createTempDir()
 
