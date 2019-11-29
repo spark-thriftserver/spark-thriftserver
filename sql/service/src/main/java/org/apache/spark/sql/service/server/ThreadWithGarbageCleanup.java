@@ -27,7 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A HiveServer2 thread used to construct new server threads.
+ * A SparkServer2 thread used to construct new server threads.
  * In particular, this thread ensures an orderly cleanup,
  * when killed by its corresponding ExecutorService.
  */

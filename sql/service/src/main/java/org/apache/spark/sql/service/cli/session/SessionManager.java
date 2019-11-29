@@ -33,10 +33,10 @@ import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.spark.sql.service.CompositeService;
-import org.apache.spark.sql.service.cli.HiveSQLException;
+import org.apache.spark.sql.service.cli.ServiceSQLException;
 import org.apache.spark.sql.service.cli.SessionHandle;
 import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
-import org.apache.spark.sql.service.server.HiveServer2;
+import org.apache.spark.sql.service.server.SparkServer2;
 import org.apache.spark.sql.service.server.ThreadFactoryWithGarbageCleanup;
 import org.apache.spark.sql.service.cli.operation.OperationManager;
 import org.slf4j.Logger;
@@ -51,8 +51,8 @@ public class SessionManager extends CompositeService {
   private static final Logger LOG = LoggerFactory.getLogger(SessionManager.class);
   public static final String HIVERCFILE = ".hiverc";
   private HiveConf hiveConf;
-  private final Map<SessionHandle, HiveSession> handleToSession =
-      new ConcurrentHashMap<SessionHandle, HiveSession>();
+  private final Map<SessionHandle, ServiceSession> handleToSession =
+      new ConcurrentHashMap<SessionHandle, ServiceSession>();
   private final OperationManager operationManager = new OperationManager();
   private ThreadPoolExecutor backgroundOperationPool;
   private boolean isOperationLogEnabled;
@@ -63,12 +63,12 @@ public class SessionManager extends CompositeService {
   private boolean checkOperation;
 
   private volatile boolean shutdown;
-  // The HiveServer2 instance running this service
-  private final HiveServer2 hiveServer2;
+  // The SparkServer2 instance running this service
+  private final SparkServer2 sparkServer2;
 
-  public SessionManager(HiveServer2 hiveServer2) {
+  public SessionManager(SparkServer2 sparkServer2) {
     super(SessionManager.class.getSimpleName());
-    this.hiveServer2 = hiveServer2;
+    this.sparkServer2 = sparkServer2;
   }
 
   @Override
@@ -85,18 +85,18 @@ public class SessionManager extends CompositeService {
 
   private void createBackgroundOperationPool() {
     int poolSize = hiveConf.getIntVar(ConfVars.HIVE_SERVER2_ASYNC_EXEC_THREADS);
-    LOG.info("HiveServer2: Background operation thread pool size: " + poolSize);
+    LOG.info("SparkServer2: Background operation thread pool size: " + poolSize);
     int poolQueueSize = hiveConf.getIntVar(ConfVars.HIVE_SERVER2_ASYNC_EXEC_WAIT_QUEUE_SIZE);
-    LOG.info("HiveServer2: Background operation thread wait queue size: " + poolQueueSize);
+    LOG.info("SparkServer2: Background operation thread wait queue size: " + poolQueueSize);
     long keepAliveTime = HiveConf.getTimeVar(
         hiveConf, ConfVars.HIVE_SERVER2_ASYNC_EXEC_KEEPALIVE_TIME, TimeUnit.SECONDS);
     LOG.info(
-        "HiveServer2: Background operation thread keepalive time: " + keepAliveTime + " seconds");
+        "SparkServer2: Background operation thread keepalive time: " + keepAliveTime + " seconds");
 
     // Create a thread pool with #poolSize threads
     // Threads terminate when they are idle for more than the keepAliveTime
     // A bounded blocking queue is used to queue incoming operations, if #operations > poolSize
-    String threadPoolName = "HiveServer2-Background-Pool";
+    String threadPoolName = "SparkServer2-Background-Pool";
     backgroundOperationPool = new ThreadPoolExecutor(poolSize, poolSize,
         keepAliveTime, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(poolQueueSize),
         new ThreadFactoryWithGarbageCleanup(threadPoolName));
@@ -155,7 +155,7 @@ public class SessionManager extends CompositeService {
       public void run() {
         for (sleepInterval(interval); !shutdown; sleepInterval(interval)) {
           long current = System.currentTimeMillis();
-          for (HiveSession session : new ArrayList<HiveSession>(handleToSession.values())) {
+          for (ServiceSession session : new ArrayList<ServiceSession>(handleToSession.values())) {
             if (sessionTimeout > 0 && session.getLastAccessTime() + sessionTimeout <= current
                 && (!checkOperation || session.getNoOperationTime() > sessionTimeout)) {
               SessionHandle handle = session.getSessionHandle();
@@ -163,7 +163,7 @@ public class SessionManager extends CompositeService {
                   new Date(session.getLastAccessTime()) + ") and will be closed");
               try {
                 closeSession(handle);
-              } catch (HiveSQLException e) {
+              } catch (ServiceSQLException e) {
                 LOG.warn("Exception is thrown closing session " + handle, e);
               }
             } else {
@@ -215,14 +215,14 @@ public class SessionManager extends CompositeService {
   }
 
   public SessionHandle openSession(TProtocolVersion protocol, String username, String password,
-      String ipAddress, Map<String, String> sessionConf) throws HiveSQLException {
+      String ipAddress, Map<String, String> sessionConf) throws ServiceSQLException {
     return openSession(protocol, username, password, ipAddress, sessionConf, false, null);
   }
 
   /**
    * Opens a new session and creates a session handle.
    * The username passed to this method is the effective username.
-   * If withImpersonation is true (==doAs true) we wrap all the calls in HiveSession
+   * If withImpersonation is true (==doAs true) we wrap all the calls in ServiceSession
    * within a UGI.doAs, where UGI corresponds to the effective user.
    *
    * Please see {@code ThriftCLIService.getUserName()} for
@@ -236,21 +236,21 @@ public class SessionManager extends CompositeService {
    * @param withImpersonation
    * @param delegationToken
    * @return
-   * @throws HiveSQLException
+   * @throws ServiceSQLException
    */
   public SessionHandle openSession(TProtocolVersion protocol, String username, String password,
       String ipAddress, Map<String, String> sessionConf, boolean withImpersonation,
-      String delegationToken) throws HiveSQLException {
-    HiveSession session;
-    // If doAs is set to true for HiveServer2, we will create a proxy object for the session impl.
+      String delegationToken) throws ServiceSQLException {
+    ServiceSession session;
+    // If doAs is set to true for SparkServer2, we will create a proxy object for the session impl.
     // Within the proxy object, we wrap the method call in a UserGroupInformation#doAs
     if (withImpersonation) {
-      HiveSessionImplwithUGI sessionWithUGI = new HiveSessionImplwithUGI(protocol, username,
+      ServiceSessionImplwithUGI sessionWithUGI = new ServiceSessionImplwithUGI(protocol, username,
           password, hiveConf, ipAddress, delegationToken);
-      session = HiveSessionProxy.getProxy(sessionWithUGI, sessionWithUGI.getSessionUgi());
+      session = ServiceSessionProxy.getProxy(sessionWithUGI, sessionWithUGI.getSessionUgi());
       sessionWithUGI.setProxySession(session);
     } else {
-      session = new HiveSessionImpl(protocol, username, password, hiveConf, ipAddress);
+      session = new ServiceSessionImpl(protocol, username, password, hiveConf, ipAddress);
     }
     session.setSessionManager(this);
     session.setOperationManager(operationManager);
@@ -263,7 +263,7 @@ public class SessionManager extends CompositeService {
         LOG.warn("Error closing session", t);
       }
       session = null;
-      throw new HiveSQLException("Failed to open new session: " + e, e);
+      throw new ServiceSQLException("Failed to open new session: " + e, e);
     }
     if (isOperationLogEnabled) {
       session.setOperationLogSessionDir(operationLogRootDir);
@@ -272,18 +272,18 @@ public class SessionManager extends CompositeService {
     return session.getSessionHandle();
   }
 
-  public void closeSession(SessionHandle sessionHandle) throws HiveSQLException {
-    HiveSession session = handleToSession.remove(sessionHandle);
+  public void closeSession(SessionHandle sessionHandle) throws ServiceSQLException {
+    ServiceSession session = handleToSession.remove(sessionHandle);
     if (session == null) {
-      throw new HiveSQLException("Session does not exist!");
+      throw new ServiceSQLException("Session does not exist!");
     }
     session.close();
   }
 
-  public HiveSession getSession(SessionHandle sessionHandle) throws HiveSQLException {
-    HiveSession session = handleToSession.get(sessionHandle);
+  public ServiceSession getSession(SessionHandle sessionHandle) throws ServiceSQLException {
+    ServiceSession session = handleToSession.get(sessionHandle);
     if (session == null) {
-      throw new HiveSQLException("Invalid SessionHandle: " + sessionHandle);
+      throw new ServiceSQLException("Invalid SessionHandle: " + sessionHandle);
     }
     return session;
   }

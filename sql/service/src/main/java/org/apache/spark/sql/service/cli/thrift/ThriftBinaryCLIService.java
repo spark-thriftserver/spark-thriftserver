@@ -28,8 +28,8 @@ import java.util.concurrent.TimeUnit;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.shims.ShimLoader;
-import org.apache.spark.sql.service.auth.HiveAuthFactory;
-import org.apache.spark.sql.service.auth.HiveAuthUtils;
+import org.apache.spark.sql.service.auth.SparkAuthFactory;
+import org.apache.spark.sql.service.auth.SparkAuthUtils;
 import org.apache.spark.sql.service.cli.CLIService;
 import org.apache.spark.sql.service.server.ThreadFactoryWithGarbageCleanup;
 import org.apache.thrift.TProcessorFactory;
@@ -49,22 +49,22 @@ public class ThriftBinaryCLIService extends ThriftCLIService {
   public void run() {
     try {
       // Server thread pool
-      String threadPoolName = "HiveServer2-Handler-Pool";
+      String threadPoolName = "SparkServer2-Handler-Pool";
       ExecutorService executorService = new ThreadPoolExecutor(minWorkerThreads, maxWorkerThreads,
           workerKeepAliveTime, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
           new ThreadFactoryWithGarbageCleanup(threadPoolName));
 
       // Thrift configs
-      hiveAuthFactory = new HiveAuthFactory(hiveConf);
-      TTransportFactory transportFactory = hiveAuthFactory.getAuthTransFactory();
-      TProcessorFactory processorFactory = hiveAuthFactory.getAuthProcFactory(this);
+      sparkAuthFactory = new SparkAuthFactory(hiveConf);
+      TTransportFactory transportFactory = sparkAuthFactory.getAuthTransFactory();
+      TProcessorFactory processorFactory = sparkAuthFactory.getAuthProcFactory(this);
       TServerSocket serverSocket = null;
       List<String> sslVersionBlacklist = new ArrayList<String>();
       for (String sslVersion : hiveConf.getVar(ConfVars.HIVE_SSL_PROTOCOL_BLACKLIST).split(",")) {
         sslVersionBlacklist.add(sslVersion);
       }
       if (!hiveConf.getBoolVar(ConfVars.HIVE_SERVER2_USE_SSL)) {
-        serverSocket = HiveAuthUtils.getServerSocket(hiveHost, portNum);
+        serverSocket = SparkAuthUtils.getServerSocket(hiveHost, portNum);
       } else {
         String keyStorePath = hiveConf.getVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH).trim();
         if (keyStorePath.isEmpty()) {
@@ -73,7 +73,7 @@ public class ThriftBinaryCLIService extends ThriftCLIService {
         }
         String keyStorePassword = ShimLoader.getHadoopShims().getPassword(hiveConf,
             HiveConf.ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD.varname);
-        serverSocket = HiveAuthUtils.getServerSSLSocket(hiveHost, portNum, keyStorePath,
+        serverSocket = SparkAuthUtils.getServerSSLSocket(hiveHost, portNum, keyStorePath,
             keyStorePassword, sslVersionBlacklist);
       }
 
@@ -102,7 +102,7 @@ public class ThriftBinaryCLIService extends ThriftCLIService {
       server.serve();
     } catch (Throwable t) {
       LOG.error(
-          "Error starting HiveServer2: could not start "
+          "Error starting SparkServer2: could not start "
               + ThriftBinaryCLIService.class.getSimpleName(), t);
       System.exit(-1);
     }

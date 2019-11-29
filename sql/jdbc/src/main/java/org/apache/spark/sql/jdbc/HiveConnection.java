@@ -493,14 +493,14 @@ public class HiveConnection implements java.sql.Connection {
         JdbcConnectionParams.SSL_TRUST_STORE_PASSWORD);
 
       if (sslTrustStore == null || sslTrustStore.isEmpty()) {
-        transport = HiveAuthUtils.getSSLSocket(host, port, loginTimeout);
+        transport = SparkAuthUtils.getSSLSocket(host, port, loginTimeout);
       } else {
-        transport = HiveAuthUtils.getSSLSocket(host, port, loginTimeout,
+        transport = SparkAuthUtils.getSSLSocket(host, port, loginTimeout,
             sslTrustStore, sslTrustStorePassword);
       }
     } else {
       // get non-SSL socket transport
-      transport = HiveAuthUtils.getSocketTransport(host, port, loginTimeout);
+      transport = SparkAuthUtils.getSocketTransport(host, port, loginTimeout);
     }
     return transport;
   }
@@ -623,7 +623,7 @@ public class HiveConnection implements java.sql.Connection {
       // check delegation token in job conf if any
       try {
         tokenStr = org.apache.hadoop.hive.shims.Utils
-            .getTokenStrForm(HiveAuthFactory.HS2_CLIENT_TOKEN);
+            .getTokenStrForm(SparkAuthFactory.HS2_CLIENT_TOKEN);
       } catch (IOException e) {
         throw new SQLException("Error reading token ", e);
       }
@@ -651,9 +651,9 @@ public class HiveConnection implements java.sql.Connection {
 
     // set the session configuration
     Map<String, String> sessVars = connParams.getSessionVars();
-    if (sessVars.containsKey(HiveAuthFactory.HS2_PROXY_USER)) {
-      openConf.put(HiveAuthFactory.HS2_PROXY_USER,
-          sessVars.get(HiveAuthFactory.HS2_PROXY_USER));
+    if (sessVars.containsKey(SparkAuthFactory.HS2_PROXY_USER)) {
+      openConf.put(SparkAuthFactory.HS2_PROXY_USER,
+          sessVars.get(SparkAuthFactory.HS2_PROXY_USER));
     }
     openReq.setConfiguration(openConf);
 

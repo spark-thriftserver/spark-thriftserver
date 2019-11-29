@@ -28,7 +28,7 @@ import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.shims.ShimLoader;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Shell;
-import org.apache.spark.sql.service.auth.HiveAuthFactory;
+import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.cli.CLIService;
 import org.apache.spark.sql.service.rpc.thrift.TCLIService;
 import org.apache.spark.sql.service.rpc.thrift.TCLIService.Iface;
@@ -64,7 +64,7 @@ public class ThriftHttpCLIService extends ThriftCLIService {
     try {
       // Server thread pool
       // Start with minWorkerThreads, expand till maxWorkerThreads and reject subsequent requests
-      String threadPoolName = "HiveServer2-HttpHandler-Pool";
+      String threadPoolName = "SparkServer2-HttpHandler-Pool";
       ThreadPoolExecutor executorService =
           new ThreadPoolExecutor(minWorkerThreads, maxWorkerThreads,
               workerKeepAliveTime, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
@@ -107,7 +107,7 @@ public class ThriftHttpCLIService extends ThriftCLIService {
           httpServer,
           null,
           // Call this full constructor to set this, which forces daemon threads:
-          new ScheduledExecutorScheduler("HiveServer2-HttpHandler-JettyScheduler", true),
+          new ScheduledExecutorScheduler("SparkServer2-HttpHandler-JettyScheduler", true),
           null,
           -1,
           -1,
@@ -123,17 +123,17 @@ public class ThriftHttpCLIService extends ThriftCLIService {
       httpServer.addConnector(connector);
 
       // Thrift configs
-      hiveAuthFactory = new HiveAuthFactory(hiveConf);
+      sparkAuthFactory = new SparkAuthFactory(hiveConf);
       TProcessor processor = new TCLIService.Processor<Iface>(this);
       TProtocolFactory protocolFactory = new TBinaryProtocol.Factory();
-      // Set during the init phase of HiveServer2 if auth mode is kerberos
+      // Set during the init phase of SparkServer2 if auth mode is kerberos
       // UGI for the hive/_HOST (kerberos) principal
       UserGroupInformation serviceUGI = cliService.getServiceUGI();
       // UGI for the http/_HOST (SPNego) principal
       UserGroupInformation httpUGI = cliService.getHttpUGI();
       String authType = hiveConf.getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION);
       TServlet thriftHttpServlet = new ThriftHttpServlet(processor, protocolFactory, authType,
-          serviceUGI, httpUGI, hiveAuthFactory);
+          serviceUGI, httpUGI, sparkAuthFactory);
 
       // Context handler
       final ServletContextHandler context = new ServletContextHandler(
@@ -154,7 +154,7 @@ public class ThriftHttpCLIService extends ThriftCLIService {
       httpServer.join();
     } catch (Throwable t) {
       LOG.error(
-          "Error starting HiveServer2: could not start "
+          "Error starting SparkServer2: could not start "
               + ThriftHttpCLIService.class.getSimpleName(), t);
       System.exit(-1);
     }

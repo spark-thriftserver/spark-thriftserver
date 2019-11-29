@@ -23,7 +23,6 @@ import javax.security.auth.login.LoginException
 
 import scala.collection.JavaConverters._
 
-import org.apache.commons.logging.Log
 import org.apache.hadoop.hive.conf.HiveConf
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars
 import org.apache.hadoop.hive.shims.Utils
@@ -31,22 +30,21 @@ import org.apache.hadoop.security.{SecurityUtil, UserGroupInformation}
 import org.slf4j.Logger
 
 import org.apache.spark.sql.SQLContext
-import org.apache.spark.sql.hive.HiveUtils
 import org.apache.spark.sql.service.{AbstractService, Service, ServiceException}
 import org.apache.spark.sql.service.ReflectionUtils._
 import org.apache.spark.sql.service.Service.STATE
-import org.apache.spark.sql.service.auth.HiveAuthFactory
+import org.apache.spark.sql.service.auth.SparkAuthFactory
 import org.apache.spark.sql.service.cli.session.SparkSQLSessionManager
-import org.apache.spark.sql.service.server.HiveServer2
+import org.apache.spark.sql.service.server.SparkServer2
 
-private[service] class SparkSQLCLIService(hiveServer: HiveServer2, sqlContext: SQLContext)
-  extends CLIService(hiveServer)
+private[service] class SparkSQLCLIService(sparkServer: SparkServer2, sqlContext: SQLContext)
+  extends CLIService(sparkServer)
   with ReflectedCompositeService {
 
   override def init(hiveConf: HiveConf): Unit = {
     setSuperField(this, "hiveConf", hiveConf)
 
-    val sparkSqlSessionManager = new SparkSQLSessionManager(hiveServer, sqlContext)
+    val sparkSqlSessionManager = new SparkSQLSessionManager(sparkServer, sqlContext)
     setSuperField(this, "sessionManager", sparkSqlSessionManager)
     addService(sparkSqlSessionManager)
     var sparkServiceUGI: UserGroupInformation = null
@@ -58,13 +56,13 @@ private[service] class SparkSQLCLIService(hiveServer: HiveServer2, sqlContext: S
         val keyTabFile = hiveConf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_KEYTAB)
         if (principal.isEmpty || keyTabFile.isEmpty) {
           throw new IOException(
-            "HiveServer2 Kerberos principal or keytab is not correctly configured")
+            "SparkServer2 Kerberos principal or keytab is not correctly configured")
         }
 
         val originalUgi = UserGroupInformation.getCurrentUser
-        sparkServiceUGI = if (HiveAuthFactory.needUgiLogin(originalUgi,
+        sparkServiceUGI = if (SparkAuthFactory.needUgiLogin(originalUgi,
           SecurityUtil.getServerPrincipal(principal, "0.0.0.0"), keyTabFile)) {
-          HiveAuthFactory.loginFromKeytab(hiveConf)
+          SparkAuthFactory.loginFromKeytab(hiveConf)
           Utils.getUGI()
         } else {
           originalUgi
@@ -81,7 +79,7 @@ private[service] class SparkSQLCLIService(hiveServer: HiveServer2, sqlContext: S
       val keyTabFile = hiveConf.getVar(ConfVars.HIVE_SERVER2_SPNEGO_KEYTAB).trim
       if (principal.nonEmpty && keyTabFile.nonEmpty) {
         try {
-          httpUGI = HiveAuthFactory.loginFromSpnegoKeytabAndReturnUGI(hiveConf)
+          httpUGI = SparkAuthFactory.loginFromSpnegoKeytabAndReturnUGI(hiveConf)
           setSuperField(this, "httpUGI", httpUGI)
         } catch {
           case e: IOException =>

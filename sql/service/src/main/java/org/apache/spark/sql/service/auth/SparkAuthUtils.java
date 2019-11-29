@@ -39,8 +39,8 @@ import org.slf4j.LoggerFactory;
  * This class helps in some aspects of authentication. It creates the proper Thrift classes for the
  * given configuration as well as helps with authenticating requests.
  */
-public class HiveAuthUtils {
-  private static final Logger LOG = LoggerFactory.getLogger(HiveAuthUtils.class);
+public class SparkAuthUtils {
+  private static final Logger LOG = LoggerFactory.getLogger(SparkAuthUtils.class);
 
   public static TTransport getSocketTransport(String host, int port, int loginTimeout) {
     return new TSocket(host, port, loginTimeout);

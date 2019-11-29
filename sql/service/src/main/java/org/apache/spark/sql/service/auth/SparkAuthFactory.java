@@ -47,7 +47,7 @@ import org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge.Server.ServerMode;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.ProxyUsers;
-import org.apache.spark.sql.service.cli.HiveSQLException;
+import org.apache.spark.sql.service.cli.ServiceSQLException;
 import org.apache.spark.sql.service.cli.thrift.ThriftCLIService;
 import org.apache.spark.sql.service.ReflectionUtils;
 import org.apache.thrift.TProcessorFactory;
@@ -64,8 +64,8 @@ import org.slf4j.LoggerFactory;
  * This class helps in some aspects of authentication. It creates the proper Thrift classes for the
  * given configuration as well as helps with authenticating requests.
  */
-public class HiveAuthFactory {
-  private static final Logger LOG = LoggerFactory.getLogger(HiveAuthFactory.class);
+public class SparkAuthFactory {
+  private static final Logger LOG = LoggerFactory.getLogger(SparkAuthFactory.class);
 
 
   public enum AuthTypes {
@@ -92,10 +92,10 @@ public class HiveAuthFactory {
   private String authTypeStr;
   private final String transportMode;
   private final HiveConf conf;
-  private HiveDelegationTokenManager delegationTokenManager = null;
+  private SparkDelegationTokenManager delegationTokenManager = null;
 
   public static final String HS2_PROXY_USER = "hive.server2.proxy.user";
-  public static final String HS2_CLIENT_TOKEN = "hiveserver2ClientToken";
+  public static final String HS2_CLIENT_TOKEN = "sparkserver2ClientToken";
 
   private static Field keytabFile = null;
   private static Method getKeytab = null;
@@ -120,7 +120,7 @@ public class HiveAuthFactory {
     }
   }
 
-  public HiveAuthFactory(HiveConf conf) throws TTransportException, IOException {
+  public SparkAuthFactory(HiveConf conf) throws TTransportException, IOException {
     this.conf = conf;
     transportMode = conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_TRANSPORT_MODE);
     authTypeStr = conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_AUTHENTICATION);
@@ -146,7 +146,7 @@ public class HiveAuthFactory {
         }
 
         // start delegation token manager
-        delegationTokenManager = new HiveDelegationTokenManager();
+        delegationTokenManager = new SparkDelegationTokenManager();
         try {
           // rawStore is only necessary for DBTokenStore
           Object rawStore = null;
@@ -203,7 +203,7 @@ public class HiveAuthFactory {
   }
 
   /**
-   * Returns the thrift processor factory for HiveServer2 running in binary mode
+   * Returns the thrift processor factory for SparkServer2 running in binary mode
    * @param service
    * @return
    * @throws LoginException
@@ -233,7 +233,8 @@ public class HiveAuthFactory {
     String principal = hiveConf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_PRINCIPAL);
     String keyTabFile = hiveConf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_KEYTAB);
     if (principal.isEmpty() || keyTabFile.isEmpty()) {
-      throw new IOException("HiveServer2 Kerberos principal or keytab is not correctly configured");
+      throw new IOException("SparkServer2 Kerberos principal or keytab " +
+          "is not correctly configured");
     } else {
       UserGroupInformation.loginUserFromKeytab(
           SecurityUtil.getServerPrincipal(principal, "0.0.0.0"), keyTabFile);
@@ -246,7 +247,7 @@ public class HiveAuthFactory {
     String principal = hiveConf.getVar(ConfVars.HIVE_SERVER2_SPNEGO_PRINCIPAL);
     String keyTabFile = hiveConf.getVar(ConfVars.HIVE_SERVER2_SPNEGO_KEYTAB);
     if (principal.isEmpty() || keyTabFile.isEmpty()) {
-      throw new IOException("HiveServer2 SPNEGO principal or keytab is not correctly configured");
+      throw new IOException("SparkServer2 SPNEGO principal or keytab is not correctly configured");
     } else {
       return UserGroupInformation.loginUserFromKeytabAndReturnUGI(
           SecurityUtil.getServerPrincipal(principal, "0.0.0.0"), keyTabFile);
@@ -321,9 +322,9 @@ public class HiveAuthFactory {
 
   // retrieve delegation token for the given user
   public String getDelegationToken(String owner, String renewer, String remoteAddr)
-      throws HiveSQLException {
+      throws ServiceSQLException {
     if (delegationTokenManager == null) {
-      throw new HiveSQLException(
+      throw new ServiceSQLException(
           "Delegation token only supported over kerberos authentication", "08S01");
     }
 
@@ -331,48 +332,48 @@ public class HiveAuthFactory {
       String tokenStr = delegationTokenManager.getDelegationTokenWithService(owner, renewer,
           HS2_CLIENT_TOKEN, remoteAddr);
       if (tokenStr == null || tokenStr.isEmpty()) {
-        throw new HiveSQLException(
+        throw new ServiceSQLException(
             "Received empty retrieving delegation token for user " + owner, "08S01");
       }
       return tokenStr;
     } catch (IOException e) {
-      throw new HiveSQLException(
+      throw new ServiceSQLException(
           "Error retrieving delegation token for user " + owner, "08S01", e);
     } catch (InterruptedException e) {
-      throw new HiveSQLException("delegation token retrieval interrupted", "08S01", e);
+      throw new ServiceSQLException("delegation token retrieval interrupted", "08S01", e);
     }
   }
 
   // cancel given delegation token
-  public void cancelDelegationToken(String delegationToken) throws HiveSQLException {
+  public void cancelDelegationToken(String delegationToken) throws ServiceSQLException {
     if (delegationTokenManager == null) {
-      throw new HiveSQLException(
+      throw new ServiceSQLException(
           "Delegation token only supported over kerberos authentication", "08S01");
     }
     try {
       delegationTokenManager.cancelDelegationToken(delegationToken);
     } catch (IOException e) {
-      throw new HiveSQLException(
+      throw new ServiceSQLException(
           "Error canceling delegation token " + delegationToken, "08S01", e);
     }
   }
 
-  public void renewDelegationToken(String delegationToken) throws HiveSQLException {
+  public void renewDelegationToken(String delegationToken) throws ServiceSQLException {
     if (delegationTokenManager == null) {
-      throw new HiveSQLException(
+      throw new ServiceSQLException(
           "Delegation token only supported over kerberos authentication", "08S01");
     }
     try {
       delegationTokenManager.renewDelegationToken(delegationToken);
     } catch (IOException e) {
-      throw new HiveSQLException(
+      throw new ServiceSQLException(
           "Error renewing delegation token " + delegationToken, "08S01", e);
     }
   }
 
-  public String verifyDelegationToken(String delegationToken) throws HiveSQLException {
+  public String verifyDelegationToken(String delegationToken) throws ServiceSQLException {
     if (delegationTokenManager == null) {
-      throw new HiveSQLException(
+      throw new ServiceSQLException(
           "Delegation token only supported over kerberos authentication", "08S01");
     }
     try {
@@ -380,25 +381,25 @@ public class HiveAuthFactory {
     } catch (IOException e) {
       String msg =  "Error verifying delegation token " + delegationToken;
       LOG.error(msg, e);
-      throw new HiveSQLException(msg, "08S01", e);
+      throw new ServiceSQLException(msg, "08S01", e);
     }
   }
 
-  public String getUserFromToken(String delegationToken) throws HiveSQLException {
+  public String getUserFromToken(String delegationToken) throws ServiceSQLException {
     if (delegationTokenManager == null) {
-      throw new HiveSQLException(
+      throw new ServiceSQLException(
           "Delegation token only supported over kerberos authentication", "08S01");
     }
     try {
       return delegationTokenManager.getUserFromToken(delegationToken);
     } catch (IOException e) {
-      throw new HiveSQLException(
+      throw new ServiceSQLException(
           "Error extracting user from delegation token " + delegationToken, "08S01", e);
     }
   }
 
   public static void verifyProxyAccess(String realUser, String proxyUser, String ipAddress,
-    HiveConf hiveConf) throws HiveSQLException {
+    HiveConf hiveConf) throws ServiceSQLException {
     try {
       UserGroupInformation sessionUgi;
       if (UserGroupInformation.isSecurityEnabled()) {
@@ -414,7 +415,7 @@ public class HiveAuthFactory {
             ipAddress, hiveConf);
       }
     } catch (IOException e) {
-      throw new HiveSQLException(
+      throw new ServiceSQLException(
         "Failed to validate proxy privilege of " + realUser + " for " + proxyUser, "08S01", e);
     }
   }

@@ -26,12 +26,12 @@ import org.apache.hadoop.hive.ql.session.SessionState
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.catalog.CatalogTableType
 import org.apache.spark.sql.catalyst.catalog.CatalogTableType.{EXTERNAL, MANAGED, VIEW}
-import org.apache.spark.sql.service.cli.{HiveSQLException, OperationState, OperationType, TableSchema}
-import org.apache.spark.sql.service.cli.session.HiveSession
+import org.apache.spark.sql.service.cli.{OperationState, OperationType, ServiceSQLException, TableSchema}
+import org.apache.spark.sql.service.cli.session.ServiceSession
 
 
 private[service] abstract class SparkMetadataOperation(
-    session: HiveSession,
+    session: ServiceSession,
     opType: OperationType)
   extends Operation(session, opType) with Logging {
 
@@ -41,7 +41,7 @@ private[service] abstract class SparkMetadataOperation(
 
   setHasResultSet(true)
 
-  @throws[HiveSQLException]
+  @throws[ServiceSQLException]
   override def close(): Unit = {
     setState(OperationState.CLOSED)
     cleanupOperationLog()
@@ -105,13 +105,13 @@ private[service] abstract class SparkMetadataOperation(
       HiveConf.ConfVars.HIVE_AUTHORIZATION_ENABLED)
   }
 
-  @throws[HiveSQLException]
+  @throws[ServiceSQLException]
   protected def authorizeMetaGets(opType: HiveOperationType,
                                   inpObjs: util.List[HivePrivilegeObject]): Unit = {
     authorizeMetaGets(opType, inpObjs, null)
   }
 
-  @throws[HiveSQLException]
+  @throws[ServiceSQLException]
   protected def authorizeMetaGets(opType: HiveOperationType,
                                   inpObjs: util.List[HivePrivilegeObject],
                                   cmdString: String): Unit = {
@@ -123,7 +123,7 @@ private[service] abstract class SparkMetadataOperation(
       ss.getAuthorizerV2.checkPrivileges(opType, inpObjs, null, ctxBuilder.build)
     } catch {
       case e@(_: HiveAuthzPluginException | _: HiveAccessControlException) =>
-        throw new HiveSQLException(e.getMessage, e)
+        throw new ServiceSQLException(e.getMessage, e)
     }
   }
 }

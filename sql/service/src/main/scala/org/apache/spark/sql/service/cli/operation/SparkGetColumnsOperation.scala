@@ -32,7 +32,7 @@ import org.apache.spark.sql.catalyst.TableIdentifier
 import org.apache.spark.sql.catalyst.catalog.SessionCatalog
 import org.apache.spark.sql.service.SparkThriftServer2
 import org.apache.spark.sql.service.cli._
-import org.apache.spark.sql.service.cli.session.HiveSession
+import org.apache.spark.sql.service.cli.session.ServiceSession
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.util.{Utils => SparkUtils}
 
@@ -40,7 +40,7 @@ import org.apache.spark.util.{Utils => SparkUtils}
  * Spark's own SparkGetColumnsOperation
  *
  * @param sqlContext SQLContext to use
- * @param parentSession a HiveSession from SessionManager
+ * @param parentSession a ServiceSession from SessionManager
  * @param catalogName catalog name. NULL if not applicable.
  * @param schemaName database name, NULL or a concrete database name
  * @param tableName table name
@@ -48,7 +48,7 @@ import org.apache.spark.util.{Utils => SparkUtils}
  */
 private[service] class SparkGetColumnsOperation(
     sqlContext: SQLContext,
-    parentSession: HiveSession,
+    parentSession: ServiceSession,
     catalogName: String,
     schemaName: String,
     tableName: String,
@@ -207,7 +207,7 @@ private[service] class SparkGetColumnsOperation(
         logError(s"Error executing get columns operation with $statementId", e)
         setState(OperationState.ERROR)
         e match {
-          case hiveException: HiveSQLException =>
+          case hiveException: ServiceSQLException =>
             SparkThriftServer2.listener.onStatementError(
               statementId, hiveException.getMessage, SparkUtils.exceptionString(hiveException))
             throw hiveException
@@ -215,7 +215,7 @@ private[service] class SparkGetColumnsOperation(
             val root = ExceptionUtils.getRootCause(e)
             SparkThriftServer2.listener.onStatementError(
               statementId, root.getMessage, SparkUtils.exceptionString(root))
-            throw new HiveSQLException("Error getting columns: " + root.toString, root)
+            throw new ServiceSQLException("Error getting columns: " + root.toString, root)
         }
     }
     SparkThriftServer2.listener.onStatementFinish(statementId)

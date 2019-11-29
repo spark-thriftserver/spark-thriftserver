@@ -21,12 +21,12 @@ import java.util.Map;
 
 import org.apache.hadoop.hive.ql.session.OperationLog;
 import org.apache.spark.sql.service.cli.OperationType;
-import org.apache.spark.sql.service.cli.session.HiveSession;
+import org.apache.spark.sql.service.cli.session.ServiceSession;
 
 public abstract class ExecuteStatementOperation extends Operation {
   protected String statement = null;
 
-  public ExecuteStatementOperation(HiveSession parentSession, String statement,
+  public ExecuteStatementOperation(ServiceSession parentSession, String statement,
                                    Map<String, String> confOverlay, boolean runInBackground) {
     super(parentSession, confOverlay, OperationType.EXECUTE_STATEMENT, runInBackground);
     this.statement = statement;

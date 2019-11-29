@@ -43,16 +43,9 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.shims.ShimLoader;
 import org.apache.hive.common.util.HiveVersionInfo;
-import org.apache.spark.sql.service.auth.HiveAuthFactory;
-import org.apache.spark.sql.service.cli.FetchOrientation;
-import org.apache.spark.sql.service.cli.FetchType;
-import org.apache.spark.sql.service.cli.GetInfoType;
-import org.apache.spark.sql.service.cli.GetInfoValue;
-import org.apache.spark.sql.service.cli.HiveSQLException;
-import org.apache.spark.sql.service.cli.OperationHandle;
-import org.apache.spark.sql.service.cli.RowSet;
-import org.apache.spark.sql.service.cli.SessionHandle;
-import org.apache.spark.sql.service.cli.TableSchema;
+import org.apache.spark.sql.service.auth.SparkAuthFactory;
+import org.apache.spark.sql.service.cli.*;
+import org.apache.spark.sql.service.cli.ServiceSQLException;
 import org.apache.spark.sql.service.cli.operation.*;
 import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
 import org.apache.spark.sql.service.server.ThreadWithGarbageCleanup;
@@ -67,10 +60,10 @@ import static org.apache.hadoop.hive.conf.SystemVariables.METACONF_PREFIX;
 import static org.apache.hadoop.hive.conf.SystemVariables.SYSTEM_PREFIX;
 
 /**
- * HiveSession
+ * ServiceSession
  *
  */
-public class HiveSessionImpl implements HiveSession {
+public class ServiceSessionImpl implements ServiceSession {
   private final SessionHandle sessionHandle;
   private String username;
   private final String password;
@@ -79,7 +72,7 @@ public class HiveSessionImpl implements HiveSession {
   private String ipAddress;
   private static final String FETCH_WORK_SERDE_CLASS =
       "org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe";
-  private static final Logger LOG = LoggerFactory.getLogger(HiveSessionImpl.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ServiceSessionImpl.class);
   private SessionManager sessionManager;
   private OperationManager operationManager;
   private final Set<OperationHandle> opHandleSet = new HashSet<OperationHandle>();
@@ -88,8 +81,8 @@ public class HiveSessionImpl implements HiveSession {
   private volatile long lastAccessTime;
   private volatile long lastIdleTime;
 
-  public HiveSessionImpl(TProtocolVersion protocol, String username, String password,
-      HiveConf serverhiveConf, String ipAddress) {
+  public ServiceSessionImpl(TProtocolVersion protocol, String username, String password,
+                            HiveConf serverhiveConf, String ipAddress) {
     this.username = username;
     this.password = password;
     this.sessionHandle = new SessionHandle(protocol);
@@ -114,15 +107,15 @@ public class HiveSessionImpl implements HiveSession {
 
   @Override
   /**
-   * Opens a new HiveServer2 session for the client connection.
-   * Creates a new SessionState object that will be associated with this HiveServer2 session.
+   * Opens a new SparkServer2 session for the client connection.
+   * Creates a new SessionState object that will be associated with this SparkServer2 session.
    * When the server executes multiple queries in the same session,
    * this SessionState object is reused across multiple queries.
    * Note that if doAs is true, this call goes through a proxy object,
    * which wraps the method logic in a UserGroupInformation#doAs.
    * That's why it is important to create SessionState here rather than in the constructor.
    */
-  public void open(Map<String, String> sessionConfMap) throws HiveSQLException {
+  public void open(Map<String, String> sessionConfMap) throws ServiceSQLException {
     sessionState = new SessionState(hiveConf, username);
     sessionState.setUserIpAddress(ipAddress);
     sessionState.setIsHiveServerQuery(true);
@@ -137,7 +130,7 @@ public class HiveSessionImpl implements HiveSession {
   }
 
   /**
-   * It is used for processing hiverc file from HiveServer2 side.
+   * It is used for processing hiverc file from SparkServer2 side.
    */
   private class GlobalHivercFileProcessor extends HiveFileProcessor {
     @Override
@@ -155,7 +148,7 @@ public class HiveSessionImpl implements HiveSession {
       String cmd_trimed = cmd.trim();
       try {
         executeStatementInternal(cmd_trimed, null, false, 0);
-      } catch (HiveSQLException e) {
+      } catch (ServiceSQLException e) {
         rc = -1;
         LOG.warn("Failed to execute HQL command in global .hiverc file.", e);
       }
@@ -188,7 +181,7 @@ public class HiveSessionImpl implements HiveSession {
     }
   }
 
-  private void configureSession(Map<String, String> sessionConfMap) throws HiveSQLException {
+  private void configureSession(Map<String, String> sessionConfMap) throws ServiceSQLException {
     SessionState.setCurrentSessionState(sessionState);
     for (Map.Entry<String, String> entry : sessionConfMap.entrySet()) {
       String key = entry.getKey();
@@ -196,7 +189,7 @@ public class HiveSessionImpl implements HiveSession {
         try {
           setVariable(key.substring(4), entry.getValue());
         } catch (Exception e) {
-          throw new HiveSQLException(e);
+          throw new ServiceSQLException(e);
         }
       } else if (key.startsWith("use:")) {
         SessionState.get().setCurrentDatabase(entry.getValue());
@@ -334,7 +327,7 @@ public class HiveSessionImpl implements HiveSession {
   }
 
   protected synchronized void acquire(boolean userAccess) {
-    // Need to make sure that the this HiveServer2's session's SessionState is
+    // Need to make sure that the this SparkServer2's session's SessionState is
     // stored in the thread local for the handler thread.
     SessionState.setCurrentSessionState(sessionState);
     if (userAccess) {
@@ -388,19 +381,19 @@ public class HiveSessionImpl implements HiveSession {
   }
 
   @Override
-  public IMetaStoreClient getMetaStoreClient() throws HiveSQLException {
+  public IMetaStoreClient getMetaStoreClient() throws ServiceSQLException {
     try {
       return Hive.get(getHiveConf()).getMSC();
     } catch (HiveException e) {
-      throw new HiveSQLException("Failed to get metastore connection", e);
+      throw new ServiceSQLException("Failed to get metastore connection", e);
     } catch (MetaException e) {
-      throw new HiveSQLException("Failed to get metastore connection", e);
+      throw new ServiceSQLException("Failed to get metastore connection", e);
     }
   }
 
   @Override
   public GetInfoValue getInfo(GetInfoType getInfoType)
-      throws HiveSQLException {
+      throws ServiceSQLException {
     acquire(true);
     try {
       switch (getInfoType) {
@@ -418,7 +411,7 @@ public class HiveSessionImpl implements HiveSession {
         return new GetInfoValue(128);
       case CLI_TXN_CAPABLE:
       default:
-        throw new HiveSQLException("Unrecognized GetInfoType value: " + getInfoType.toString());
+        throw new ServiceSQLException("Unrecognized GetInfoType value: " + getInfoType.toString());
       }
     } finally {
       release(true);
@@ -427,31 +420,31 @@ public class HiveSessionImpl implements HiveSession {
 
   @Override
   public OperationHandle executeStatement(String statement, Map<String, String> confOverlay)
-      throws HiveSQLException {
+      throws ServiceSQLException {
     return executeStatementInternal(statement, confOverlay, false, 0);
   }
 
   @Override
   public OperationHandle executeStatement(String statement, Map<String, String> confOverlay,
-      long queryTimeout) throws HiveSQLException {
+      long queryTimeout) throws ServiceSQLException {
     return executeStatementInternal(statement, confOverlay, false, queryTimeout);
   }
 
   @Override
   public OperationHandle executeStatementAsync(String statement, Map<String, String> confOverlay)
-      throws HiveSQLException {
+      throws ServiceSQLException {
     return executeStatementInternal(statement, confOverlay, true, 0);
   }
 
   @Override
   public OperationHandle executeStatementAsync(String statement, Map<String, String> confOverlay,
-      long queryTimeout) throws HiveSQLException {
+      long queryTimeout) throws ServiceSQLException {
     return executeStatementInternal(statement, confOverlay, true, queryTimeout);
   }
 
   private OperationHandle executeStatementInternal(String statement,
       Map<String, String> confOverlay, boolean runAsync,
-      long queryTimeout) throws HiveSQLException {
+      long queryTimeout) throws ServiceSQLException {
     acquire(true);
 
     OperationManager operationManager = getOperationManager();
@@ -462,10 +455,10 @@ public class HiveSessionImpl implements HiveSession {
       operation.run();
       opHandleSet.add(opHandle);
       return opHandle;
-    } catch (HiveSQLException e) {
-      // Referring to SQLOperation.java, there is no chance that a HiveSQLException throws
+    } catch (ServiceSQLException e) {
+      // Referring to SQLOperation.java, there is no chance that a ServiceSQLException throws
       // and the asyn background operation submits to thread pool successfully at the same time.
-      // So, Cleanup opHandle directly when got HiveSQLException
+      // So, Cleanup opHandle directly when got ServiceSQLException
       operationManager.closeOperation(opHandle);
       throw e;
     } finally {
@@ -475,7 +468,7 @@ public class HiveSessionImpl implements HiveSession {
 
   @Override
   public OperationHandle getTypeInfo()
-      throws HiveSQLException {
+      throws ServiceSQLException {
     acquire(true);
 
     OperationManager operationManager = getOperationManager();
@@ -485,7 +478,7 @@ public class HiveSessionImpl implements HiveSession {
       operation.run();
       opHandleSet.add(opHandle);
       return opHandle;
-    } catch (HiveSQLException e) {
+    } catch (ServiceSQLException e) {
       operationManager.closeOperation(opHandle);
       throw e;
     } finally {
@@ -495,7 +488,7 @@ public class HiveSessionImpl implements HiveSession {
 
   @Override
   public OperationHandle getCatalogs()
-      throws HiveSQLException {
+      throws ServiceSQLException {
     acquire(true);
 
     OperationManager operationManager = getOperationManager();
@@ -505,7 +498,7 @@ public class HiveSessionImpl implements HiveSession {
       operation.run();
       opHandleSet.add(opHandle);
       return opHandle;
-    } catch (HiveSQLException e) {
+    } catch (ServiceSQLException e) {
       operationManager.closeOperation(opHandle);
       throw e;
     } finally {
@@ -515,7 +508,7 @@ public class HiveSessionImpl implements HiveSession {
 
   @Override
   public OperationHandle getSchemas(String catalogName, String schemaName)
-      throws HiveSQLException {
+      throws ServiceSQLException {
     acquire(true);
 
     OperationManager operationManager = getOperationManager();
@@ -526,7 +519,7 @@ public class HiveSessionImpl implements HiveSession {
       operation.run();
       opHandleSet.add(opHandle);
       return opHandle;
-    } catch (HiveSQLException e) {
+    } catch (ServiceSQLException e) {
       operationManager.closeOperation(opHandle);
       throw e;
     } finally {
@@ -537,7 +530,7 @@ public class HiveSessionImpl implements HiveSession {
   @Override
   public OperationHandle getTables(String catalogName, String schemaName, String tableName,
       List<String> tableTypes)
-          throws HiveSQLException {
+          throws ServiceSQLException {
     acquire(true);
 
     OperationManager operationManager = getOperationManager();
@@ -549,7 +542,7 @@ public class HiveSessionImpl implements HiveSession {
       operation.run();
       opHandleSet.add(opHandle);
       return opHandle;
-    } catch (HiveSQLException e) {
+    } catch (ServiceSQLException e) {
       operationManager.closeOperation(opHandle);
       throw e;
     } finally {
@@ -559,7 +552,7 @@ public class HiveSessionImpl implements HiveSession {
 
   @Override
   public OperationHandle getTableTypes()
-      throws HiveSQLException {
+      throws ServiceSQLException {
     acquire(true);
 
     OperationManager operationManager = getOperationManager();
@@ -570,7 +563,7 @@ public class HiveSessionImpl implements HiveSession {
       operation.run();
       opHandleSet.add(opHandle);
       return opHandle;
-    } catch (HiveSQLException e) {
+    } catch (ServiceSQLException e) {
       operationManager.closeOperation(opHandle);
       throw e;
     } finally {
@@ -580,7 +573,7 @@ public class HiveSessionImpl implements HiveSession {
 
   @Override
   public OperationHandle getColumns(String catalogName, String schemaName,
-      String tableName, String columnName)  throws HiveSQLException {
+      String tableName, String columnName)  throws ServiceSQLException {
     acquire(true);
     String addedJars = Utilities.getResourceFiles(hiveConf, SessionState.ResourceType.JAR);
     if (StringUtils.isNotBlank(addedJars)) {
@@ -595,7 +588,7 @@ public class HiveSessionImpl implements HiveSession {
       operation.run();
       opHandleSet.add(opHandle);
       return opHandle;
-    } catch (HiveSQLException e) {
+    } catch (ServiceSQLException e) {
       operationManager.closeOperation(opHandle);
       throw e;
     } finally {
@@ -605,7 +598,7 @@ public class HiveSessionImpl implements HiveSession {
 
   @Override
   public OperationHandle getFunctions(String catalogName, String schemaName, String functionName)
-      throws HiveSQLException {
+      throws ServiceSQLException {
     acquire(true);
 
     OperationManager operationManager = getOperationManager();
@@ -616,7 +609,7 @@ public class HiveSessionImpl implements HiveSession {
       operation.run();
       opHandleSet.add(opHandle);
       return opHandle;
-    } catch (HiveSQLException e) {
+    } catch (ServiceSQLException e) {
       operationManager.closeOperation(opHandle);
       throw e;
     } finally {
@@ -625,7 +618,7 @@ public class HiveSessionImpl implements HiveSession {
   }
 
   @Override
-  public void close() throws HiveSQLException {
+  public void close() throws ServiceSQLException {
     try {
       acquire(true);
       // Iterate through the opHandles and close their operations
@@ -647,7 +640,7 @@ public class HiveSessionImpl implements HiveSession {
         sessionState = null;
       }
     } catch (IOException ioe) {
-      throw new HiveSQLException("Failure to close", ioe);
+      throw new ServiceSQLException("Failure to close", ioe);
     } finally {
       if (sessionState != null) {
         try {
@@ -740,7 +733,7 @@ public class HiveSessionImpl implements HiveSession {
   }
 
   @Override
-  public void cancelOperation(OperationHandle opHandle) throws HiveSQLException {
+  public void cancelOperation(OperationHandle opHandle) throws ServiceSQLException {
     acquire(true);
     try {
       sessionManager.getOperationManager().cancelOperation(opHandle);
@@ -750,7 +743,7 @@ public class HiveSessionImpl implements HiveSession {
   }
 
   @Override
-  public void closeOperation(OperationHandle opHandle) throws HiveSQLException {
+  public void closeOperation(OperationHandle opHandle) throws ServiceSQLException {
     acquire(true);
     try {
       operationManager.closeOperation(opHandle);
@@ -761,7 +754,7 @@ public class HiveSessionImpl implements HiveSession {
   }
 
   @Override
-  public TableSchema getResultSetMetadata(OperationHandle opHandle) throws HiveSQLException {
+  public TableSchema getResultSetMetadata(OperationHandle opHandle) throws ServiceSQLException {
     acquire(true);
     try {
       return sessionManager.getOperationManager().getOperationResultSetSchema(opHandle);
@@ -772,7 +765,7 @@ public class HiveSessionImpl implements HiveSession {
 
   @Override
   public RowSet fetchResults(OperationHandle opHandle, FetchOrientation orientation,
-      long maxRows, FetchType fetchType) throws HiveSQLException {
+      long maxRows, FetchType fetchType) throws ServiceSQLException {
     acquire(true);
     try {
       if (fetchType == FetchType.QUERY_OUTPUT) {
@@ -784,7 +777,7 @@ public class HiveSessionImpl implements HiveSession {
     }
   }
 
-  protected HiveSession getSession() {
+  protected ServiceSession getSession() {
     return this;
   }
 
@@ -799,46 +792,46 @@ public class HiveSessionImpl implements HiveSession {
   }
 
   @Override
-  public String getDelegationToken(HiveAuthFactory authFactory, String owner, String renewer)
-      throws HiveSQLException {
-    HiveAuthFactory.verifyProxyAccess(getUsername(), owner, getIpAddress(), getHiveConf());
+  public String getDelegationToken(SparkAuthFactory authFactory, String owner, String renewer)
+      throws ServiceSQLException {
+    SparkAuthFactory.verifyProxyAccess(getUsername(), owner, getIpAddress(), getHiveConf());
     return authFactory.getDelegationToken(owner, renewer, getIpAddress());
   }
 
   @Override
-  public void cancelDelegationToken(HiveAuthFactory authFactory, String tokenStr)
-      throws HiveSQLException {
-    HiveAuthFactory.verifyProxyAccess(getUsername(), getUserFromToken(authFactory, tokenStr),
+  public void cancelDelegationToken(SparkAuthFactory authFactory, String tokenStr)
+      throws ServiceSQLException {
+    SparkAuthFactory.verifyProxyAccess(getUsername(), getUserFromToken(authFactory, tokenStr),
         getIpAddress(), getHiveConf());
     authFactory.cancelDelegationToken(tokenStr);
   }
 
   @Override
-  public void renewDelegationToken(HiveAuthFactory authFactory, String tokenStr)
-      throws HiveSQLException {
-    HiveAuthFactory.verifyProxyAccess(getUsername(), getUserFromToken(authFactory, tokenStr),
+  public void renewDelegationToken(SparkAuthFactory authFactory, String tokenStr)
+      throws ServiceSQLException {
+    SparkAuthFactory.verifyProxyAccess(getUsername(), getUserFromToken(authFactory, tokenStr),
         getIpAddress(), getHiveConf());
     authFactory.renewDelegationToken(tokenStr);
   }
 
   // extract the real user from the given token string
-  private String getUserFromToken(HiveAuthFactory authFactory, String tokenStr)
-      throws HiveSQLException {
+  private String getUserFromToken(SparkAuthFactory authFactory, String tokenStr)
+      throws ServiceSQLException {
     return authFactory.getUserFromToken(tokenStr);
   }
 
   @Override
   public OperationHandle getPrimaryKeys(String catalog, String schema,
-      String table) throws HiveSQLException {
+      String table) throws ServiceSQLException {
     acquire(true);
-    throw new HiveSQLException("GetPrimaryKeys is not supported yet");
+    throw new ServiceSQLException("GetPrimaryKeys is not supported yet");
   }
 
   @Override
   public OperationHandle getCrossReference(String primaryCatalog,
       String primarySchema, String primaryTable, String foreignCatalog,
-      String foreignSchema, String foreignTable) throws HiveSQLException {
+      String foreignSchema, String foreignTable) throws ServiceSQLException {
     acquire(true);
-    throw new HiveSQLException("GetCrossReference is not supported yet");
+    throw new ServiceSQLException("GetCrossReference is not supported yet");
   }
 }

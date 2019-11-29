@@ -22,32 +22,32 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
-import org.apache.spark.sql.service.auth.HiveAuthFactory;
+import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.cli.*;
 
-public interface HiveSession extends HiveSessionBase {
+public interface ServiceSession extends ServiceSessionBase {
 
   void open(Map<String, String> sessionConfMap) throws Exception;
 
-  IMetaStoreClient getMetaStoreClient() throws HiveSQLException;
+  IMetaStoreClient getMetaStoreClient() throws ServiceSQLException;
 
   /**
    * getInfo operation handler
    * @param getInfoType
    * @return
-   * @throws HiveSQLException
+   * @throws ServiceSQLException
    */
-  GetInfoValue getInfo(GetInfoType getInfoType) throws HiveSQLException;
+  GetInfoValue getInfo(GetInfoType getInfoType) throws ServiceSQLException;
 
   /**
    * execute operation handler
    * @param statement
    * @param confOverlay
    * @return
-   * @throws HiveSQLException
+   * @throws ServiceSQLException
    */
   OperationHandle executeStatement(String statement,
-                                   Map<String, String> confOverlay) throws HiveSQLException;
+                                   Map<String, String> confOverlay) throws ServiceSQLException;
 
   /**
    * execute operation handler
@@ -55,20 +55,20 @@ public interface HiveSession extends HiveSessionBase {
    * @param confOverlay
    * @param queryTimeout
    * @return
-   * @throws HiveSQLException
+   * @throws ServiceSQLException
    */
   OperationHandle executeStatement(String statement, Map<String, String> confOverlay,
-      long queryTimeout) throws HiveSQLException;
+      long queryTimeout) throws ServiceSQLException;
 
   /**
    * execute operation handler
    * @param statement
    * @param confOverlay
    * @return
-   * @throws HiveSQLException
+   * @throws ServiceSQLException
    */
   OperationHandle executeStatementAsync(String statement, Map<String, String> confOverlay)
-      throws HiveSQLException;
+      throws ServiceSQLException;
 
   /**
    * execute operation handler
@@ -76,34 +76,34 @@ public interface HiveSession extends HiveSessionBase {
    * @param confOverlay
    * @param queryTimeout
    * @return
-   * @throws HiveSQLException
+   * @throws ServiceSQLException
    */
   OperationHandle executeStatementAsync(String statement, Map<String, String> confOverlay,
-      long queryTimeout) throws HiveSQLException;
+      long queryTimeout) throws ServiceSQLException;
 
   /**
    * getTypeInfo operation handler
    * @return
-   * @throws HiveSQLException
+   * @throws ServiceSQLException
    */
-  OperationHandle getTypeInfo() throws HiveSQLException;
+  OperationHandle getTypeInfo() throws ServiceSQLException;
 
   /**
    * getCatalogs operation handler
    * @return
-   * @throws HiveSQLException
+   * @throws ServiceSQLException
    */
-  OperationHandle getCatalogs() throws HiveSQLException;
+  OperationHandle getCatalogs() throws ServiceSQLException;
 
   /**
    * getSchemas operation handler
    * @param catalogName
    * @param schemaName
    * @return
-   * @throws HiveSQLException
+   * @throws ServiceSQLException
    */
   OperationHandle getSchemas(String catalogName, String schemaName)
-      throws HiveSQLException;
+      throws ServiceSQLException;
 
   /**
    * getTables operation handler
@@ -112,17 +112,17 @@ public interface HiveSession extends HiveSessionBase {
    * @param tableName
    * @param tableTypes
    * @return
-   * @throws HiveSQLException
+   * @throws ServiceSQLException
    */
   OperationHandle getTables(String catalogName, String schemaName,
-      String tableName, List<String> tableTypes) throws HiveSQLException;
+      String tableName, List<String> tableTypes) throws ServiceSQLException;
 
   /**
    * getTableTypes operation handler
    * @return
-   * @throws HiveSQLException
+   * @throws ServiceSQLException
    */
-  OperationHandle getTableTypes() throws HiveSQLException ;
+  OperationHandle getTableTypes() throws ServiceSQLException;
 
   /**
    * getColumns operation handler
@@ -131,10 +131,10 @@ public interface HiveSession extends HiveSessionBase {
    * @param tableName
    * @param columnName
    * @return
-   * @throws HiveSQLException
+   * @throws ServiceSQLException
    */
   OperationHandle getColumns(String catalogName, String schemaName,
-      String tableName, String columnName)  throws HiveSQLException;
+      String tableName, String columnName)  throws ServiceSQLException;
 
   /**
    * getFunctions operation handler
@@ -142,10 +142,10 @@ public interface HiveSession extends HiveSessionBase {
    * @param schemaName
    * @param functionName
    * @return
-   * @throws HiveSQLException
+   * @throws ServiceSQLException
    */
   OperationHandle getFunctions(String catalogName, String schemaName,
-      String functionName) throws HiveSQLException;
+      String functionName) throws ServiceSQLException;
 
   /**
    * getPrimaryKeys operation handler
@@ -153,10 +153,10 @@ public interface HiveSession extends HiveSessionBase {
    * @param schema
    * @param table
    * @return
-   * @throws HiveSQLException
+   * @throws ServiceSQLException
    */
   OperationHandle getPrimaryKeys(String catalog, String schema,
-      String table) throws HiveSQLException;
+      String table) throws ServiceSQLException;
 
 
   /**
@@ -168,36 +168,36 @@ public interface HiveSession extends HiveSessionBase {
    * @param foreignSchema
    * @param foreignTable
    * @return
-   * @throws HiveSQLException
+   * @throws ServiceSQLException
    */
   OperationHandle getCrossReference(String primaryCatalog,
       String primarySchema, String primaryTable, String foreignCatalog,
-      String foreignSchema, String foreignTable) throws HiveSQLException;
+      String foreignSchema, String foreignTable) throws ServiceSQLException;
 
   /**
    * close the session
-   * @throws HiveSQLException
+   * @throws ServiceSQLException
    */
-  void close() throws HiveSQLException;
+  void close() throws ServiceSQLException;
 
-  void cancelOperation(OperationHandle opHandle) throws HiveSQLException;
+  void cancelOperation(OperationHandle opHandle) throws ServiceSQLException;
 
-  void closeOperation(OperationHandle opHandle) throws HiveSQLException;
+  void closeOperation(OperationHandle opHandle) throws ServiceSQLException;
 
   TableSchema getResultSetMetadata(OperationHandle opHandle)
-      throws HiveSQLException;
+      throws ServiceSQLException;
 
   RowSet fetchResults(OperationHandle opHandle, FetchOrientation orientation,
-                      long maxRows, FetchType fetchType) throws HiveSQLException;
+                      long maxRows, FetchType fetchType) throws ServiceSQLException;
 
-  String getDelegationToken(HiveAuthFactory authFactory, String owner,
-      String renewer) throws HiveSQLException;
+  String getDelegationToken(SparkAuthFactory authFactory, String owner,
+                            String renewer) throws ServiceSQLException;
 
-  void cancelDelegationToken(HiveAuthFactory authFactory, String tokenStr)
-      throws HiveSQLException;
+  void cancelDelegationToken(SparkAuthFactory authFactory, String tokenStr)
+      throws ServiceSQLException;
 
-  void renewDelegationToken(HiveAuthFactory authFactory, String tokenStr)
-      throws HiveSQLException;
+  void renewDelegationToken(SparkAuthFactory authFactory, String tokenStr)
+      throws ServiceSQLException;
 
   void closeExpiredOperations();
 

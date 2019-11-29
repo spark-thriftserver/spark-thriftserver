@@ -50,7 +50,7 @@ public enum OperationState {
 
   public static void validateTransition(OperationState oldState,
       OperationState newState)
-          throws HiveSQLException {
+          throws ServiceSQLException {
     switch (oldState) {
     case INITIALIZED:
       switch (newState) {
@@ -94,12 +94,12 @@ public enum OperationState {
     default:
       // fall-through
     }
-    throw new HiveSQLException("Illegal Operation state transition " +
+    throw new ServiceSQLException("Illegal Operation state transition " +
         "from " + oldState + " to " + newState);
   }
 
   public void validateTransition(OperationState newState)
-      throws HiveSQLException {
+      throws ServiceSQLException {
     validateTransition(this, newState);
   }
 

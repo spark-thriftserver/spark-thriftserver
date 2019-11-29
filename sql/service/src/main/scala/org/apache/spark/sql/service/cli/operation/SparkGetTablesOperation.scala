@@ -31,14 +31,14 @@ import org.apache.spark.sql.catalyst.catalog.CatalogTableType._
 import org.apache.spark.sql.hive.HiveUtils
 import org.apache.spark.sql.service.SparkThriftServer2
 import org.apache.spark.sql.service.cli._
-import org.apache.spark.sql.service.cli.session.HiveSession
+import org.apache.spark.sql.service.cli.session.ServiceSession
 import org.apache.spark.util.{Utils => SparkUtils}
 
 /**
  * Spark's own GetTablesOperation
  *
  * @param sqlContext SQLContext to use
- * @param parentSession a HiveSession from SessionManager
+ * @param parentSession a ServiceSession from SessionManager
  * @param catalogName catalog name. null if not applicable
  * @param schemaName database name, null or a concrete database name
  * @param tableName table name pattern
@@ -46,7 +46,7 @@ import org.apache.spark.util.{Utils => SparkUtils}
  */
 private[service] class SparkGetTablesOperation(
     sqlContext: SQLContext,
-    parentSession: HiveSession,
+    parentSession: ServiceSession,
     catalogName: String,
     schemaName: String,
     tableName: String,
@@ -160,7 +160,7 @@ private[service] class SparkGetTablesOperation(
         logError(s"Error executing get tables operation with $statementId", e)
         setState(OperationState.ERROR)
         e match {
-          case hiveException: HiveSQLException =>
+          case hiveException: ServiceSQLException =>
             SparkThriftServer2.listener.onStatementError(
               statementId, hiveException.getMessage, SparkUtils.exceptionString(hiveException))
             throw hiveException
@@ -168,7 +168,7 @@ private[service] class SparkGetTablesOperation(
             val root = ExceptionUtils.getRootCause(e)
             SparkThriftServer2.listener.onStatementError(
               statementId, root.getMessage, SparkUtils.exceptionString(root))
-            throw new HiveSQLException("Error getting tables: " + root.toString, root)
+            throw new ServiceSQLException("Error getting tables: " + root.toString, root)
         }
     }
     SparkThriftServer2.listener.onStatementFinish(statementId)

@@ -39,12 +39,12 @@ import org.apache.hadoop.hive.shims.Utils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.spark.sql.service.CompositeService;
 import org.apache.spark.sql.service.ServiceException;
-import org.apache.spark.sql.service.auth.HiveAuthFactory;
+import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.cli.operation.Operation;
-import org.apache.spark.sql.service.cli.session.HiveSession;
+import org.apache.spark.sql.service.cli.session.ServiceSession;
 import org.apache.spark.sql.service.cli.session.SessionManager;
 import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
-import org.apache.spark.sql.service.server.HiveServer2;
+import org.apache.spark.sql.service.server.SparkServer2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,23 +67,23 @@ public class CLIService extends CompositeService implements ICLIService {
   private SessionManager sessionManager;
   private UserGroupInformation serviceUGI;
   private UserGroupInformation httpUGI;
-  // The HiveServer2 instance running this service
-  private final HiveServer2 hiveServer2;
+  // The SparkServer2 instance running this service
+  private final SparkServer2 sparkServer2;
 
-  public CLIService(HiveServer2 hiveServer2) {
+  public CLIService(SparkServer2 sparkServer2) {
     super(CLIService.class.getSimpleName());
-    this.hiveServer2 = hiveServer2;
+    this.sparkServer2 = sparkServer2;
   }
 
   @Override
   public synchronized void init(HiveConf hiveConf) {
     this.hiveConf = hiveConf;
-    sessionManager = new SessionManager(hiveServer2);
+    sessionManager = new SessionManager(sparkServer2);
     addService(sessionManager);
     //  If the hadoop cluster is secure, do a kerberos login for the service from the keytab
     if (UserGroupInformation.isSecurityEnabled()) {
       try {
-        HiveAuthFactory.loginFromKeytab(hiveConf);
+        SparkAuthFactory.loginFromKeytab(hiveConf);
         this.serviceUGI = Utils.getUGI();
       } catch (IOException e) {
         throw new ServiceException("Unable to login to kerberos with given principal/keytab", e);
@@ -99,7 +99,7 @@ public class CLIService extends CompositeService implements ICLIService {
             ", ketabFile: " + keyTabFile);
       } else {
         try {
-          this.httpUGI = HiveAuthFactory.loginFromSpnegoKeytabAndReturnUGI(hiveConf);
+          this.httpUGI = SparkAuthFactory.loginFromSpnegoKeytabAndReturnUGI(hiveConf);
           LOG.info("SPNego httpUGI successfully created.");
         } catch (IOException e) {
           LOG.warn("SPNego httpUGI creation failed: ", e);
@@ -156,7 +156,7 @@ public class CLIService extends CompositeService implements ICLIService {
    */
   @Deprecated
   public SessionHandle openSession(TProtocolVersion protocol, String username, String password,
-      Map<String, String> configuration) throws HiveSQLException {
+      Map<String, String> configuration) throws ServiceSQLException {
     SessionHandle sessionHandle =
         sessionManager.openSession(protocol, username, password, null,
             configuration, false, null);
@@ -171,7 +171,7 @@ public class CLIService extends CompositeService implements ICLIService {
   @Deprecated
   public SessionHandle openSessionWithImpersonation(TProtocolVersion protocol, String username,
       String password, Map<String, String> configuration, String delegationToken)
-          throws HiveSQLException {
+          throws ServiceSQLException {
     SessionHandle sessionHandle = sessionManager.openSession(protocol, username, password,
         null, configuration, true, delegationToken);
     LOG.debug(sessionHandle + ": openSessionWithImpersonation()");
@@ -179,7 +179,7 @@ public class CLIService extends CompositeService implements ICLIService {
   }
 
   public SessionHandle openSession(TProtocolVersion protocol, String username, String password,
-      String ipAddress, Map<String, String> configuration) throws HiveSQLException {
+      String ipAddress, Map<String, String> configuration) throws ServiceSQLException {
     SessionHandle sessionHandle = sessionManager.openSession(protocol, username, password,
         ipAddress, configuration, false, null);
     LOG.debug(sessionHandle + ": openSession()");
@@ -188,7 +188,7 @@ public class CLIService extends CompositeService implements ICLIService {
 
   public SessionHandle openSessionWithImpersonation(TProtocolVersion protocol, String username,
       String password, String ipAddress, Map<String, String> configuration, String delegationToken)
-          throws HiveSQLException {
+          throws ServiceSQLException {
     SessionHandle sessionHandle = sessionManager.openSession(protocol, username, password,
         ipAddress, configuration, true, delegationToken);
     LOG.debug(sessionHandle + ": openSession()");
@@ -200,7 +200,7 @@ public class CLIService extends CompositeService implements ICLIService {
    */
   @Override
   public SessionHandle openSession(String username, String password,
-      Map<String, String> configuration) throws HiveSQLException {
+      Map<String, String> configuration) throws ServiceSQLException {
     SessionHandle sessionHandle = sessionManager.openSession(SERVER_VERSION, username, password,
         null, configuration, false, null);
     LOG.debug(sessionHandle + ": openSession()");
@@ -212,7 +212,7 @@ public class CLIService extends CompositeService implements ICLIService {
    */
   @Override
   public SessionHandle openSessionWithImpersonation(String username, String password,
-      Map<String, String> configuration, String delegationToken) throws HiveSQLException {
+      Map<String, String> configuration, String delegationToken) throws ServiceSQLException {
     SessionHandle sessionHandle = sessionManager.openSession(SERVER_VERSION, username, password,
         null, configuration, true, delegationToken);
     LOG.debug(sessionHandle + ": openSession()");
@@ -224,7 +224,7 @@ public class CLIService extends CompositeService implements ICLIService {
    */
   @Override
   public void closeSession(SessionHandle sessionHandle)
-      throws HiveSQLException {
+      throws ServiceSQLException {
     sessionManager.closeSession(sessionHandle);
     LOG.debug(sessionHandle + ": closeSession()");
   }
@@ -234,7 +234,7 @@ public class CLIService extends CompositeService implements ICLIService {
    */
   @Override
   public GetInfoValue getInfo(SessionHandle sessionHandle, GetInfoType getInfoType)
-      throws HiveSQLException {
+      throws ServiceSQLException {
     GetInfoValue infoValue = sessionManager.getSession(sessionHandle)
         .getInfo(getInfoType);
     LOG.debug(sessionHandle + ": getInfo()");
@@ -247,8 +247,8 @@ public class CLIService extends CompositeService implements ICLIService {
    */
   @Override
   public OperationHandle executeStatement(SessionHandle sessionHandle, String statement,
-      Map<String, String> confOverlay) throws HiveSQLException {
-    HiveSession session = sessionManager.getSession(sessionHandle);
+      Map<String, String> confOverlay) throws ServiceSQLException {
+    ServiceSession session = sessionManager.getSession(sessionHandle);
     OperationHandle opHandle = session.executeStatement(statement, confOverlay);
     LOG.debug(sessionHandle + ": executeStatement()");
     return opHandle;
@@ -259,8 +259,8 @@ public class CLIService extends CompositeService implements ICLIService {
    */
   @Override
   public OperationHandle executeStatement(SessionHandle sessionHandle, String statement,
-        Map<String, String> confOverlay, long queryTimeout) throws HiveSQLException {
-    HiveSession session = sessionManager.getSession(sessionHandle);
+        Map<String, String> confOverlay, long queryTimeout) throws ServiceSQLException {
+    ServiceSession session = sessionManager.getSession(sessionHandle);
     OperationHandle opHandle = session.executeStatement(statement, confOverlay, queryTimeout);
     LOG.debug(sessionHandle + ": executeStatement()");
     return opHandle;
@@ -271,8 +271,8 @@ public class CLIService extends CompositeService implements ICLIService {
    */
   @Override
   public OperationHandle executeStatementAsync(SessionHandle sessionHandle, String statement,
-      Map<String, String> confOverlay) throws HiveSQLException {
-    HiveSession session = sessionManager.getSession(sessionHandle);
+      Map<String, String> confOverlay) throws ServiceSQLException {
+    ServiceSession session = sessionManager.getSession(sessionHandle);
     OperationHandle opHandle = session.executeStatementAsync(statement, confOverlay);
     LOG.debug(sessionHandle + ": executeStatementAsync()");
     return opHandle;
@@ -283,8 +283,8 @@ public class CLIService extends CompositeService implements ICLIService {
    */
   @Override
   public OperationHandle executeStatementAsync(SessionHandle sessionHandle, String statement,
-      Map<String, String> confOverlay, long queryTimeout) throws HiveSQLException {
-    HiveSession session = sessionManager.getSession(sessionHandle);
+      Map<String, String> confOverlay, long queryTimeout) throws ServiceSQLException {
+    ServiceSession session = sessionManager.getSession(sessionHandle);
     OperationHandle opHandle = session.executeStatementAsync(statement, confOverlay, queryTimeout);
     LOG.debug(sessionHandle + ": executeStatementAsync()");
     return opHandle;
@@ -296,7 +296,7 @@ public class CLIService extends CompositeService implements ICLIService {
    */
   @Override
   public OperationHandle getTypeInfo(SessionHandle sessionHandle)
-      throws HiveSQLException {
+      throws ServiceSQLException {
     OperationHandle opHandle = sessionManager.getSession(sessionHandle)
         .getTypeInfo();
     LOG.debug(sessionHandle + ": getTypeInfo()");
@@ -308,7 +308,7 @@ public class CLIService extends CompositeService implements ICLIService {
    */
   @Override
   public OperationHandle getCatalogs(SessionHandle sessionHandle)
-      throws HiveSQLException {
+      throws ServiceSQLException {
     OperationHandle opHandle = sessionManager.getSession(sessionHandle)
         .getCatalogs();
     LOG.debug(sessionHandle + ": getCatalogs()");
@@ -321,7 +321,7 @@ public class CLIService extends CompositeService implements ICLIService {
   @Override
   public OperationHandle getSchemas(SessionHandle sessionHandle,
       String catalogName, String schemaName)
-          throws HiveSQLException {
+          throws ServiceSQLException {
     OperationHandle opHandle = sessionManager.getSession(sessionHandle)
         .getSchemas(catalogName, schemaName);
     LOG.debug(sessionHandle + ": getSchemas()");
@@ -335,7 +335,7 @@ public class CLIService extends CompositeService implements ICLIService {
   @Override
   public OperationHandle getTables(SessionHandle sessionHandle,
       String catalogName, String schemaName, String tableName, List<String> tableTypes)
-          throws HiveSQLException {
+          throws ServiceSQLException {
     OperationHandle opHandle = sessionManager.getSession(sessionHandle)
         .getTables(catalogName, schemaName, tableName, tableTypes);
     LOG.debug(sessionHandle + ": getTables()");
@@ -347,7 +347,7 @@ public class CLIService extends CompositeService implements ICLIService {
    */
   @Override
   public OperationHandle getTableTypes(SessionHandle sessionHandle)
-      throws HiveSQLException {
+      throws ServiceSQLException {
     OperationHandle opHandle = sessionManager.getSession(sessionHandle)
         .getTableTypes();
     LOG.debug(sessionHandle + ": getTableTypes()");
@@ -360,7 +360,7 @@ public class CLIService extends CompositeService implements ICLIService {
   @Override
   public OperationHandle getColumns(SessionHandle sessionHandle,
       String catalogName, String schemaName, String tableName, String columnName)
-          throws HiveSQLException {
+          throws ServiceSQLException {
     OperationHandle opHandle = sessionManager.getSession(sessionHandle)
         .getColumns(catalogName, schemaName, tableName, columnName);
     LOG.debug(sessionHandle + ": getColumns()");
@@ -373,7 +373,7 @@ public class CLIService extends CompositeService implements ICLIService {
   @Override
   public OperationHandle getFunctions(SessionHandle sessionHandle,
       String catalogName, String schemaName, String functionName)
-          throws HiveSQLException {
+          throws ServiceSQLException {
     OperationHandle opHandle = sessionManager.getSession(sessionHandle)
         .getFunctions(catalogName, schemaName, functionName);
     LOG.debug(sessionHandle + ": getFunctions()");
@@ -385,7 +385,7 @@ public class CLIService extends CompositeService implements ICLIService {
    */
   @Override
   public OperationHandle getPrimaryKeys(SessionHandle sessionHandle,
-      String catalog, String schema, String table) throws HiveSQLException {
+      String catalog, String schema, String table) throws ServiceSQLException {
     OperationHandle opHandle = sessionManager.getSession(sessionHandle)
         .getPrimaryKeys(catalog, schema, table);
     LOG.debug(sessionHandle + ": getPrimaryKeys()");
@@ -398,7 +398,7 @@ public class CLIService extends CompositeService implements ICLIService {
   @Override
   public OperationHandle getCrossReference(SessionHandle sessionHandle,
       String primaryCatalog, String primarySchema, String primaryTable, String foreignCatalog,
-      String foreignSchema, String foreignTable) throws HiveSQLException {
+      String foreignSchema, String foreignTable) throws ServiceSQLException {
     OperationHandle opHandle = sessionManager.getSession(sessionHandle)
         .getCrossReference(primaryCatalog, primarySchema, primaryTable,
          foreignCatalog,
@@ -412,7 +412,7 @@ public class CLIService extends CompositeService implements ICLIService {
    */
   @Override
   public OperationStatus getOperationStatus(OperationHandle opHandle)
-      throws HiveSQLException {
+      throws ServiceSQLException {
     Operation operation = sessionManager.getOperationManager().getOperation(opHandle);
     /**
      * If this is a background operation run asynchronously,
@@ -445,7 +445,7 @@ public class CLIService extends CompositeService implements ICLIService {
     return opStatus;
   }
 
-  public HiveConf getSessionConf(SessionHandle sessionHandle) throws HiveSQLException {
+  public HiveConf getSessionConf(SessionHandle sessionHandle) throws ServiceSQLException {
     return sessionManager.getSession(sessionHandle).getHiveConf();
   }
 
@@ -454,7 +454,7 @@ public class CLIService extends CompositeService implements ICLIService {
    */
   @Override
   public void cancelOperation(OperationHandle opHandle)
-      throws HiveSQLException {
+      throws ServiceSQLException {
     sessionManager.getOperationManager().getOperation(opHandle)
     .getParentSession().cancelOperation(opHandle);
     LOG.debug(opHandle + ": cancelOperation()");
@@ -465,7 +465,7 @@ public class CLIService extends CompositeService implements ICLIService {
    */
   @Override
   public void closeOperation(OperationHandle opHandle)
-      throws HiveSQLException {
+      throws ServiceSQLException {
     sessionManager.getOperationManager().getOperation(opHandle)
     .getParentSession().closeOperation(opHandle);
     LOG.debug(opHandle + ": closeOperation");
@@ -476,7 +476,7 @@ public class CLIService extends CompositeService implements ICLIService {
    */
   @Override
   public TableSchema getResultSetMetadata(OperationHandle opHandle)
-      throws HiveSQLException {
+      throws ServiceSQLException {
     TableSchema tableSchema = sessionManager.getOperationManager()
         .getOperation(opHandle).getParentSession().getResultSetMetadata(opHandle);
     LOG.debug(opHandle + ": getResultSetMetadata()");
@@ -488,14 +488,14 @@ public class CLIService extends CompositeService implements ICLIService {
    */
   @Override
   public RowSet fetchResults(OperationHandle opHandle)
-      throws HiveSQLException {
+      throws ServiceSQLException {
     return fetchResults(opHandle, Operation.DEFAULT_FETCH_ORIENTATION,
         Operation.DEFAULT_FETCH_MAX_ROWS, FetchType.QUERY_OUTPUT);
   }
 
   @Override
   public RowSet fetchResults(OperationHandle opHandle, FetchOrientation orientation,
-                             long maxRows, FetchType fetchType) throws HiveSQLException {
+                             long maxRows, FetchType fetchType) throws ServiceSQLException {
     RowSet rowSet = sessionManager.getOperationManager().getOperation(opHandle)
         .getParentSession().fetchResults(opHandle, orientation, maxRows, fetchType);
     LOG.debug(opHandle + ": fetchResults()");
@@ -504,7 +504,7 @@ public class CLIService extends CompositeService implements ICLIService {
 
   // obtain delegation token for the give user from metastore
   public synchronized String getDelegationTokenFromMetaStore(String owner)
-      throws HiveSQLException, UnsupportedOperationException, LoginException, IOException {
+      throws ServiceSQLException, UnsupportedOperationException, LoginException, IOException {
     if (!hiveConf.getBoolVar(HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL) ||
         !hiveConf.getBoolVar(HiveConf.ConfVars.HIVE_SERVER2_ENABLE_DOAS)) {
       throw new UnsupportedOperationException(
@@ -518,14 +518,14 @@ public class CLIService extends CompositeService implements ICLIService {
       if (e.getCause() instanceof UnsupportedOperationException) {
         throw (UnsupportedOperationException)e.getCause();
       } else {
-        throw new HiveSQLException("Error connect metastore to setup impersonation", e);
+        throw new ServiceSQLException("Error connect metastore to setup impersonation", e);
       }
     }
   }
 
   @Override
-  public String getDelegationToken(SessionHandle sessionHandle, HiveAuthFactory authFactory,
-      String owner, String renewer) throws HiveSQLException {
+  public String getDelegationToken(SessionHandle sessionHandle, SparkAuthFactory authFactory,
+      String owner, String renewer) throws ServiceSQLException {
     String delegationToken = sessionManager.getSession(sessionHandle)
         .getDelegationToken(authFactory, owner, renewer);
     LOG.info(sessionHandle  + ": getDelegationToken()");
@@ -533,15 +533,15 @@ public class CLIService extends CompositeService implements ICLIService {
   }
 
   @Override
-  public void cancelDelegationToken(SessionHandle sessionHandle, HiveAuthFactory authFactory,
-      String tokenStr) throws HiveSQLException {
+  public void cancelDelegationToken(SessionHandle sessionHandle, SparkAuthFactory authFactory,
+      String tokenStr) throws ServiceSQLException {
     sessionManager.getSession(sessionHandle).cancelDelegationToken(authFactory, tokenStr);
     LOG.info(sessionHandle  + ": cancelDelegationToken()");
   }
 
   @Override
-  public void renewDelegationToken(SessionHandle sessionHandle, HiveAuthFactory authFactory,
-      String tokenStr) throws HiveSQLException {
+  public void renewDelegationToken(SessionHandle sessionHandle, SparkAuthFactory authFactory,
+      String tokenStr) throws ServiceSQLException {
     sessionManager.getSession(sessionHandle).renewDelegationToken(authFactory, tokenStr);
     LOG.info(sessionHandle  + ": renewDelegationToken()");
   }

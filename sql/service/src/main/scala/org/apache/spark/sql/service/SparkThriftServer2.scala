@@ -37,12 +37,12 @@ import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.service.ReflectionUtils._
 import org.apache.spark.sql.service.cli.{ReflectedCompositeService, SparkSQLCLIService}
 import org.apache.spark.sql.service.cli.thrift.{ThriftBinaryCLIService, ThriftHttpCLIService}
-import org.apache.spark.sql.service.server.HiveServer2
+import org.apache.spark.sql.service.server.SparkServer2
 import org.apache.spark.sql.service.ui.ThriftServerTab
 import org.apache.spark.util.{ShutdownHookManager, Utils}
 
 /**
- * The main entry point for the Spark SQL port of HiveServer2.  Starts up a `SparkSQLContext` and a
+ * The main entry point for the Spark SQL port of SparkServer2.  Starts up a `SparkSQLContext` and a
  * `SparkThriftServer2` thrift server.
  */
 object SparkThriftServer2 extends Logging {
@@ -76,13 +76,13 @@ object SparkThriftServer2 extends Logging {
   def main(args: Array[String]): Unit = {
     // If the arguments contains "-h" or "--help", print out the usage and exit.
     if (args.contains("-h") || args.contains("--help")) {
-      HiveServer2.main(args)
+      SparkServer2.main(args)
       // The following code should not be reachable. It is added to ensure the main function exits.
       return
     }
 
     Utils.initDaemon(log)
-    val optionsProcessor = new HiveServer2.ServerOptionsProcessor("SparkThriftServer2")
+    val optionsProcessor = new SparkServer2.ServerOptionsProcessor("SparkThriftServer2")
     optionsProcessor.parse(args)
 
     logInfo("Starting SparkContext")
@@ -112,7 +112,7 @@ object SparkThriftServer2 extends Logging {
       // If application was killed before SparkThriftServer2 start successfully then SparkSubmit
       // process can not exit, so check whether if SparkContext was stopped.
       if (SparkSQLEnv.sparkContext.stopped.get()) {
-        logError("SparkContext has stopped even if HiveServer2 has started, so exit")
+        logError("SparkContext has stopped even if SparkServer2 has started, so exit")
         System.exit(-1)
       }
     } catch {
@@ -169,7 +169,7 @@ object SparkThriftServer2 extends Logging {
    * An inner sparkListener called in sc.stop to clean up the SparkThriftServer2
    */
   private[service] class SparkThriftServer2Listener(
-      val server: HiveServer2,
+      val server: SparkServer2,
       val conf: SQLConf) extends SparkListener {
 
     override def onApplicationEnd(applicationEnd: SparkListenerApplicationEnd): Unit = {
@@ -298,7 +298,7 @@ object SparkThriftServer2 extends Logging {
 }
 
 private[spark] class SparkThriftServer2(sqlContext: SQLContext)
-  extends HiveServer2
+  extends SparkServer2
   with ReflectedCompositeService {
   // state is tracked internally so that the server only attempts to shut down if it successfully
   // started, and then once only.

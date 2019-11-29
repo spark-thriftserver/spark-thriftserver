@@ -26,18 +26,18 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.service.SparkThriftServer2
 import org.apache.spark.sql.service.cli._
-import org.apache.spark.sql.service.cli.session.HiveSession
+import org.apache.spark.sql.service.cli.session.ServiceSession
 import org.apache.spark.util.{Utils => SparkUtils}
 
 /**
  * Spark's own GetCatalogsOperation
  *
  * @param sqlContext SQLContext to use
- * @param parentSession a HiveSession from SessionManager
+ * @param parentSession a ServiceSession from SessionManager
  */
 private[service] class SparkGetCatalogsOperation(
     sqlContext: SQLContext,
-    parentSession: HiveSession)
+    parentSession: ServiceSession)
   extends SparkMetadataOperation(parentSession, OperationType.GET_CATALOGS) with Logging {
 
   private var statementId: String = _
@@ -78,7 +78,7 @@ private[service] class SparkGetCatalogsOperation(
         logError(s"Error executing get catalogs operation with $statementId", e)
         setState(OperationState.ERROR)
         e match {
-          case hiveException: HiveSQLException =>
+          case hiveException: ServiceSQLException =>
             SparkThriftServer2.listener.onStatementError(
               statementId, hiveException.getMessage, SparkUtils.exceptionString(hiveException))
             throw hiveException
@@ -86,7 +86,7 @@ private[service] class SparkGetCatalogsOperation(
             val root = ExceptionUtils.getRootCause(e)
             SparkThriftServer2.listener.onStatementError(
               statementId, root.getMessage, SparkUtils.exceptionString(root))
-            throw new HiveSQLException("Error getting catalogs: " + root.toString, root)
+            throw new ServiceSQLException("Error getting catalogs: " + root.toString, root)
         }
     }
     SparkThriftServer2.listener.onStatementFinish(statementId)

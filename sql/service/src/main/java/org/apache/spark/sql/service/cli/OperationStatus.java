@@ -25,9 +25,9 @@ package org.apache.spark.sql.service.cli;
 public class OperationStatus {
 
   private final OperationState state;
-  private final HiveSQLException operationException;
+  private final ServiceSQLException operationException;
 
-  public OperationStatus(OperationState state, HiveSQLException operationException) {
+  public OperationStatus(OperationState state, ServiceSQLException operationException) {
     this.state = state;
     this.operationException = operationException;
   }
@@ -36,7 +36,7 @@ public class OperationStatus {
     return state;
   }
 
-  public HiveSQLException getOperationException() {
+  public ServiceSQLException getOperationException() {
     return operationException;
   }
 

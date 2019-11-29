@@ -40,13 +40,10 @@ import org.apache.hadoop.hive.shims.HadoopShims.KerberosNameShim;
 import org.apache.hadoop.hive.shims.ShimLoader;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.spark.sql.service.CookieSigner;
-import org.apache.spark.sql.service.auth.AuthenticationProviderFactory;
+import org.apache.spark.sql.service.auth.*;
 import org.apache.spark.sql.service.auth.AuthenticationProviderFactory.AuthMethods;
-import org.apache.spark.sql.service.auth.HiveAuthFactory;
-import org.apache.spark.sql.service.auth.HttpAuthUtils;
-import org.apache.spark.sql.service.auth.HttpAuthenticationException;
-import org.apache.spark.sql.service.auth.PasswdAuthenticationProvider;
-import org.apache.spark.sql.service.cli.HiveSQLException;
+import org.apache.spark.sql.service.auth.SparkAuthFactory;
+import org.apache.spark.sql.service.cli.ServiceSQLException;
 import org.apache.spark.sql.service.cli.session.SessionManager;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TProtocolFactory;
@@ -84,17 +81,17 @@ public class ThriftHttpServlet extends TServlet {
   private int cookieMaxAge;
   private boolean isCookieSecure;
   private boolean isHttpOnlyCookie;
-  private final HiveAuthFactory hiveAuthFactory;
+  private final SparkAuthFactory sparkAuthFactory;
   private static final String HIVE_DELEGATION_TOKEN_HEADER =  "X-Hive-Delegation-Token";
 
   public ThriftHttpServlet(TProcessor processor, TProtocolFactory protocolFactory,
       String authType, UserGroupInformation serviceUGI, UserGroupInformation httpUGI,
-      HiveAuthFactory hiveAuthFactory) {
+      SparkAuthFactory sparkAuthFactory) {
     super(processor, protocolFactory);
     this.authType = authType;
     this.serviceUGI = serviceUGI;
     this.httpUGI = httpUGI;
-    this.hiveAuthFactory = hiveAuthFactory;
+    this.sparkAuthFactory = sparkAuthFactory;
     this.isCookieAuthEnabled = hiveConf.getBoolVar(
       ConfVars.HIVE_SERVER2_THRIFT_HTTP_COOKIE_AUTH_ENABLED);
     // Initialize the cookie based authentication related variables.
@@ -167,7 +164,7 @@ public class ThriftHttpServlet extends TServlet {
       SessionManager.setIpAddress(clientIpAddress);
       // Generate new cookie and add it to the response
       if (requireNewCookie &&
-          !authType.equalsIgnoreCase(HiveAuthFactory.AuthTypes.NOSASL.toString())) {
+          !authType.equalsIgnoreCase(SparkAuthFactory.AuthTypes.NOSASL.toString())) {
         String cookieToken = HttpAuthUtils.createCookieToken(clientUserName);
         Cookie hs2Cookie = createCookie(signer.signCookie(cookieToken));
 
@@ -210,7 +207,7 @@ public class ThriftHttpServlet extends TServlet {
 
     // Following is the main loop which iterates through all the cookies send by the client.
     // The HS2 generated cookies are of the format hive.server2.auth=<value>
-    // A cookie which is identified as a hiveserver2 generated cookie is validated
+    // A cookie which is identified as a sparkserver2 generated cookie is validated
     // by calling signer.verifyAndExtract(). If the validation passes, send the
     // username for which the cookie is validated to the caller. If no client side
     // cookie passes the validation, return null to the caller.
@@ -328,7 +325,7 @@ public class ThriftHttpServlet extends TServlet {
       throws HttpAuthenticationException {
     String userName = getUsername(request, authType);
     // No-op when authType is NOSASL
-    if (!authType.equalsIgnoreCase(HiveAuthFactory.AuthTypes.NOSASL.toString())) {
+    if (!authType.equalsIgnoreCase(SparkAuthFactory.AuthTypes.NOSASL.toString())) {
       try {
         AuthMethods authMethod = AuthMethods.getValidAuthMethod(authType);
         PasswdAuthenticationProvider provider =
@@ -346,8 +343,8 @@ public class ThriftHttpServlet extends TServlet {
       throws HttpAuthenticationException {
     String tokenStr = request.getHeader(HIVE_DELEGATION_TOKEN_HEADER);
     try {
-      return hiveAuthFactory.verifyDelegationToken(tokenStr);
-    } catch (HiveSQLException e) {
+      return sparkAuthFactory.verifyDelegationToken(tokenStr);
+    } catch (ServiceSQLException e) {
       throw new HttpAuthenticationException(e);
     }
   }
@@ -541,7 +538,7 @@ public class ThriftHttpServlet extends TServlet {
   }
 
   private boolean isKerberosAuthMode(String authType) {
-    return authType.equalsIgnoreCase(HiveAuthFactory.AuthTypes.KERBEROS.toString());
+    return authType.equalsIgnoreCase(SparkAuthFactory.AuthTypes.KERBEROS.toString());
   }
 
   private static String getDoAsQueryParam(String queryString) {

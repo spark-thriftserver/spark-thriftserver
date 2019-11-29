@@ -26,10 +26,10 @@ import org.apache.spark.sql.service.rpc.thrift.TStatus;
 import org.apache.spark.sql.service.rpc.thrift.TStatusCode;
 
 /**
- * HiveSQLException.
+ * ServiceSQLException.
  *
  */
-public class HiveSQLException extends SQLException {
+public class ServiceSQLException extends SQLException {
 
   /**
    *
@@ -39,21 +39,21 @@ public class HiveSQLException extends SQLException {
   /**
    *
    */
-  public HiveSQLException() {
+  public ServiceSQLException() {
     super();
   }
 
   /**
    * @param reason
    */
-  public HiveSQLException(String reason) {
+  public ServiceSQLException(String reason) {
     super(reason);
   }
 
   /**
    * @param cause
    */
-  public HiveSQLException(Throwable cause) {
+  public ServiceSQLException(Throwable cause) {
     super(cause);
   }
 
@@ -61,7 +61,7 @@ public class HiveSQLException extends SQLException {
    * @param reason
    * @param sqlState
    */
-  public HiveSQLException(String reason, String sqlState) {
+  public ServiceSQLException(String reason, String sqlState) {
     super(reason, sqlState);
   }
 
@@ -69,7 +69,7 @@ public class HiveSQLException extends SQLException {
    * @param reason
    * @param cause
    */
-  public HiveSQLException(String reason, Throwable cause) {
+  public ServiceSQLException(String reason, Throwable cause) {
     super(reason, cause);
   }
 
@@ -78,7 +78,7 @@ public class HiveSQLException extends SQLException {
    * @param sqlState
    * @param vendorCode
    */
-  public HiveSQLException(String reason, String sqlState, int vendorCode) {
+  public ServiceSQLException(String reason, String sqlState, int vendorCode) {
     super(reason, sqlState, vendorCode);
   }
 
@@ -87,7 +87,7 @@ public class HiveSQLException extends SQLException {
    * @param sqlState
    * @param cause
    */
-  public HiveSQLException(String reason, String sqlState, Throwable cause) {
+  public ServiceSQLException(String reason, String sqlState, Throwable cause) {
     super(reason, sqlState, cause);
   }
 
@@ -97,11 +97,11 @@ public class HiveSQLException extends SQLException {
    * @param vendorCode
    * @param cause
    */
-  public HiveSQLException(String reason, String sqlState, int vendorCode, Throwable cause) {
+  public ServiceSQLException(String reason, String sqlState, int vendorCode, Throwable cause) {
     super(reason, sqlState, vendorCode, cause);
   }
 
-  public HiveSQLException(TStatus status) {
+  public ServiceSQLException(TStatus status) {
     // TODO: set correct vendorCode field
     super(status.getErrorMessage(), status.getSqlState(), status.getErrorCode());
     if (status.getInfoMessages() != null) {
@@ -129,8 +129,8 @@ public class HiveSQLException extends SQLException {
    * @return a {@link TStatus} object
    */
   public static TStatus toTStatus(Exception e) {
-    if (e instanceof HiveSQLException) {
-      return ((HiveSQLException)e).toTStatus();
+    if (e instanceof ServiceSQLException) {
+      return ((ServiceSQLException)e).toTStatus();
     }
     TStatus tStatus = new TStatus(TStatusCode.ERROR_STATUS);
     tStatus.setErrorMessage(e.getMessage());

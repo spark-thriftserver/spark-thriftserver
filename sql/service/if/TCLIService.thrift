@@ -561,7 +561,7 @@ struct TOperationHandle {
 // Open a session (connection) on the server against
 // which operations may be executed.
 struct TOpenSessionReq {
-  // The version of the HiveServer2 protocol that the client is using.
+  // The version of the SparkServer2 protocol that the client is using.
   1: required TProtocolVersion client_protocol = TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V10
 
   // Username and password for authentication.
@@ -718,7 +718,7 @@ struct TExecuteStatementResp {
 
 // GetTypeInfo()
 //
-// Get information about types supported by the HiveServer instance.
+// Get information about types supported by the SparkServer instance.
 // The information is returned as a result set which can be fetched
 // using the OperationHandle provided in the response.
 //

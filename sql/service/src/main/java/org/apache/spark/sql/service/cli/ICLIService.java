@@ -23,91 +23,91 @@ import java.util.Map;
 
 
 
-import org.apache.spark.sql.service.auth.HiveAuthFactory;
+import org.apache.spark.sql.service.auth.SparkAuthFactory;
 
 public interface ICLIService {
 
   SessionHandle openSession(String username, String password,
       Map<String, String> configuration)
-          throws HiveSQLException;
+          throws ServiceSQLException;
 
   SessionHandle openSessionWithImpersonation(String username, String password,
       Map<String, String> configuration, String delegationToken)
-          throws HiveSQLException;
+          throws ServiceSQLException;
 
   void closeSession(SessionHandle sessionHandle)
-      throws HiveSQLException;
+      throws ServiceSQLException;
 
   GetInfoValue getInfo(SessionHandle sessionHandle, GetInfoType infoType)
-      throws HiveSQLException;
+      throws ServiceSQLException;
 
   OperationHandle executeStatement(SessionHandle sessionHandle, String statement,
-      Map<String, String> confOverlay) throws HiveSQLException;
+      Map<String, String> confOverlay) throws ServiceSQLException;
 
   OperationHandle executeStatement(SessionHandle sessionHandle, String statement,
-      Map<String, String> confOverlay, long queryTimeout) throws HiveSQLException;
+      Map<String, String> confOverlay, long queryTimeout) throws ServiceSQLException;
 
   OperationHandle executeStatementAsync(SessionHandle sessionHandle, String statement,
-      Map<String, String> confOverlay) throws HiveSQLException;
+      Map<String, String> confOverlay) throws ServiceSQLException;
   OperationHandle executeStatementAsync(SessionHandle sessionHandle, String statement,
-      Map<String, String> confOverlay, long queryTimeout) throws HiveSQLException;
+      Map<String, String> confOverlay, long queryTimeout) throws ServiceSQLException;
 
   OperationHandle getTypeInfo(SessionHandle sessionHandle)
-      throws HiveSQLException;
+      throws ServiceSQLException;
 
   OperationHandle getCatalogs(SessionHandle sessionHandle)
-      throws HiveSQLException;
+      throws ServiceSQLException;
 
   OperationHandle getSchemas(SessionHandle sessionHandle,
       String catalogName, String schemaName)
-          throws HiveSQLException;
+          throws ServiceSQLException;
 
   OperationHandle getTables(SessionHandle sessionHandle,
       String catalogName, String schemaName, String tableName, List<String> tableTypes)
-          throws HiveSQLException;
+          throws ServiceSQLException;
 
   OperationHandle getTableTypes(SessionHandle sessionHandle)
-      throws HiveSQLException;
+      throws ServiceSQLException;
 
   OperationHandle getColumns(SessionHandle sessionHandle,
       String catalogName, String schemaName, String tableName, String columnName)
-          throws HiveSQLException;
+          throws ServiceSQLException;
 
   OperationHandle getFunctions(SessionHandle sessionHandle,
       String catalogName, String schemaName, String functionName)
-          throws HiveSQLException;
+          throws ServiceSQLException;
 
   OperationStatus getOperationStatus(OperationHandle opHandle)
-      throws HiveSQLException;
+      throws ServiceSQLException;
 
   void cancelOperation(OperationHandle opHandle)
-      throws HiveSQLException;
+      throws ServiceSQLException;
 
   void closeOperation(OperationHandle opHandle)
-      throws HiveSQLException;
+      throws ServiceSQLException;
 
   TableSchema getResultSetMetadata(OperationHandle opHandle)
-      throws HiveSQLException;
+      throws ServiceSQLException;
 
   RowSet fetchResults(OperationHandle opHandle)
-      throws HiveSQLException;
+      throws ServiceSQLException;
 
   RowSet fetchResults(OperationHandle opHandle, FetchOrientation orientation,
-      long maxRows, FetchType fetchType) throws HiveSQLException;
+      long maxRows, FetchType fetchType) throws ServiceSQLException;
 
-  String getDelegationToken(SessionHandle sessionHandle, HiveAuthFactory authFactory,
-      String owner, String renewer) throws HiveSQLException;
+  String getDelegationToken(SessionHandle sessionHandle, SparkAuthFactory authFactory,
+      String owner, String renewer) throws ServiceSQLException;
 
-  void cancelDelegationToken(SessionHandle sessionHandle, HiveAuthFactory authFactory,
-      String tokenStr) throws HiveSQLException;
+  void cancelDelegationToken(SessionHandle sessionHandle, SparkAuthFactory authFactory,
+      String tokenStr) throws ServiceSQLException;
 
-  void renewDelegationToken(SessionHandle sessionHandle, HiveAuthFactory authFactory,
-      String tokenStr) throws HiveSQLException;
+  void renewDelegationToken(SessionHandle sessionHandle, SparkAuthFactory authFactory,
+      String tokenStr) throws ServiceSQLException;
 
   OperationHandle getPrimaryKeys(SessionHandle sessionHandle, String catalog,
-      String schema, String table) throws HiveSQLException;
+      String schema, String table) throws ServiceSQLException;
 
   OperationHandle getCrossReference(SessionHandle sessionHandle,
       String primaryCatalog, String primarySchema, String primaryTable,
-      String foreignCatalog, String foreignSchema, String foreignTable) throws HiveSQLException;
+      String foreignCatalog, String foreignSchema, String foreignTable) throws ServiceSQLException;
 }

@@ -30,7 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class is responsible for setting the ipAddress for operations executed via HiveServer2.
+ * This class is responsible for setting the ipAddress for operations executed via SparkServer2.
  *
  * - IP address is only set for operations that calls listeners with hookContext
  * - IP address is only set if the underlying transport mechanism is socket

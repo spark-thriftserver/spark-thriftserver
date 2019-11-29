@@ -38,13 +38,13 @@ import org.apache.spark.sql.execution.command.SetCommand
 import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.service.SparkThriftServer2
 import org.apache.spark.sql.service.cli._
-import org.apache.spark.sql.service.cli.session.HiveSession
+import org.apache.spark.sql.service.cli.session.ServiceSession
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.CalendarInterval
 import org.apache.spark.util.{Utils => SparkUtils}
 
 private[service] class SparkExecuteStatementOperation(
-    parentSession: HiveSession,
+    parentSession: ServiceSession,
     statement: String,
     confOverlay: JMap[String, String],
     runInBackground: Boolean = true)
@@ -219,7 +219,7 @@ private[service] class SparkExecuteStatementOperation(
               try {
                 execute()
               } catch {
-                case e: HiveSQLException =>
+                case e: ServiceSQLException =>
                   setOperationException(e)
                   log.error("Error running hive query: ", e)
               }
@@ -230,7 +230,7 @@ private[service] class SparkExecuteStatementOperation(
             sparkServiceUGI.doAs(doAsAction)
           } catch {
             case e: Exception =>
-              setOperationException(new HiveSQLException(e))
+              setOperationException(new ServiceSQLException(e))
               logError("Error running hive query as user : " +
                 sparkServiceUGI.getShortUserName(), e)
           }
@@ -247,14 +247,14 @@ private[service] class SparkExecuteStatementOperation(
           setState(OperationState.ERROR)
           SparkThriftServer2.listener.onStatementError(
             statementId, rejected.getMessage, SparkUtils.exceptionString(rejected))
-          throw new HiveSQLException("The background threadpool cannot accept" +
+          throw new ServiceSQLException("The background threadpool cannot accept" +
             " new task for execution, please retry the operation", rejected)
         case NonFatal(e) =>
           logError(s"Error executing query in background", e)
           setState(OperationState.ERROR)
           SparkThriftServer2.listener.onStatementError(
             statementId, e.getMessage, SparkUtils.exceptionString(e))
-          throw new HiveSQLException(e)
+          throw new ServiceSQLException(e)
       }
     }
   }
@@ -297,7 +297,7 @@ private[service] class SparkExecuteStatementOperation(
       dataTypes = result.queryExecution.analyzed.output.map(_.dataType).toArray
     } catch {
       // Actually do need to catch Throwable as some failures don't inherit from Exception and
-      // HiveServer will silently swallow them.
+      // Spark Thrift Server will silently swallow them.
       case e: Throwable =>
         // When cancel() or close() is called very quickly after the query is started,
         // then they may both call cleanup() before Spark Jobs are started. But before background
@@ -314,7 +314,7 @@ private[service] class SparkExecuteStatementOperation(
           logError(s"Error executing query with $statementId, currentState $currentState, ", e)
           setState(OperationState.ERROR)
           e match {
-            case hiveException: HiveSQLException =>
+            case hiveException: ServiceSQLException =>
               SparkThriftServer2.listener.onStatementError(
                 statementId, hiveException.getMessage, SparkUtils.exceptionString(hiveException))
               throw hiveException
@@ -322,7 +322,7 @@ private[service] class SparkExecuteStatementOperation(
               val root = ExceptionUtils.getRootCause(e)
               SparkThriftServer2.listener.onStatementError(
                 statementId, root.getMessage, SparkUtils.exceptionString(root))
-              throw new HiveSQLException("Error running query: " + root.toString, root)
+              throw new ServiceSQLException("Error running query: " + root.toString, root)
           }
         }
     } finally {

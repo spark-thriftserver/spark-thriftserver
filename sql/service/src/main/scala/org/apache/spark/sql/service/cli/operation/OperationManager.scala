@@ -35,7 +35,7 @@ import org.apache.spark.sql.hive.HiveUtils
 import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.service.AbstractService
 import org.apache.spark.sql.service.cli._
-import org.apache.spark.sql.service.cli.session.HiveSession
+import org.apache.spark.sql.service.cli.session.ServiceSession
 import org.apache.spark.sql.types.StructType
 
 class OperationManager
@@ -73,7 +73,7 @@ class OperationManager
   }
 
 
-  def newExecuteStatementOperation(parentSession: HiveSession,
+  def newExecuteStatementOperation(parentSession: ServiceSession,
                                    statement: String,
                                    confOverlay: JMap[String, String],
                                    async: Boolean,
@@ -93,7 +93,7 @@ class OperationManager
     }
   }
 
-  def newGetTypeInfoOperation(session: HiveSession): SparkGetTypeInfoOperation =
+  def newGetTypeInfoOperation(session: ServiceSession): SparkGetTypeInfoOperation =
     synchronized {
       val sqlContext = sessionToContexts.get(session.getSessionHandle)
       require(sqlContext != null, s"Session handle: ${session.getSessionHandle} has not been" +
@@ -104,7 +104,7 @@ class OperationManager
       operation
     }
 
-  def newGetCatalogsOperation(session: HiveSession): SparkGetCatalogsOperation =
+  def newGetCatalogsOperation(session: ServiceSession): SparkGetCatalogsOperation =
     synchronized {
       val sqlContext = sessionToContexts.get(session.getSessionHandle)
       require(sqlContext != null, s"Session handle: ${session.getSessionHandle} has not been" +
@@ -115,7 +115,7 @@ class OperationManager
       operation
     }
 
-  def newGetSchemasOperation(session: HiveSession,
+  def newGetSchemasOperation(session: ServiceSession,
                              catalogName: String,
                              schemaName: String): SparkGetSchemasOperation = synchronized {
     val sqlContext = sessionToContexts.get(session.getSessionHandle)
@@ -127,7 +127,7 @@ class OperationManager
     operation
   }
 
-  def newGetTablesOperation(session: HiveSession,
+  def newGetTablesOperation(session: ServiceSession,
                             catalogName: String,
                             schemaName: String,
                             tableName: String,
@@ -142,7 +142,7 @@ class OperationManager
     operation
   }
 
-  def newGetColumnsOperation(session: HiveSession,
+  def newGetColumnsOperation(session: ServiceSession,
                              catalogName: String,
                              schemaName: String,
                              tableName: String,
@@ -157,7 +157,7 @@ class OperationManager
     operation
   }
 
-  def newGetTableTypesOperation(session: HiveSession): SparkGetTableTypesOperation =
+  def newGetTableTypesOperation(session: ServiceSession): SparkGetTableTypesOperation =
     synchronized {
       val sqlContext = sessionToContexts.get(session.getSessionHandle)
       require(sqlContext != null, s"Session handle: ${session.getSessionHandle} has not been" +
@@ -168,7 +168,7 @@ class OperationManager
       operation
     }
 
-  def newGetFunctionsOperation(session: HiveSession,
+  def newGetFunctionsOperation(session: ServiceSession,
                                catalogName: String,
                                schemaName: String,
                                functionName: String): SparkGetFunctionsOperation = synchronized {
@@ -182,21 +182,21 @@ class OperationManager
     operation
   }
 
-  def newGetPrimaryKeysOperation(session: HiveSession,
+  def newGetPrimaryKeysOperation(session: ServiceSession,
                                  catalogName: String,
                                  schemaName: String,
                                  tableName: String): Operation = {
-    throw new HiveSQLException("GetPrimaryKeysOperation is not supported yet")
+    throw new ServiceSQLException("GetPrimaryKeysOperation is not supported yet")
   }
 
-  def newGetCrossReferenceOperation(parentSession: HiveSession,
+  def newGetCrossReferenceOperation(parentSession: ServiceSession,
                                     primaryCatalog: String,
                                     primarySchema: String,
                                     primaryTable: String,
                                     foreignCatalog: String,
                                     foreignSchema: String,
                                     foreignTable: String): Operation = {
-    throw new HiveSQLException("GetCrossReferenceOperation is not supported yet")
+    throw new ServiceSQLException("GetCrossReferenceOperation is not supported yet")
   }
 
   def setConfMap(conf: SQLConf, confMap: java.util.Map[String, String]): Unit = {
@@ -207,11 +207,11 @@ class OperationManager
     }
   }
 
-  @throws[HiveSQLException]
+  @throws[ServiceSQLException]
   def getOperation(operationHandle: OperationHandle): Operation = {
     val operation: Operation = getOperationInternal(operationHandle)
     if (operation == null) {
-      throw new HiveSQLException("Invalid OperationHandle: " + operationHandle)
+      throw new ServiceSQLException("Invalid OperationHandle: " + operationHandle)
     }
     operation
   }
@@ -237,12 +237,12 @@ class OperationManager
     handleToOperation.remove(opHandle)
   }
 
-  @throws[HiveSQLException]
+  @throws[ServiceSQLException]
   def getOperationStatus(opHandle: OperationHandle): OperationStatus = {
     getOperation(opHandle).getStatus
   }
 
-  @throws[HiveSQLException]
+  @throws[ServiceSQLException]
   def cancelOperation(opHandle: OperationHandle): Unit = {
     val operation: Operation = getOperation(opHandle)
     val opState: OperationState = operation.getStatus.getState
@@ -258,40 +258,40 @@ class OperationManager
     }
   }
 
-  @throws[HiveSQLException]
+  @throws[ServiceSQLException]
   def closeOperation(opHandle: OperationHandle): Unit = {
     val operation: Operation = removeOperation(opHandle)
     if (operation == null) {
-      throw new HiveSQLException("Operation does not exist!")
+      throw new ServiceSQLException("Operation does not exist!")
     }
     operation.close
   }
 
-  @throws[HiveSQLException]
+  @throws[ServiceSQLException]
   def getOperationResultSetSchema(opHandle: OperationHandle): TableSchema = {
     getOperation(opHandle).getResultSetSchema
   }
 
-  @throws[HiveSQLException]
+  @throws[ServiceSQLException]
   def getOperationNextRowSet(opHandle: OperationHandle): RowSet = {
     getOperation(opHandle).getNextRowSet
   }
 
-  @throws[HiveSQLException]
+  @throws[ServiceSQLException]
   def getOperationNextRowSet(opHandle: OperationHandle,
                              orientation: FetchOrientation,
                              maxRows: Long): RowSet = {
     getOperation(opHandle).getNextRowSet(orientation, maxRows)
   }
 
-  @throws[HiveSQLException]
+  @throws[ServiceSQLException]
   def getOperationLogRowSet(opHandle: OperationHandle,
                             orientation: FetchOrientation,
                             maxRows: Long): RowSet = {
     // get the OperationLog object from the operation
     val operationLog: OperationLog = getOperation(opHandle).getOperationLog
     if (operationLog == null) {
-      throw new HiveSQLException("Couldn't find log associated " +
+      throw new ServiceSQLException("Couldn't find log associated " +
         "with operation handle: " + opHandle)
     }
     // read logs
@@ -300,7 +300,7 @@ class OperationManager
       logs = operationLog.readOperationLog(isFetchFirst(orientation), maxRows)
     } catch {
       case e: SQLException =>
-        throw new HiveSQLException(e.getMessage, e.getCause)
+        throw new ServiceSQLException(e.getMessage, e.getCause)
     }
     // convert logs to RowSet
     // convert logs to RowSet
