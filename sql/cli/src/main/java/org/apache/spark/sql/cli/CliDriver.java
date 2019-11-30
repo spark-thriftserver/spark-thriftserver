@@ -30,7 +30,6 @@ import java.util.*;
 
 import com.google.common.base.Splitter;
 
-import jline.console.ConsoleReader;
 import jline.console.completer.Completer;
 import jline.console.completer.StringsCompleter;
 import jline.console.completer.ArgumentCompleter;
@@ -76,7 +75,6 @@ public class CliDriver {
   public static final String HIVERCFILE = ".hiverc";
 
   private final LogHelper console;
-  protected ConsoleReader reader;
   private Configuration conf;
 
   public CliDriver() {
