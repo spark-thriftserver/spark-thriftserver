@@ -38,8 +38,7 @@ import org.apache.spark.sql.service.cli.session.SparkSQLSessionManager
 import org.apache.spark.sql.service.server.SparkServer2
 
 private[service] class SparkSQLCLIService(sparkServer: SparkServer2, sqlContext: SQLContext)
-  extends CLIService(sparkServer)
-  with ReflectedCompositeService {
+  extends CLIService with ReflectedCompositeService {
 
   override def init(hiveConf: HiveConf): Unit = {
     setSuperField(this, "hiveConf", hiveConf)

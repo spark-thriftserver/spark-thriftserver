@@ -59,7 +59,7 @@ public class SparkServer2 extends CompositeService {
 
   @Override
   public synchronized void init(HiveConf hiveConf) {
-    cliService = new CLIService(this);
+    cliService = new CLIService();
     addService(cliService);
     if (isHTTPTransportMode(hiveConf)) {
       thriftCLIService = new ThriftHttpCLIService(cliService);

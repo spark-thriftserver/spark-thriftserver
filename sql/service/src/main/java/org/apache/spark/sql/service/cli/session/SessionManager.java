@@ -64,12 +64,9 @@ public class SessionManager extends CompositeService {
   private boolean checkOperation;
 
   private volatile boolean shutdown;
-  // The SparkServer2 instance running this service
-  private final SparkServer2 sparkServer2;
 
-  public SessionManager(SparkServer2 sparkServer2) {
+  public SessionManager() {
     super(SessionManager.class.getSimpleName());
-    this.sparkServer2 = sparkServer2;
   }
 
   @Override
