@@ -305,7 +305,7 @@ private[spark] class SparkThriftServer2(sqlContext: SQLContext)
   private val started = new AtomicBoolean(false)
 
   override def init(hiveConf: HiveConf): Unit = {
-    val sparkSqlCliService = new SparkSQLCLIService(this, sqlContext)
+    val sparkSqlCliService = new SparkSQLCLIService(sqlContext)
     setSuperField(this, "cliService", sparkSqlCliService)
     addService(sparkSqlCliService)
 

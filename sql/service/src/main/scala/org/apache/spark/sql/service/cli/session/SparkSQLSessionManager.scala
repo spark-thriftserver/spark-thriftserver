@@ -27,10 +27,8 @@ import org.apache.spark.sql.service.SparkThriftServer2
 import org.apache.spark.sql.service.cli.{ReflectedCompositeService, SessionHandle}
 import org.apache.spark.sql.service.cli.operation.OperationManager
 import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion
-import org.apache.spark.sql.service.server.SparkServer2
 
-
-private[service] class SparkSQLSessionManager(sparkServer: SparkServer2, sqlContext: SQLContext)
+private[service] class SparkSQLSessionManager(sqlContext: SQLContext)
   extends SessionManager
   with ReflectedCompositeService
   with Logging {

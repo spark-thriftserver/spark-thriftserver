@@ -18,7 +18,7 @@
 package org.apache.spark.sql.service.cli
 
 import java.io.IOException
-import java.util.{List => JList}
+import java.util.{List => JList, Locale}
 import javax.security.auth.login.LoginException
 
 import scala.collection.JavaConverters._
@@ -35,15 +35,14 @@ import org.apache.spark.sql.service.ReflectionUtils._
 import org.apache.spark.sql.service.Service.STATE
 import org.apache.spark.sql.service.auth.SparkAuthFactory
 import org.apache.spark.sql.service.cli.session.SparkSQLSessionManager
-import org.apache.spark.sql.service.server.SparkServer2
 
-private[service] class SparkSQLCLIService(sparkServer: SparkServer2, sqlContext: SQLContext)
+private[service] class SparkSQLCLIService(sqlContext: SQLContext)
   extends CLIService with ReflectedCompositeService {
 
   override def init(hiveConf: HiveConf): Unit = {
     setSuperField(this, "hiveConf", hiveConf)
 
-    val sparkSqlSessionManager = new SparkSQLSessionManager(sparkServer, sqlContext)
+    val sparkSqlSessionManager = new SparkSQLSessionManager(sqlContext)
     setSuperField(this, "sessionManager", sparkSqlSessionManager)
     addService(sparkSqlSessionManager)
     var sparkServiceUGI: UserGroupInformation = null

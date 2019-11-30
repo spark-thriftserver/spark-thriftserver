@@ -37,7 +37,6 @@ import org.apache.spark.sql.service.CompositeService;
 import org.apache.spark.sql.service.cli.ServiceSQLException;
 import org.apache.spark.sql.service.cli.SessionHandle;
 import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
-import org.apache.spark.sql.service.server.SparkServer2;
 import org.apache.spark.sql.service.server.ThreadFactoryWithGarbageCleanup;
 import org.apache.spark.sql.service.cli.operation.OperationManager;
 import org.slf4j.Logger;
