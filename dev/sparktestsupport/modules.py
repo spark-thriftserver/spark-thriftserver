@@ -200,6 +200,21 @@ service = Module(
     ]
 )
 
+service = Module(
+    name="cli",
+    dependencies=[service],
+    source_file_regexes=[
+        "sql/cli",
+        "bin/spark-cli-sql",
+    ],
+    build_profile_flags=[
+        "-Pspark-thriftserver",
+    ],
+    sbt_test_goals=[
+        "cli/test",
+    ]
+)
+
 avro = Module(
     name="avro",
     dependencies=[sql],

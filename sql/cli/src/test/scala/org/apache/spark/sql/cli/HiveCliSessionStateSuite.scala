@@ -15,9 +15,8 @@
  * limitations under the License.
  */
 
-package org.apache.spark.sql.service
+package org.apache.spark.sql.cli
 
-import org.apache.hadoop.hive.cli.CliSessionState
 import org.apache.hadoop.hive.conf.HiveConf
 import org.apache.hadoop.hive.ql.session.SessionState
 

@@ -84,7 +84,7 @@ class SparkSubmitCommandBuilder extends AbstractCommandBuilder {
     specialClasses.put("org.apache.spark.repl.Main", "spark-shell");
     specialClasses.put("org.apache.spark.sql.hive.thriftserver.SparkSQLCLIDriver",
       SparkLauncher.NO_RESOURCE);
-    specialClasses.put("org.apache.spark.sql.service.SparkSQLCLIDriver",
+    specialClasses.put("org.apache.spark.sql.cli.SparkSQLCLIDriver",
       SparkLauncher.NO_RESOURCE);
     specialClasses.put("org.apache.spark.sql.hive.thriftserver.HiveThriftServer2",
       SparkLauncher.NO_RESOURCE);

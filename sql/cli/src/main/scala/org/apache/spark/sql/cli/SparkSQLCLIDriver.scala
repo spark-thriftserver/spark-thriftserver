@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.spark.sql.service
+package org.apache.spark.sql.cli
 
 import java.io._
 import java.nio.charset.StandardCharsets.UTF_8
@@ -28,7 +28,6 @@ import jline.console.ConsoleReader
 import jline.console.history.FileHistory
 import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.hive.cli.{CliDriver, CliSessionState, OptionsProcessor}
 import org.apache.hadoop.hive.common.HiveInterruptUtils
 import org.apache.hadoop.hive.conf.HiveConf
 import org.apache.hadoop.hive.ql.Driver
@@ -46,14 +45,13 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.sql.AnalysisException
 import org.apache.spark.sql.hive.HiveUtils
 import org.apache.spark.sql.hive.security.HiveDelegationTokenProvider
-import org.apache.spark.sql.service.utils.LogHelper
 import org.apache.spark.util.ShutdownHookManager
 
 /**
  * This code doesn't support remote connections in Hive 1.2+, as the underlying CliDriver
  * has dropped its support.
  */
-private[service] object SparkSQLCLIDriver extends Logging {
+private[cli] object SparkSQLCLIDriver extends Logging {
   private val prompt = "spark-sql"
   private val continuedPrompt = "".padTo(prompt.length, ' ')
   private var transport: TSocket = _
@@ -226,12 +224,12 @@ private[service] object SparkSQLCLIDriver extends Logging {
         reader.setHistory(new FileHistory(new File(historyFile)))
       } else {
         logWarning("WARNING: Directory for Hive history file: " + historyDirectory +
-                           " does not exist.   History will not be available during this session.")
+          " does not exist.   History will not be available during this session.")
       }
     } catch {
       case e: Exception =>
         logWarning("WARNING: Encountered an error while trying to initialize Hive's " +
-                           "history file.  History will not be available during this session.")
+          "history file.  History will not be available during this session.")
         logWarning(e.getMessage)
     }
 
@@ -250,22 +248,20 @@ private[service] object SparkSQLCLIDriver extends Logging {
     }
 
     // TODO: missing
-/*
-    val clientTransportTSocketField = classOf[CliSessionState].getDeclaredField("transport")
-    clientTransportTSocketField.setAccessible(true)
+    /*
+        val clientTransportTSocketField = classOf[CliSessionState].getDeclaredField("transport")
+        clientTransportTSocketField.setAccessible(true)
 
-    transport = clientTransportTSocketField.get(sessionState).asInstanceOf[TSocket]
-*/
+        transport = clientTransportTSocketField.get(sessionState).asInstanceOf[TSocket]
+    */
     transport = null
 
     var ret = 0
     var prefix = ""
-    val currentDB = ReflectionUtils.invokeStatic(classOf[CliDriver], "getFormattedDb",
-      classOf[HiveConf] -> conf, classOf[CliSessionState] -> sessionState)
+    val currentDB = CliDriver.getFormattedDb(conf, sessionState)
 
     def promptWithCurrentDB: String = s"$prompt$currentDB"
-    def continuedPromptWithDBSpaces: String = continuedPrompt + ReflectionUtils.invokeStatic(
-      classOf[CliDriver], "spacesForString", classOf[String] -> currentDB)
+    def continuedPromptWithDBSpaces: String = continuedPrompt + CliDriver.spacesForString(currentDB)
 
     cli.printMasterAndAppId
 
@@ -304,7 +300,7 @@ private[service] object SparkSQLCLIDriver extends Logging {
 
 }
 
-private[service] class SparkSQLCLIDriver extends CliDriver with Logging {
+private[cli] class SparkSQLCLIDriver extends CliDriver with Logging {
   private val sessionState = SessionState.get().asInstanceOf[CliSessionState]
 
   private val console = new LogHelper(LoggerFactory.getLogger(classOf[SparkSQLCLIDriver]))

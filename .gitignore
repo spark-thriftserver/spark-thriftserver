@@ -86,6 +86,8 @@ metastore/
 metastore_db/
 sql/hive-thriftserver/test_warehouses
 sql/service/test_warehouse
+sql/jdbc/test_warehouse
+sql/cli/test_warehouse
 warehouse/
 spark-warehouse/
 

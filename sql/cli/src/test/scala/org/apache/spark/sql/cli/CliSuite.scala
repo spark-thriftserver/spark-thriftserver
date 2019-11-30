@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.spark.sql.service
+package org.apache.spark.sql.cli
 
 import java.io._
 import java.nio.charset.StandardCharsets
@@ -73,17 +73,17 @@ class CliSuite extends SparkFunSuite with BeforeAndAfterAll with Logging {
    * @param queriesAndExpectedAnswers one or more tuples of query + answer
    */
   def runCliWithin(
-      timeout: FiniteDuration,
-      extraArgs: Seq[String] = Seq.empty,
-      errorResponses: Seq[String] = Seq("Error:"))(
-      queriesAndExpectedAnswers: (String, String)*): Unit = {
+                    timeout: FiniteDuration,
+                    extraArgs: Seq[String] = Seq.empty,
+                    errorResponses: Seq[String] = Seq("Error:"))(
+                    queriesAndExpectedAnswers: (String, String)*): Unit = {
 
     val (queries, expectedAnswers) = queriesAndExpectedAnswers.unzip
     // Explicitly adds ENTER for each statement to make sure they are actually entered into the CLI.
     val queriesString = queries.map(_ + "\n").mkString
 
     val command = {
-      val cliScript = "../../bin/spark-service-sql".split("/").mkString(File.separator)
+      val cliScript = "../../bin/spark-cli-sql".split("/").mkString(File.separator)
       val jdbcUrl = s"jdbc:derby:;databaseName=$metastorePath;create=true"
       s"""$cliScript
          |  --master local

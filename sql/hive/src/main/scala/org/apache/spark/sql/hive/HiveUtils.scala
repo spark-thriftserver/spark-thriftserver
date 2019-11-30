@@ -271,7 +271,8 @@ private[spark] object HiveUtils extends Logging {
     var temp: Class[_] = if (state != null) state.getClass else null
     var found = false
     while (temp != null && !found) {
-      found = temp.getName == "org.apache.hadoop.hive.cli.CliSessionState"
+      found = temp.getName == "org.apache.hadoop.hive.cli.CliSessionState" ||
+        temp.getName == "org.apache.spark.sql.cli.CliSessionState"
       temp = temp.getSuperclass
     }
     found

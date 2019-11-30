@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.spark.sql.service
+package org.apache.spark.sql.cli
 
 import java.util.{ArrayList => JArrayList, Arrays, List => JList}
 
@@ -23,7 +23,6 @@ import scala.collection.JavaConverters._
 
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.apache.hadoop.hive.metastore.api.{FieldSchema, Schema}
-import org.apache.hadoop.hive.ql.Driver
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse
 
 import org.apache.spark.internal.Logging
@@ -32,14 +31,13 @@ import org.apache.spark.sql.execution.{QueryExecution, SQLExecution}
 import org.apache.spark.sql.execution.HiveResult.hiveResultString
 
 
-private[service] class SparkSQLDriver(val context: SQLContext = SparkSQLEnv.sqlContext)
-  extends Driver
-  with Logging {
+private[cli] class SparkSQLDriver(val context: SQLContext = SparkSQLEnv.sqlContext)
+    extends Logging {
 
-  private[service] var tableSchema: Schema = _
-  private[service] var hiveResponse: Seq[String] = _
+  private[cli] var tableSchema: Schema = _
+  private[cli] var hiveResponse: Seq[String] = _
 
-  override def init(): Unit = {
+  def init(): Unit = {
   }
 
   private def getResultSetSchema(query: QueryExecution): Schema = {
@@ -56,7 +54,7 @@ private[service] class SparkSQLDriver(val context: SQLContext = SparkSQLEnv.sqlC
     }
   }
 
-  override def run(command: String): CommandProcessorResponse = {
+  def run(command: String): CommandProcessorResponse = {
     // TODO unify the error code
     try {
       context.sparkContext.setJobDescription(command)
@@ -67,22 +65,22 @@ private[service] class SparkSQLDriver(val context: SQLContext = SparkSQLEnv.sqlC
       tableSchema = getResultSetSchema(execution)
       new CommandProcessorResponse(0)
     } catch {
-        case ae: AnalysisException =>
-          logDebug(s"Failed in [$command]", ae)
-          new CommandProcessorResponse(1, ExceptionUtils.getStackTrace(ae), null, ae)
-        case cause: Throwable =>
-          logError(s"Failed in [$command]", cause)
-          new CommandProcessorResponse(1, ExceptionUtils.getStackTrace(cause), null, cause)
+      case ae: AnalysisException =>
+        logDebug(s"Failed in [$command]", ae)
+        new CommandProcessorResponse(1, ExceptionUtils.getStackTrace(ae), null, ae)
+      case cause: Throwable =>
+        logError(s"Failed in [$command]", cause)
+        new CommandProcessorResponse(1, ExceptionUtils.getStackTrace(cause), null, cause)
     }
   }
 
-  override def close(): Int = {
+  def close(): Int = {
     hiveResponse = null
     tableSchema = null
     0
   }
 
-  override def getResults(res: JList[_]): Boolean = {
+  def getResults(res: JList[_]): Boolean = {
     if (hiveResponse == null) {
       false
     } else {
@@ -92,10 +90,9 @@ private[service] class SparkSQLDriver(val context: SQLContext = SparkSQLEnv.sqlC
     }
   }
 
-  override def getSchema: Schema = tableSchema
+  def getSchema: Schema = tableSchema
 
-  override def destroy(): Unit = {
-    super.destroy()
+  def destroy(): Unit = {
     hiveResponse = null
     tableSchema = null
   }

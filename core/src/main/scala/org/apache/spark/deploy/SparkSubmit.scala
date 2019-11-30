@@ -1034,7 +1034,8 @@ object SparkSubmit extends CommandLineUtils with Logging {
    * Return whether the given main class represents a sql shell.
    */
   private[deploy] def isSqlShell(mainClass: String): Boolean = {
-    mainClass == "org.apache.spark.sql.hive.thriftserver.SparkSQLCLIDriver"
+    mainClass == "org.apache.spark.sql.hive.thriftserver.SparkSQLCLIDriver" ||
+      mainClass == "org.apache.spark.sql.cliSparkSQLCLIDriver"
   }
 
   /**
