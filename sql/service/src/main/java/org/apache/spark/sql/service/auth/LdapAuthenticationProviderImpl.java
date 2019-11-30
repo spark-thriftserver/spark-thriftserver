@@ -23,8 +23,9 @@ import javax.naming.NamingException;
 import javax.naming.directory.InitialDirContext;
 import javax.security.sasl.AuthenticationException;
 
-import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.ServiceUtils;
+import org.apache.spark.sql.service.internal.ServiceConf;
 
 public class LdapAuthenticationProviderImpl implements PasswdAuthenticationProvider {
 
@@ -33,10 +34,10 @@ public class LdapAuthenticationProviderImpl implements PasswdAuthenticationProvi
   private final String ldapDomain;
 
   LdapAuthenticationProviderImpl() {
-    HiveConf conf = new HiveConf();
-    ldapURL = conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_PLAIN_LDAP_URL);
-    baseDN = conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_PLAIN_LDAP_BASEDN);
-    ldapDomain = conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_PLAIN_LDAP_DOMAIN);
+    SQLConf conf = SQLConf.get();
+    ldapURL = conf.getConfString(ServiceConf.THRIFTSERVER_PLAIN_LDAP_URL().key());
+    baseDN = conf.getConfString(ServiceConf.THRIFTSERVER_PLAIN_LDAP_BASEDN().key());
+    ldapDomain = conf.getConfString(ServiceConf.THRIFTSERVER_PLAIN_LDAP_DOMAIN().key());
   }
 
   @Override

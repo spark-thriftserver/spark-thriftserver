@@ -20,11 +20,14 @@ package org.apache.spark.sql.service.server;
 
 import java.util.Properties;
 
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.CompositeService;
 import org.apache.spark.sql.service.cli.CLIService;
 import org.apache.spark.sql.service.cli.thrift.ThriftBinaryCLIService;
 import org.apache.spark.sql.service.cli.thrift.ThriftCLIService;
 import org.apache.spark.sql.service.cli.thrift.ThriftHttpCLIService;
+import org.apache.spark.sql.service.internal.ServiceConf;
 import scala.runtime.AbstractFunction0;
 import scala.runtime.BoxedUnit;
 
@@ -36,7 +39,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.hive.common.LogUtils;
 import org.apache.hadoop.hive.common.LogUtils.LogInitializationException;
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,23 +53,24 @@ public class SparkServer2 extends CompositeService {
 
   private CLIService cliService;
   private ThriftCLIService thriftCLIService;
+  private HiveConf hiveConf;
 
-  public SparkServer2() {
+  public SparkServer2(HiveConf hiveConf) {
     super(SparkServer2.class.getSimpleName());
-    HiveConf.setLoadHiveServer2Config(true);
+    this.hiveConf = hiveConf;
   }
 
   @Override
-  public synchronized void init(HiveConf hiveConf) {
-    cliService = new CLIService(this);
+  public synchronized void init(SQLConf sqlConf) {
+    cliService = new CLIService(this, hiveConf);
     addService(cliService);
-    if (isHTTPTransportMode(hiveConf)) {
+    if (isHTTPTransportMode(sqlConf)) {
       thriftCLIService = new ThriftHttpCLIService(cliService);
     } else {
       thriftCLIService = new ThriftBinaryCLIService(cliService);
     }
     addService(thriftCLIService);
-    super.init(hiveConf);
+    super.init(sqlConf);
 
     // Add a shutdown hook for catching SIGTERM & SIGINT
     // this must be higher than the Hadoop Filesystem priority of 10,
@@ -89,10 +92,10 @@ public class SparkServer2 extends CompositeService {
         });
   }
 
-  public static boolean isHTTPTransportMode(HiveConf hiveConf) {
+  public static boolean isHTTPTransportMode(SQLConf sqlConf) {
     String transportMode = System.getenv("HIVE_SERVER2_TRANSPORT_MODE");
     if (transportMode == null) {
-      transportMode = hiveConf.getVar(HiveConf.ConfVars.HIVE_SERVER2_TRANSPORT_MODE);
+      transportMode = sqlConf.getConfString(ServiceConf.THRIFTSERVER_TRANSPORT_MODE().key());
     }
     if (transportMode != null && (transportMode.equalsIgnoreCase("http"))) {
       return true;
@@ -111,45 +114,7 @@ public class SparkServer2 extends CompositeService {
     super.stop();
   }
 
-  private static void startSparkServer2() throws Throwable {
-    long attempts = 0, maxAttempts = 1;
-    while (true) {
-      LOG.info("Starting SparkServer2");
-      HiveConf hiveConf = new HiveConf();
-      maxAttempts = hiveConf.getLongVar(HiveConf.ConfVars.HIVE_SERVER2_MAX_START_ATTEMPTS);
-      SparkServer2 server = null;
-      try {
-        server = new SparkServer2();
-        server.init(hiveConf);
-        server.start();
-        break;
-      } catch (Throwable throwable) {
-        if (server != null) {
-          try {
-            server.stop();
-          } catch (Throwable t) {
-            LOG.info("Exception caught when calling stop of SparkServer2 before retrying start", t);
-          } finally {
-            server = null;
-          }
-        }
-        if (++attempts >= maxAttempts) {
-          throw new Error("Max start attempts " + maxAttempts + " exhausted", throwable);
-        } else {
-          LOG.warn("Error starting SparkServer2 on attempt " + attempts
-              + ", will retry in 60 seconds", throwable);
-          try {
-            Thread.sleep(60L * 1000L);
-          } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-          }
-        }
-      }
-    }
-  }
-
   public static void main(String[] args) {
-    HiveConf.setLoadHiveServer2Config(true);
     try {
       ServerOptionsProcessor oproc = new ServerOptionsProcessor("sparkserver2");
       ServerOptionsProcessorResponse oprocResponse = oproc.parse(args);
@@ -277,7 +242,6 @@ public class SparkServer2 extends CompositeService {
     @Override
     public void execute() {
       try {
-        startSparkServer2();
       } catch (Throwable t) {
         LOG.error("Error starting SparkServer2", t);
         System.exit(-1);

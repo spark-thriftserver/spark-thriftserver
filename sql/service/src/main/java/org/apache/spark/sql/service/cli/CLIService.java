@@ -29,7 +29,6 @@ import java.util.concurrent.TimeoutException;
 import javax.security.auth.login.LoginException;
 
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.exec.FunctionRegistry;
 import org.apache.hadoop.hive.ql.metadata.Hive;
@@ -37,12 +36,14 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.shims.Utils;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.CompositeService;
 import org.apache.spark.sql.service.ServiceException;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.cli.operation.Operation;
 import org.apache.spark.sql.service.cli.session.ServiceSession;
 import org.apache.spark.sql.service.cli.session.SessionManager;
+import org.apache.spark.sql.service.internal.ServiceConf;
 import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
 import org.apache.spark.sql.service.server.SparkServer2;
 import org.slf4j.Logger;
@@ -63,6 +64,7 @@ public class CLIService extends CompositeService implements ICLIService {
 
   private final Logger LOG = LoggerFactory.getLogger(CLIService.class.getName());
 
+  private SQLConf sqlConf;
   private HiveConf hiveConf;
   private SessionManager sessionManager;
   private UserGroupInformation serviceUGI;
@@ -70,20 +72,21 @@ public class CLIService extends CompositeService implements ICLIService {
   // The SparkServer2 instance running this service
   private final SparkServer2 sparkServer2;
 
-  public CLIService(SparkServer2 sparkServer2) {
+  public CLIService(SparkServer2 sparkServer2, HiveConf hiveConf) {
     super(CLIService.class.getSimpleName());
+    this.hiveConf = hiveConf;
     this.sparkServer2 = sparkServer2;
   }
 
   @Override
-  public synchronized void init(HiveConf hiveConf) {
-    this.hiveConf = hiveConf;
-    sessionManager = new SessionManager(sparkServer2);
+  public synchronized void init(SQLConf sqlConf) {
+    this.sqlConf = sqlConf;
+    sessionManager = new SessionManager(sparkServer2, hiveConf);
     addService(sessionManager);
     //  If the hadoop cluster is secure, do a kerberos login for the service from the keytab
     if (UserGroupInformation.isSecurityEnabled()) {
       try {
-        SparkAuthFactory.loginFromKeytab(hiveConf);
+        SparkAuthFactory.loginFromKeytab(sqlConf);
         this.serviceUGI = Utils.getUGI();
       } catch (IOException e) {
         throw new ServiceException("Unable to login to kerberos with given principal/keytab", e);
@@ -92,14 +95,14 @@ public class CLIService extends CompositeService implements ICLIService {
       }
 
       // Also try creating a UGI object for the SPNego principal
-      String principal = hiveConf.getVar(ConfVars.HIVE_SERVER2_SPNEGO_PRINCIPAL);
-      String keyTabFile = hiveConf.getVar(ConfVars.HIVE_SERVER2_SPNEGO_KEYTAB);
+      String principal = sqlConf.getConf(ServiceConf.THRIFTSERVER_SPNEGO_PRINCIPAL());
+      String keyTabFile = sqlConf.getConf(ServiceConf.THRIFTSERVER_SPNEGO_KEYTAB());
       if (principal.isEmpty() || keyTabFile.isEmpty()) {
         LOG.info("SPNego httpUGI not created, spNegoPrincipal: " + principal +
             ", ketabFile: " + keyTabFile);
       } else {
         try {
-          this.httpUGI = SparkAuthFactory.loginFromSpnegoKeytabAndReturnUGI(hiveConf);
+          this.httpUGI = SparkAuthFactory.loginFromSpnegoKeytabAndReturnUGI(sqlConf);
           LOG.info("SPNego httpUGI successfully created.");
         } catch (IOException e) {
           LOG.warn("SPNego httpUGI creation failed: ", e);
@@ -114,7 +117,7 @@ public class CLIService extends CompositeService implements ICLIService {
           + e.getMessage(), e);
     }
     setupBlockedUdfs();
-    super.init(hiveConf);
+    super.init(sqlConf);
   }
 
   private void applyAuthorizationConfigPolicy(HiveConf newHiveConf) throws HiveException,
@@ -129,8 +132,8 @@ public class CLIService extends CompositeService implements ICLIService {
 
   private void setupBlockedUdfs() {
     FunctionRegistry.setupPermissionsForBuiltinUDFs(
-        hiveConf.getVar(ConfVars.HIVE_SERVER2_BUILTIN_UDF_WHITELIST),
-        hiveConf.getVar(ConfVars.HIVE_SERVER2_BUILTIN_UDF_BLACKLIST));
+        sqlConf.getConf(ServiceConf.THRIFTSERVER_BUILTIN_UDF_WHITELIST()),
+        sqlConf.getConf(ServiceConf.THRIFTSERVER_BUILTIN_UDF_BLACKLIST()));
   }
 
   public UserGroupInformation getServiceUGI() {
@@ -422,8 +425,7 @@ public class CLIService extends CompositeService implements ICLIService {
      */
     if (operation.shouldRunAsync()) {
       HiveConf conf = operation.getParentSession().getHiveConf();
-      long timeout = HiveConf.getTimeVar(conf,
-          HiveConf.ConfVars.HIVE_SERVER2_LONG_POLLING_TIMEOUT, TimeUnit.MILLISECONDS);
+      long timeout = Long.valueOf(sqlConf.getConfString(ServiceConf.THRIFTSERVER_LONG_POLLING_TIMEOUT().key()));
       try {
         operation.getBackgroundHandle().get(timeout, TimeUnit.MILLISECONDS);
       } catch (TimeoutException e) {
@@ -506,7 +508,7 @@ public class CLIService extends CompositeService implements ICLIService {
   public synchronized String getDelegationTokenFromMetaStore(String owner)
       throws ServiceSQLException, UnsupportedOperationException, LoginException, IOException {
     if (!hiveConf.getBoolVar(HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL) ||
-        !hiveConf.getBoolVar(HiveConf.ConfVars.HIVE_SERVER2_ENABLE_DOAS)) {
+        !Boolean.valueOf(sqlConf.getConfString(ServiceConf.THRIFTSERVER_ENABLE_DOAS().key()))) {
       throw new UnsupportedOperationException(
           "delegation token is can only be obtained for a secure remote metastore");
     }

@@ -23,7 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.spark.sql.internal.SQLConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,11 +54,11 @@ public class CompositeService extends AbstractService {
   }
 
   @Override
-  public synchronized void init(HiveConf hiveConf) {
+  public synchronized void init(SQLConf sqlConf) {
     for (Service service : serviceList) {
-      service.init(hiveConf);
+      service.init(sqlConf);
     }
-    super.init(hiveConf);
+    super.init(sqlConf);
   }
 
   @Override

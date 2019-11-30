@@ -24,7 +24,6 @@ import java.util.concurrent.ConcurrentHashMap
 
 import scala.collection.JavaConverters._
 
-import org.apache.hadoop.hive.conf.HiveConf
 import org.apache.hadoop.hive.metastore.api.{FieldSchema, Schema}
 import org.apache.hadoop.hive.ql.session.OperationLog
 import org.apache.log4j.Logger
@@ -36,6 +35,7 @@ import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.service.AbstractService
 import org.apache.spark.sql.service.cli._
 import org.apache.spark.sql.service.cli.session.ServiceSession
+import org.apache.spark.sql.service.internal.ServiceConf
 import org.apache.spark.sql.types.StructType
 
 class OperationManager
@@ -47,14 +47,14 @@ class OperationManager
   val sessionToContexts = new ConcurrentHashMap[SessionHandle, SQLContext]()
   val sessionToActivePool = new ConcurrentHashMap[SessionHandle, String]()
 
-  override def init(hiveConf: HiveConf): Unit = synchronized {
-    if (hiveConf.getBoolVar(HiveConf.ConfVars.HIVE_SERVER2_LOGGING_OPERATION_ENABLED)) {
+  override def init(sqlConf: SQLConf): Unit = synchronized {
+    if (sqlConf.getConf(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_ENABLE)) {
       initOperationLogCapture(
-        hiveConf.getVar(HiveConf.ConfVars.HIVE_SERVER2_LOGGING_OPERATION_LEVEL))
+        sqlConf.getConf(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_LEVEL))
     } else {
       logDebug("Operation level logging is turned off")
     }
-    super.init(hiveConf)
+    super.init(sqlConf)
   }
 
   override def start(): Unit = {

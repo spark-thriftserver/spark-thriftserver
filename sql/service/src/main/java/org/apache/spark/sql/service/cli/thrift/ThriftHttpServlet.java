@@ -24,7 +24,6 @@ import java.security.PrivilegedExceptionAction;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
@@ -34,17 +33,17 @@ import javax.ws.rs.core.NewCookie;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.StringUtils;
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.shims.HadoopShims.KerberosNameShim;
 import org.apache.hadoop.hive.shims.ShimLoader;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.CookieSigner;
 import org.apache.spark.sql.service.auth.*;
 import org.apache.spark.sql.service.auth.AuthenticationProviderFactory.AuthMethods;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.cli.ServiceSQLException;
 import org.apache.spark.sql.service.cli.session.SessionManager;
+import org.apache.spark.sql.service.internal.ServiceConf;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TProtocolFactory;
 import org.apache.thrift.server.TServlet;
@@ -69,7 +68,7 @@ public class ThriftHttpServlet extends TServlet {
   private final String authType;
   private final UserGroupInformation serviceUGI;
   private final UserGroupInformation httpUGI;
-  private HiveConf hiveConf = new HiveConf();
+  private SQLConf sqlConf = SQLConf.get();
 
   // Class members for cookie based authentication.
   private CookieSigner signer;
@@ -92,22 +91,18 @@ public class ThriftHttpServlet extends TServlet {
     this.serviceUGI = serviceUGI;
     this.httpUGI = httpUGI;
     this.sparkAuthFactory = sparkAuthFactory;
-    this.isCookieAuthEnabled = hiveConf.getBoolVar(
-      ConfVars.HIVE_SERVER2_THRIFT_HTTP_COOKIE_AUTH_ENABLED);
+    this.isCookieAuthEnabled = Boolean.valueOf(sqlConf.getConfString(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_AUTH_ENABLED().key()));
     // Initialize the cookie based authentication related variables.
     if (isCookieAuthEnabled) {
       // Generate the signer with secret.
       String secret = Long.toString(RAN.nextLong());
       LOG.debug("Using the random number as the secret for cookie generation " + secret);
       this.signer = new CookieSigner(secret.getBytes());
-      this.cookieMaxAge = (int) hiveConf.getTimeVar(
-        ConfVars.HIVE_SERVER2_THRIFT_HTTP_COOKIE_MAX_AGE, TimeUnit.SECONDS);
-      this.cookieDomain = hiveConf.getVar(ConfVars.HIVE_SERVER2_THRIFT_HTTP_COOKIE_DOMAIN);
-      this.cookiePath = hiveConf.getVar(ConfVars.HIVE_SERVER2_THRIFT_HTTP_COOKIE_PATH);
-      this.isCookieSecure = hiveConf.getBoolVar(
-        ConfVars.HIVE_SERVER2_THRIFT_HTTP_COOKIE_IS_SECURE);
-      this.isHttpOnlyCookie = hiveConf.getBoolVar(
-        ConfVars.HIVE_SERVER2_THRIFT_HTTP_COOKIE_IS_HTTPONLY);
+      this.cookieMaxAge = Integer.valueOf(sqlConf.getConfString(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_MAX_AGE().key()));
+      this.cookieDomain = sqlConf.getConfString(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_DOMAIN().key());
+      this.cookiePath = sqlConf.getConfString(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_PATH().key());
+      this.isCookieSecure = Boolean.valueOf(sqlConf.getConfString(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_IS_SECURE().key()));
+      this.isHttpOnlyCookie = Boolean.valueOf(sqlConf.getConfString(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_IS_HTTPONLY().key()));
     }
   }
 

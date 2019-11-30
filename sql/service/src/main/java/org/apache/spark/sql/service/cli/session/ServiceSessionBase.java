@@ -20,6 +20,7 @@ package org.apache.spark.sql.service.cli.session;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.session.SessionState;
+import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.cli.SessionHandle;
 import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
 import org.apache.spark.sql.service.cli.operation.OperationManager;
@@ -75,6 +76,8 @@ public interface ServiceSessionBase {
   String getPassword();
 
   HiveConf getHiveConf();
+
+  SQLConf getSQLConf();
 
   SessionState getSessionState();
 

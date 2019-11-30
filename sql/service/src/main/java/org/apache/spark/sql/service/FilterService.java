@@ -19,6 +19,7 @@
 package org.apache.spark.sql.service;
 
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.spark.sql.internal.SQLConf;
 
 /**
  * FilterService.
@@ -35,7 +36,7 @@ public class FilterService implements Service {
   }
 
   @Override
-  public void init(HiveConf config) {
+  public void init(SQLConf config) {
     service.init(config);
   }
 
@@ -66,8 +67,8 @@ public class FilterService implements Service {
   }
 
   @Override
-  public HiveConf getHiveConf() {
-    return service.getHiveConf();
+  public SQLConf getSqlConf() {
+    return service.getSqlConf();
   }
 
   @Override

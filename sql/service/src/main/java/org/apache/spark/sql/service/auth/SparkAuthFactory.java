@@ -35,7 +35,6 @@ import javax.security.auth.login.LoginException;
 import javax.security.sasl.Sasl;
 
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.HiveMetaStore;
 import org.apache.hadoop.hive.metastore.HiveMetaStore.HMSHandler;
 import org.apache.hadoop.hive.metastore.api.MetaException;
@@ -47,9 +46,11 @@ import org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge.Server.ServerMode;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.ProxyUsers;
+import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.cli.ServiceSQLException;
 import org.apache.spark.sql.service.cli.thrift.ThriftCLIService;
 import org.apache.spark.sql.service.ReflectionUtils;
+import org.apache.spark.sql.service.internal.ServiceConf;
 import org.apache.thrift.TProcessorFactory;
 import org.apache.thrift.transport.TSSLTransportFactory;
 import org.apache.thrift.transport.TServerSocket;
@@ -66,7 +67,6 @@ import org.slf4j.LoggerFactory;
  */
 public class SparkAuthFactory {
   private static final Logger LOG = LoggerFactory.getLogger(SparkAuthFactory.class);
-
 
   public enum AuthTypes {
     NOSASL("NOSASL"),
@@ -91,7 +91,7 @@ public class SparkAuthFactory {
   private HadoopThriftAuthBridge.Server saslServer;
   private String authTypeStr;
   private final String transportMode;
-  private final HiveConf conf;
+  private final SQLConf conf;
   private SparkDelegationTokenManager delegationTokenManager = null;
 
   public static final String HS2_PROXY_USER = "hive.server2.proxy.user";
@@ -120,10 +120,10 @@ public class SparkAuthFactory {
     }
   }
 
-  public SparkAuthFactory(HiveConf conf) throws TTransportException, IOException {
+  public SparkAuthFactory(SQLConf conf, HiveConf hiveConf) throws TTransportException, IOException {
     this.conf = conf;
-    transportMode = conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_TRANSPORT_MODE);
-    authTypeStr = conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_AUTHENTICATION);
+    transportMode = conf.getConf(ServiceConf.THRIFTSERVER_TRANSPORT_MODE());
+    authTypeStr = conf.getConf(ServiceConf.THRIFTSERVER_AUTHENTICATION());
 
     // In http mode we use NOSASL as the default auth type
     if ("http".equalsIgnoreCase(transportMode)) {
@@ -135,8 +135,8 @@ public class SparkAuthFactory {
         authTypeStr = AuthTypes.NONE.getAuthName();
       }
       if (authTypeStr.equalsIgnoreCase(AuthTypes.KERBEROS.getAuthName())) {
-        String principal = conf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_PRINCIPAL);
-        String keytab = conf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_KEYTAB);
+        String principal = conf.getConf(ServiceConf.THRIFTSERVER_KERBEROS_PRINCIPAL());
+        String keytab = conf.getConf(ServiceConf.THRIFTSERVER_KERBEROS_KEYTAB());
         if (needUgiLogin(UserGroupInformation.getCurrentUser(),
           SecurityUtil.getServerPrincipal(principal, "0.0.0.0"), keytab)) {
           saslServer = ShimLoader.getHadoopThriftAuthBridge().createServer(principal, keytab);
@@ -150,17 +150,17 @@ public class SparkAuthFactory {
         try {
           // rawStore is only necessary for DBTokenStore
           Object rawStore = null;
-          String tokenStoreClass = conf.getVar(
-              HiveConf.ConfVars.METASTORE_CLUSTER_DELEGATION_TOKEN_STORE_CLS);
+          String tokenStoreClass = conf.getConf(
+              ServiceConf.THRIFTSERVER_CLUSTER_DELEGATION_TOKEN_STORE_CLS());
 
           if (tokenStoreClass.equals(DBTokenStore.class.getName())) {
             HMSHandler baseHandler = new HiveMetaStore.HMSHandler(
-                "new db based metaserver", conf, true);
+                "new db based metaserver", hiveConf, true);
             rawStore = baseHandler.getMS();
           }
 
           delegationTokenManager.startDelegationTokenSecretManager(
-              conf, rawStore, ServerMode.HIVESERVER2);
+              hiveConf, rawStore, ServerMode.HIVESERVER2);
           ReflectionUtils.setSuperField(saslServer, "secretManager", delegationTokenManager);
         }
         catch (MetaException|IOException e) {
@@ -172,7 +172,7 @@ public class SparkAuthFactory {
 
   public Map<String, String> getSaslProperties() {
     Map<String, String> saslProps = new HashMap<String, String>();
-    SaslQOP saslQOP = SaslQOP.fromString(conf.getVar(ConfVars.HIVE_SERVER2_THRIFT_SASL_QOP));
+    SaslQOP saslQOP = SaslQOP.fromString(conf.getConf(ServiceConf.THRIFTSERVER_THRIFT_SASL_QOP()));
     saslProps.put(Sasl.QOP, saslQOP.toString());
     saslProps.put(Sasl.SERVER_AUTH, "true");
     return saslProps;
@@ -229,9 +229,9 @@ public class SparkAuthFactory {
   }
 
   // Perform kerberos login using the hadoop shim API if the configuration is available
-  public static void loginFromKeytab(HiveConf hiveConf) throws IOException {
-    String principal = hiveConf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_PRINCIPAL);
-    String keyTabFile = hiveConf.getVar(ConfVars.HIVE_SERVER2_KERBEROS_KEYTAB);
+  public static void loginFromKeytab(SQLConf sqlConf) throws IOException {
+    String principal = sqlConf.getConf(ServiceConf.THRIFTSERVER_KERBEROS_PRINCIPAL());
+    String keyTabFile = sqlConf.getConf(ServiceConf.THRIFTSERVER_KERBEROS_KEYTAB());
     if (principal.isEmpty() || keyTabFile.isEmpty()) {
       throw new IOException("SparkServer2 Kerberos principal or keytab " +
           "is not correctly configured");
@@ -242,10 +242,10 @@ public class SparkAuthFactory {
   }
 
   // Perform SPNEGO login using the hadoop shim API if the configuration is available
-  public static UserGroupInformation loginFromSpnegoKeytabAndReturnUGI(HiveConf hiveConf)
+  public static UserGroupInformation loginFromSpnegoKeytabAndReturnUGI(SQLConf sqlConf)
     throws IOException {
-    String principal = hiveConf.getVar(ConfVars.HIVE_SERVER2_SPNEGO_PRINCIPAL);
-    String keyTabFile = hiveConf.getVar(ConfVars.HIVE_SERVER2_SPNEGO_KEYTAB);
+    String principal = sqlConf.getConf(ServiceConf.THRIFTSERVER_SPNEGO_PRINCIPAL());
+    String keyTabFile = sqlConf.getConf(ServiceConf.THRIFTSERVER_SPNEGO_KEYTAB());
     if (principal.isEmpty() || keyTabFile.isEmpty()) {
       throw new IOException("SparkServer2 SPNEGO principal or keytab is not correctly configured");
     } else {

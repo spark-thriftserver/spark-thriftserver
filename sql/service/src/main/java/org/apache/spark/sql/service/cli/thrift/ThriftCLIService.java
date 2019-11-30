@@ -24,10 +24,9 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
+import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.AbstractService;
 import org.apache.spark.sql.service.ServiceException;
 import org.apache.spark.sql.service.ServiceUtils;
@@ -35,6 +34,7 @@ import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.auth.TSetIpAddressProcessor;
 import org.apache.spark.sql.service.cli.*;
 import org.apache.spark.sql.service.cli.session.SessionManager;
+import org.apache.spark.sql.service.internal.ServiceConf;
 import org.apache.spark.sql.service.rpc.thrift.*;
 import org.apache.spark.sql.service.server.SparkServer2;
 import org.apache.thrift.TException;
@@ -61,13 +61,14 @@ public abstract class ThriftCLIService extends AbstractService
 
   protected int portNum;
   protected InetAddress serverIPAddress;
-  protected String hiveHost;
+  protected String sparkHost;
   protected TServer server;
   protected org.eclipse.jetty.server.Server httpServer;
 
   private boolean isStarted = false;
   protected boolean isEmbedded = false;
 
+  protected SQLConf sqlConf;
   protected HiveConf hiveConf;
 
   protected int minWorkerThreads;
@@ -128,17 +129,17 @@ public abstract class ThriftCLIService extends AbstractService
   }
 
   @Override
-  public synchronized void init(HiveConf hiveConf) {
-    this.hiveConf = hiveConf;
+  public synchronized void init(SQLConf sqlConf) {
+    this.sqlConf = sqlConf;
     // Initialize common server configs needed in both binary & http modes
     String portString;
-    hiveHost = System.getenv("HIVE_SERVER2_THRIFT_BIND_HOST");
-    if (hiveHost == null) {
-      hiveHost = hiveConf.getVar(ConfVars.HIVE_SERVER2_THRIFT_BIND_HOST);
+    sparkHost = System.getenv("HIVE_SERVER2_THRIFT_BIND_HOST");
+    if (sparkHost == null) {
+      sparkHost = sqlConf.getConf(ServiceConf.THRIFTSERVER_BIND_HOST());
     }
     try {
-      if (hiveHost != null && !hiveHost.isEmpty()) {
-        serverIPAddress = InetAddress.getByName(hiveHost);
+      if (sparkHost != null && !sparkHost.isEmpty()) {
+        serverIPAddress = InetAddress.getByName(sparkHost);
       } else {
         serverIPAddress = InetAddress.getLocalHost();
       }
@@ -146,31 +147,28 @@ public abstract class ThriftCLIService extends AbstractService
       throw new ServiceException(e);
     }
     // HTTP mode
-    if (SparkServer2.isHTTPTransportMode(hiveConf)) {
-      workerKeepAliveTime =
-          hiveConf.getTimeVar(ConfVars.HIVE_SERVER2_THRIFT_HTTP_WORKER_KEEPALIVE_TIME,
-              TimeUnit.SECONDS);
-      portString = System.getenv("HIVE_SERVER2_THRIFT_HTTP_PORT");
+    if (SparkServer2.isHTTPTransportMode(sqlConf)) {
+      workerKeepAliveTime =Long.valueOf(sqlConf.getConfString(ServiceConf.THRIFTSERVER_THRIFT_HTTP_WORKER_KEEPALIVE_TIME().key()));
+      portString = System.getenv("SPARK_THRIFTSERVER_THRIFT_HTTP_PORT");
       if (portString != null) {
         portNum = Integer.valueOf(portString);
       } else {
-        portNum = hiveConf.getIntVar(ConfVars.HIVE_SERVER2_THRIFT_HTTP_PORT);
+        portNum = Integer.valueOf(sqlConf.getConfString(ServiceConf.THRIFTSERVER_HTTP_PORT().key()));
       }
     }
     // Binary mode
     else {
-      workerKeepAliveTime =
-          hiveConf.getTimeVar(ConfVars.HIVE_SERVER2_THRIFT_WORKER_KEEPALIVE_TIME, TimeUnit.SECONDS);
-      portString = System.getenv("HIVE_SERVER2_THRIFT_PORT");
+      workerKeepAliveTime =Long.valueOf(sqlConf.getConfString(ServiceConf.THRIFTSERVER_THRIFT_HTTP_WORKER_KEEPALIVE_TIME().key()));
+      portString = System.getenv("SPARK_THRIFTSERVER_THRIFT_PORT");
       if (portString != null) {
         portNum = Integer.valueOf(portString);
       } else {
-        portNum = hiveConf.getIntVar(ConfVars.HIVE_SERVER2_THRIFT_PORT);
+        portNum = Integer.valueOf(sqlConf.getConfString(ServiceConf.THRIFTSERVER_HTTP_PORT().key()));
       }
     }
-    minWorkerThreads = hiveConf.getIntVar(ConfVars.HIVE_SERVER2_THRIFT_MIN_WORKER_THREADS);
-    maxWorkerThreads = hiveConf.getIntVar(ConfVars.HIVE_SERVER2_THRIFT_MAX_WORKER_THREADS);
-    super.init(hiveConf);
+    minWorkerThreads = Integer.valueOf(sqlConf.getConfString(ServiceConf.THRIFTSERVER_THRIFT_MIN_WORKER_THREADS().key()));
+    maxWorkerThreads = Integer.valueOf(sqlConf.getConfString(ServiceConf.THRIFTSERVER_THRIFT_MAX_WORKER_THREADS().key()));
+    super.init(sqlConf);
   }
 
   @Override
@@ -266,8 +264,8 @@ public abstract class ThriftCLIService extends AbstractService
     String clientIpAddress;
     // Http transport mode.
     // We set the thread local ip address, in ThriftHttpServlet.
-    if (cliService.getHiveConf().getVar(
-        ConfVars.HIVE_SERVER2_TRANSPORT_MODE).equalsIgnoreCase("http")) {
+    if (cliService.getSqlConf().getConfString(
+        ServiceConf.THRIFTSERVER_TRANSPORT_MODE().key()).equalsIgnoreCase("http")) {
       clientIpAddress = SessionManager.getIpAddress();
     }
     else {
@@ -306,8 +304,8 @@ public abstract class ThriftCLIService extends AbstractService
     }
     // Http transport mode.
     // We set the thread local username, in ThriftHttpServlet.
-    if (cliService.getHiveConf().getVar(
-        ConfVars.HIVE_SERVER2_TRANSPORT_MODE).equalsIgnoreCase("http")) {
+    if (cliService.getSqlConf().getConfString(
+            ServiceConf.THRIFTSERVER_TRANSPORT_MODE().key()).equalsIgnoreCase("http")) {
       userName = SessionManager.getUserName();
     }
     if (userName == null) {
@@ -348,7 +346,7 @@ public abstract class ThriftCLIService extends AbstractService
         req.getClient_protocol());
     res.setServerProtocolVersion(protocol);
     SessionHandle sessionHandle;
-    if (cliService.getHiveConf().getBoolVar(ConfVars.HIVE_SERVER2_ENABLE_DOAS) &&
+    if (Boolean.valueOf(cliService.getSqlConf().getConfString(ServiceConf.THRIFTSERVER_ENABLE_DOAS().key())) &&
         (userName != null)) {
       String delegationTokenStr = getDelegationToken(userName);
       sessionHandle = cliService.openSessionWithImpersonation(protocol, userName,
@@ -363,7 +361,7 @@ public abstract class ThriftCLIService extends AbstractService
 
   private String getDelegationToken(String userName)
       throws ServiceSQLException, LoginException, IOException {
-    if (userName == null || !cliService.getHiveConf().getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION)
+    if (userName == null || !cliService.getSqlConf().getConfString(ServiceConf.THRIFTSERVER_AUTHENTICATION().key())
         .equalsIgnoreCase(SparkAuthFactory.AuthTypes.KERBEROS.toString())) {
       return null;
     }
@@ -690,8 +688,8 @@ public abstract class ThriftCLIService extends AbstractService
     String proxyUser = null;
     // Http transport mode.
     // We set the thread local proxy username, in ThriftHttpServlet.
-    if (cliService.getHiveConf().getVar(
-        ConfVars.HIVE_SERVER2_TRANSPORT_MODE).equalsIgnoreCase("http")) {
+    if (cliService.getSqlConf().getConfString(
+        ServiceConf.THRIFTSERVER_TRANSPORT_MODE().key()).equalsIgnoreCase("http")) {
       proxyUser = SessionManager.getProxyUserName();
       LOG.debug("Proxy user from query string: " + proxyUser);
     }
@@ -708,13 +706,13 @@ public abstract class ThriftCLIService extends AbstractService
     }
 
     // check whether substitution is allowed
-    if (!hiveConf.getBoolVar(HiveConf.ConfVars.HIVE_SERVER2_ALLOW_USER_SUBSTITUTION)) {
+    if (!Boolean.valueOf(sqlConf.getConfString(ServiceConf.THRIFTSERVER_ALLOW_USER_SUBSTITUTION().key()))) {
       throw new ServiceSQLException("Proxy user substitution is not allowed");
     }
 
     // If there's no authentication, then directly substitute the user
     if (SparkAuthFactory.AuthTypes.NONE.toString()
-        .equalsIgnoreCase(hiveConf.getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION))) {
+        .equalsIgnoreCase(sqlConf.getConfString(ServiceConf.THRIFTSERVER_AUTHENTICATION().key()))) {
       return proxyUser;
     }
 
@@ -725,7 +723,7 @@ public abstract class ThriftCLIService extends AbstractService
   }
 
   private boolean isKerberosAuthMode() {
-    return cliService.getHiveConf().getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION)
+    return cliService.getSqlConf().getConfString(ServiceConf.THRIFTSERVER_AUTHENTICATION().key())
         .equalsIgnoreCase(SparkAuthFactory.AuthTypes.KERBEROS.toString());
   }
 }

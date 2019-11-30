@@ -26,6 +26,7 @@ import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.shims.Utils;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.cli.ServiceSQLException;
 import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
@@ -47,9 +48,9 @@ public class ServiceSessionImplwithUGI extends ServiceSessionImpl {
   static final Logger LOG = LoggerFactory.getLogger(ServiceSessionImplwithUGI.class);
 
   public ServiceSessionImplwithUGI(TProtocolVersion protocol, String username, String password,
-                                   HiveConf hiveConf, String ipAddress, String delegationToken)
+                                   HiveConf hiveConf, SQLConf sqlConf, String ipAddress, String delegationToken)
       throws ServiceSQLException {
-    super(protocol, username, password, hiveConf, ipAddress);
+    super(protocol, username, password, hiveConf, sqlConf, ipAddress);
     setSessionUGI(username);
     setDelegationToken(delegationToken);
 

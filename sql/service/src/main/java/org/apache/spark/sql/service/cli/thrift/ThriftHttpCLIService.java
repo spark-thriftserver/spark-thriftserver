@@ -30,6 +30,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Shell;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.cli.CLIService;
+import org.apache.spark.sql.service.internal.ServiceConf;
 import org.apache.spark.sql.service.rpc.thrift.TCLIService;
 import org.apache.spark.sql.service.rpc.thrift.TCLIService.Iface;
 import org.apache.spark.sql.service.server.ThreadFactoryWithGarbageCleanup;
@@ -77,11 +78,11 @@ public class ThriftHttpCLIService extends ThriftCLIService {
       // Connector configs
 
       ConnectionFactory[] connectionFactories;
-      boolean useSsl = hiveConf.getBoolVar(ConfVars.HIVE_SERVER2_USE_SSL);
+      boolean useSsl = Boolean.valueOf(sqlConf.getConfString(ServiceConf.THRIFTSERVER_USE_SSL().key()));
       String schemeName = useSsl ? "https" : "http";
       // Change connector if SSL is used
       if (useSsl) {
-        String keyStorePath = hiveConf.getVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH).trim();
+        String keyStorePath = sqlConf.getConfString(ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PATH().key());
         String keyStorePassword = ShimLoader.getHadoopShims().getPassword(hiveConf,
             HiveConf.ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD.varname);
         if (keyStorePath.isEmpty()) {
@@ -89,8 +90,7 @@ public class ThriftHttpCLIService extends ThriftCLIService {
               + " Not configured for SSL connection");
         }
         SslContextFactory sslContextFactory = new SslContextFactory.Server();
-        String[] excludedProtocols =
-           hiveConf.getVar(ConfVars.HIVE_SSL_PROTOCOL_BLACKLIST).split(",");
+        String[] excludedProtocols = sqlConf.getConfString(ServiceConf.THRIFTSERVER_SSL_PROTOCOL_BLACKLIST().key()).split(",");
         LOG.info("HTTP Server SSL: adding excluded protocols: " +
              Arrays.toString(excludedProtocols));
         sslContextFactory.addExcludeProtocols(excludedProtocols);
@@ -116,14 +116,13 @@ public class ThriftHttpCLIService extends ThriftCLIService {
       connector.setPort(portNum);
       // Linux:yes, Windows:no
       connector.setReuseAddress(!Shell.WINDOWS);
-      int maxIdleTime = (int) hiveConf.getTimeVar(ConfVars.HIVE_SERVER2_THRIFT_HTTP_MAX_IDLE_TIME,
-          TimeUnit.MILLISECONDS);
+      int maxIdleTime = Integer.valueOf(sqlConf.getConfString(ServiceConf.THRIFTSERVER_THRIFT_HTTP_MAX_IDLE_TIME().key()));
       connector.setIdleTimeout(maxIdleTime);
 
       httpServer.addConnector(connector);
 
       // Thrift configs
-      sparkAuthFactory = new SparkAuthFactory(hiveConf);
+      sparkAuthFactory = new SparkAuthFactory(sqlConf, hiveConf);
       TProcessor processor = new TCLIService.Processor<Iface>(this);
       TProtocolFactory protocolFactory = new TBinaryProtocol.Factory();
       // Set during the init phase of SparkServer2 if auth mode is kerberos
@@ -131,7 +130,7 @@ public class ThriftHttpCLIService extends ThriftCLIService {
       UserGroupInformation serviceUGI = cliService.getServiceUGI();
       // UGI for the http/_HOST (SPNego) principal
       UserGroupInformation httpUGI = cliService.getHttpUGI();
-      String authType = hiveConf.getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION);
+      String authType = sqlConf.getConfString(ServiceConf.THRIFTSERVER_AUTHENTICATION().key());
       TServlet thriftHttpServlet = new ThriftHttpServlet(processor, protocolFactory, authType,
           serviceUGI, httpUGI, sparkAuthFactory);
 
@@ -139,8 +138,7 @@ public class ThriftHttpCLIService extends ThriftCLIService {
       final ServletContextHandler context = new ServletContextHandler(
           ServletContextHandler.SESSIONS);
       context.setContextPath("/");
-      String httpPath = getHttpPath(hiveConf
-          .getVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_HTTP_PATH));
+      String httpPath = getHttpPath(sqlConf.getConfString(ServiceConf.THRIFTSERVER_HTTP_PATH().key()));
       httpServer.setHandler(context);
       context.addServlet(new ServletHolder(thriftHttpServlet), httpPath);
 

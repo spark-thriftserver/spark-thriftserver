@@ -117,7 +117,7 @@ public final class HttpAuthUtils {
 
   /**
    * Splits the cookie token into attributes pairs.
-   * @param str input token.
+   * @param tokenStr input token.
    * @return a map with the attribute pairs of the token if the input is valid.
    * Else, returns null.
    */

@@ -18,7 +18,7 @@
 
 package org.apache.spark.sql.service.cli.session;
 
-import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.spark.sql.internal.SQLConf;
 
 /**
  *
@@ -35,8 +35,8 @@ public class ServiceSessionHookContextImpl implements ServiceSessionHookContext 
   }
 
   @Override
-  public HiveConf getSessionConf() {
-    return serviceSession.getHiveConf();
+  public SQLConf getSessionConf() {
+    return serviceSession.getSQLConf();
   }
 
 

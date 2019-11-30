@@ -24,7 +24,6 @@ import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 import org.apache.hadoop.hive.conf.HiveConf
-import org.apache.hadoop.hive.conf.HiveConf.ConfVars
 
 import org.apache.spark.SparkContext
 import org.apache.spark.annotation.DeveloperApi
@@ -32,11 +31,11 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.internal.config.UI.UI_ENABLED
 import org.apache.spark.scheduler.{SparkListener, SparkListenerApplicationEnd, SparkListenerJobStart}
 import org.apache.spark.sql.SQLContext
-import org.apache.spark.sql.hive.HiveUtils
 import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.service.ReflectionUtils._
 import org.apache.spark.sql.service.cli.{ReflectedCompositeService, SparkSQLCLIService}
 import org.apache.spark.sql.service.cli.thrift.{ThriftBinaryCLIService, ThriftHttpCLIService}
+import org.apache.spark.sql.service.internal.ServiceConf
 import org.apache.spark.sql.service.server.SparkServer2
 import org.apache.spark.sql.service.ui.ThriftServerTab
 import org.apache.spark.util.{ShutdownHookManager, Utils}
@@ -55,13 +54,9 @@ object SparkThriftServer2 extends Logging {
    */
   @DeveloperApi
   def startWithContext(sqlContext: SQLContext): SparkThriftServer2 = {
-    val server = new SparkThriftServer2(sqlContext)
+    val server = new SparkThriftServer2(sqlContext, new HiveConf())
 
-    val executionHive = HiveUtils.newClientForExecution(
-      sqlContext.sparkContext.conf,
-      sqlContext.sessionState.newHadoopConf())
-
-    server.init(executionHive.conf)
+    server.init(SparkSQLEnv.sqlContext.conf)
     server.start()
     listener = new SparkThriftServer2Listener(server, sqlContext.conf)
     sqlContext.sparkContext.addSparkListener(listener)
@@ -93,13 +88,9 @@ object SparkThriftServer2 extends Logging {
       uiTab.foreach(_.detach())
     }
 
-    val executionHive = HiveUtils.newClientForExecution(
-      SparkSQLEnv.sqlContext.sparkContext.conf,
-      SparkSQLEnv.sqlContext.sessionState.newHadoopConf())
-
     try {
-      val server = new SparkThriftServer2(SparkSQLEnv.sqlContext)
-      server.init(executionHive.conf)
+      val server = new SparkThriftServer2(SparkSQLEnv.sqlContext, new HiveConf())
+      server.init(SparkSQLEnv.sqlContext.conf)
       server.start()
       logInfo("SparkThriftServer2 started")
       listener = new SparkThriftServer2Listener(server, SparkSQLEnv.sqlContext.conf)
@@ -297,19 +288,19 @@ object SparkThriftServer2 extends Logging {
   }
 }
 
-private[spark] class SparkThriftServer2(sqlContext: SQLContext)
-  extends SparkServer2
+private[spark] class SparkThriftServer2(sqlContext: SQLContext, hiveConf: HiveConf)
+  extends SparkServer2(hiveConf)
   with ReflectedCompositeService {
   // state is tracked internally so that the server only attempts to shut down if it successfully
   // started, and then once only.
   private val started = new AtomicBoolean(false)
 
-  override def init(hiveConf: HiveConf): Unit = {
-    val sparkSqlCliService = new SparkSQLCLIService(this, sqlContext)
+  override def init(sqlConf: SQLConf): Unit = {
+    val sparkSqlCliService = new SparkSQLCLIService(this, sqlContext, hiveConf)
     setSuperField(this, "cliService", sparkSqlCliService)
     addService(sparkSqlCliService)
 
-    val thriftCliService = if (isHTTPTransportMode(hiveConf)) {
+    val thriftCliService = if (isHTTPTransportMode(sqlConf)) {
       new ThriftHttpCLIService(sparkSqlCliService)
     } else {
       new ThriftBinaryCLIService(sparkSqlCliService)
@@ -317,11 +308,11 @@ private[spark] class SparkThriftServer2(sqlContext: SQLContext)
 
     setSuperField(this, "thriftCLIService", thriftCliService)
     addService(thriftCliService)
-    initCompositeService(hiveConf)
+    initCompositeService(sqlConf)
   }
 
-  private def isHTTPTransportMode(hiveConf: HiveConf): Boolean = {
-    val transportMode = hiveConf.getVar(ConfVars.HIVE_SERVER2_TRANSPORT_MODE)
+  private def isHTTPTransportMode(sqlConf: SQLConf): Boolean = {
+    val transportMode = sqlConf.getConfString(ServiceConf.THRIFTSERVER_TRANSPORT_MODE.key)
     transportMode.toLowerCase(Locale.ROOT).equals("http")
   }
 

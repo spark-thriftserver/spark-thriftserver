@@ -17,6 +17,7 @@
  */
 
 package org.apache.spark.sql.service.cli.operation;
+
 import java.io.CharArrayWriter;
 import java.util.Enumeration;
 import java.util.regex.Pattern;

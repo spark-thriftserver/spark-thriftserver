@@ -39,6 +39,7 @@ import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.service.SparkThriftServer2
 import org.apache.spark.sql.service.cli._
 import org.apache.spark.sql.service.cli.session.ServiceSession
+import org.apache.spark.sql.service.internal.ServiceConf
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.CalendarInterval
 import org.apache.spark.util.{Utils => SparkUtils}
@@ -127,7 +128,7 @@ private[service] class SparkExecuteStatementOperation(
     if ((order.equals(FetchOrientation.FETCH_FIRST) ||
         order.equals(FetchOrientation.FETCH_PRIOR)) && previousFetchEndOffset != 0) {
       // Reset the iterator to the beginning of the query.
-      iter = if (sqlContext.getConf(SQLConf.THRIFTSERVER_INCREMENTAL_COLLECT.key).toBoolean) {
+      iter = if (sqlContext.getConf(ServiceConf.THRIFTSERVER_INCREMENTAL_COLLECT.key).toBoolean) {
         resultList = None
         result.toLocalIterator.asScala
       } else {
@@ -286,7 +287,7 @@ private[service] class SparkExecuteStatementOperation(
       }
       SparkThriftServer2.listener.onStatementParsed(statementId, result.queryExecution.toString())
       iter = {
-        if (sqlContext.getConf(SQLConf.THRIFTSERVER_INCREMENTAL_COLLECT.key).toBoolean) {
+        if (sqlContext.getConf(ServiceConf.THRIFTSERVER_INCREMENTAL_COLLECT.key).toBoolean) {
           resultList = None
           result.toLocalIterator.asScala
         } else {

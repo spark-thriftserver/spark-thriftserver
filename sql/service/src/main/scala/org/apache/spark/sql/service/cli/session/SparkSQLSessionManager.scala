@@ -22,6 +22,7 @@ import org.apache.hadoop.hive.conf.HiveConf
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.hive.HiveUtils
+import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.service.ReflectionUtils._
 import org.apache.spark.sql.service.SparkThriftServer2
 import org.apache.spark.sql.service.cli.{ReflectedCompositeService, SessionHandle}
@@ -30,16 +31,19 @@ import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion
 import org.apache.spark.sql.service.server.SparkServer2
 
 
-private[service] class SparkSQLSessionManager(sparkServer: SparkServer2, sqlContext: SQLContext)
-  extends SessionManager(sparkServer)
+private[service] class SparkSQLSessionManager(
+    sparkServer: SparkServer2,
+    sqlContext: SQLContext,
+    hiveConf: HiveConf)
+  extends SessionManager(sparkServer, hiveConf)
   with ReflectedCompositeService
   with Logging {
 
   private lazy val sparkSqlOperationManager = new OperationManager()
 
-  override def init(hiveConf: HiveConf): Unit = {
+  override def init(sqlConf: SQLConf): Unit = {
     setSuperField(this, "operationManager", sparkSqlOperationManager)
-    super.init(hiveConf)
+    super.init(sqlConf)
   }
 
   override def openSession(

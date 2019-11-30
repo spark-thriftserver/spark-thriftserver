@@ -41,8 +41,8 @@ import org.apache.hadoop.hive.ql.history.HiveHistory;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
-import org.apache.hadoop.hive.shims.ShimLoader;
 import org.apache.hive.common.util.HiveVersionInfo;
+import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.cli.*;
 import org.apache.spark.sql.service.cli.ServiceSQLException;
@@ -67,6 +67,7 @@ public class ServiceSessionImpl implements ServiceSession {
   private final SessionHandle sessionHandle;
   private String username;
   private final String password;
+  private SQLConf sqlConf;
   private HiveConf hiveConf;
   private SessionState sessionState;
   private String ipAddress;
@@ -82,23 +83,14 @@ public class ServiceSessionImpl implements ServiceSession {
   private volatile long lastIdleTime;
 
   public ServiceSessionImpl(TProtocolVersion protocol, String username, String password,
-                            HiveConf serverhiveConf, String ipAddress) {
+                            HiveConf serverhiveConf, SQLConf sqlConf, String ipAddress) {
     this.username = username;
     this.password = password;
     this.sessionHandle = new SessionHandle(protocol);
     this.hiveConf = new HiveConf(serverhiveConf);
     this.ipAddress = ipAddress;
+    this.sqlConf = sqlConf;
 
-    try {
-      // In non-impersonation mode, map scheduler queue to current user
-      // if fair scheduler is configured.
-      if (! hiveConf.getBoolVar(ConfVars.HIVE_SERVER2_ENABLE_DOAS) &&
-        hiveConf.getBoolVar(ConfVars.HIVE_SERVER2_MAP_FAIR_SCHEDULER_QUEUE)) {
-        ShimLoader.getHadoopShims().refreshDefaultQueue(hiveConf, username);
-      }
-    } catch (IOException e) {
-      LOG.warn("Error setting scheduler queue: " + e, e);
-    }
     // Set an explicit session name to control the download directory name
     hiveConf.set(ConfVars.HIVESESSIONID.varname,
         sessionHandle.getHandleIdentifier().toString());
@@ -378,6 +370,11 @@ public class ServiceSessionImpl implements ServiceSession {
   public HiveConf getHiveConf() {
     hiveConf.setVar(HiveConf.ConfVars.HIVEFETCHOUTPUTSERDE, FETCH_WORK_SERDE_CLASS);
     return hiveConf;
+  }
+
+  @Override
+  public SQLConf getSQLConf() {
+    return sqlConf;
   }
 
   @Override

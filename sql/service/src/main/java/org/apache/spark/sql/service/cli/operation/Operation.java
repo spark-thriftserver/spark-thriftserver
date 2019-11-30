@@ -28,9 +28,11 @@ import java.util.concurrent.TimeUnit;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.OperationLog;
+import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.cli.*;
 import org.apache.spark.sql.service.cli.ServiceSQLException;
 import org.apache.spark.sql.service.cli.session.ServiceSession;
+import org.apache.spark.sql.service.internal.ServiceConf;
 import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +41,7 @@ public abstract class Operation {
   protected final ServiceSession parentSession;
   private OperationState state = OperationState.INITIALIZED;
   private final OperationHandle opHandle;
-  private HiveConf configuration;
+  private SQLConf configuration;
   public static final Logger LOG = LoggerFactory.getLogger(Operation.class.getName());
   public static final FetchOrientation DEFAULT_FETCH_ORIENTATION = FetchOrientation.FETCH_NEXT;
   public static final long DEFAULT_FETCH_MAX_ROWS = 100;
@@ -78,8 +80,7 @@ public abstract class Operation {
     this.runAsync = runInBackground;
     this.opHandle = new OperationHandle(opType, parentSession.getProtocolVersion());
     lastAccessTime = System.currentTimeMillis();
-    operationTimeout = HiveConf.getTimeVar(parentSession.getHiveConf(),
-        HiveConf.ConfVars.HIVE_SERVER2_IDLE_OPERATION_TIMEOUT, TimeUnit.MILLISECONDS);
+    operationTimeout = Long.valueOf(parentSession.getSQLConf().getConfString(ServiceConf.THRIFTSERVER_IDLE_OPERATION_TIMEOUT().key()));
   }
 
   public Future<?> getBackgroundHandle() {
@@ -94,12 +95,12 @@ public abstract class Operation {
     return runAsync;
   }
 
-  public void setConfiguration(HiveConf configuration) {
-    this.configuration = new HiveConf(configuration);
+  public void setConfiguration(SQLConf configuration) {
+    this.configuration = configuration;
   }
 
-  public HiveConf getConfiguration() {
-    return new HiveConf(configuration);
+  public SQLConf getConfiguration() {
+    return configuration;
   }
 
   public ServiceSession getParentSession() {
