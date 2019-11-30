@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
+import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.service.CompositeService;
 import org.apache.spark.sql.service.cli.ServiceSQLException;
 import org.apache.spark.sql.service.cli.SessionHandle;
@@ -216,7 +217,14 @@ public class SessionManager extends CompositeService {
 
   public SessionHandle openSession(TProtocolVersion protocol, String username, String password,
       String ipAddress, Map<String, String> sessionConf) throws ServiceSQLException {
-    return openSession(protocol, username, password, ipAddress, sessionConf, false, null);
+    return openSession(protocol, username, password, ipAddress, sessionConf, false, null, null);
+  }
+
+  public SessionHandle openSession(TProtocolVersion protocol, String username, String password,
+          String ipAddress, Map<String, String> sessionConf, boolean withImpersonation,
+          String delegationToken) throws ServiceSQLException {
+    return openSession(protocol, username, password, ipAddress, sessionConf, withImpersonation,
+            delegationToken, null);
   }
 
   /**
@@ -240,17 +248,17 @@ public class SessionManager extends CompositeService {
    */
   public SessionHandle openSession(TProtocolVersion protocol, String username, String password,
       String ipAddress, Map<String, String> sessionConf, boolean withImpersonation,
-      String delegationToken) throws ServiceSQLException {
+      String delegationToken, SQLContext context) throws ServiceSQLException {
     ServiceSession session;
     // If doAs is set to true for SparkServer2, we will create a proxy object for the session impl.
     // Within the proxy object, we wrap the method call in a UserGroupInformation#doAs
     if (withImpersonation) {
       ServiceSessionImplwithUGI sessionWithUGI = new ServiceSessionImplwithUGI(protocol, username,
-          password, hiveConf, ipAddress, delegationToken);
+          password, hiveConf, ipAddress, delegationToken, context);
       session = ServiceSessionProxy.getProxy(sessionWithUGI, sessionWithUGI.getSessionUgi());
       sessionWithUGI.setProxySession(session);
     } else {
-      session = new ServiceSessionImpl(protocol, username, password, hiveConf, ipAddress);
+      session = new ServiceSessionImpl(protocol, username, password, hiveConf, ipAddress, context);
     }
     session.setSessionManager(this);
     session.setOperationManager(operationManager);
@@ -277,6 +285,7 @@ public class SessionManager extends CompositeService {
     if (session == null) {
       throw new ServiceSQLException("Session does not exist!");
     }
+    session.getSQLContext().clearCache();
     session.close();
   }
 

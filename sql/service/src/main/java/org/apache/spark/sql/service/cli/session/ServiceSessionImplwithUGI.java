@@ -26,6 +26,7 @@ import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.shims.Utils;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.cli.ServiceSQLException;
 import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
@@ -47,19 +48,11 @@ public class ServiceSessionImplwithUGI extends ServiceSessionImpl {
   static final Logger LOG = LoggerFactory.getLogger(ServiceSessionImplwithUGI.class);
 
   public ServiceSessionImplwithUGI(TProtocolVersion protocol, String username, String password,
-                                   HiveConf hiveConf, String ipAddress, String delegationToken)
+      HiveConf hiveConf, String ipAddress, String delegationToken, SQLContext context)
       throws ServiceSQLException {
-    super(protocol, username, password, hiveConf, ipAddress);
+    super(protocol, username, password, hiveConf, ipAddress, context);
     setSessionUGI(username);
     setDelegationToken(delegationToken);
-
-    // create a new metastore connection for this particular user session
-    Hive.set(null);
-    try {
-      sessionHive = Hive.get(getHiveConf());
-    } catch (HiveException e) {
-      throw new ServiceSQLException("Failed to setup metastore connection", e);
-    }
   }
 
   // setup appropriate UGI for the session

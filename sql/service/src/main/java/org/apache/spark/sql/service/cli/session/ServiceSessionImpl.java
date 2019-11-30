@@ -43,6 +43,8 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.shims.ShimLoader;
 import org.apache.hive.common.util.HiveVersionInfo;
+import org.apache.spark.sql.SQLContext;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.cli.*;
 import org.apache.spark.sql.service.cli.ServiceSQLException;
@@ -78,16 +80,19 @@ public class ServiceSessionImpl implements ServiceSession {
   private final Set<OperationHandle> opHandleSet = new HashSet<OperationHandle>();
   private boolean isOperationLogEnabled;
   private File sessionLogDir;
+
+  private SQLContext sqlContext;
   private volatile long lastAccessTime;
   private volatile long lastIdleTime;
 
   public ServiceSessionImpl(TProtocolVersion protocol, String username, String password,
-                            HiveConf serverhiveConf, String ipAddress) {
+                            HiveConf serverhiveConf, String ipAddress, SQLContext context) {
     this.username = username;
     this.password = password;
     this.sessionHandle = new SessionHandle(protocol);
     this.hiveConf = new HiveConf(serverhiveConf);
     this.ipAddress = ipAddress;
+    this.sqlContext = context;
 
     try {
       // In non-impersonation mode, map scheduler queue to current user
@@ -381,14 +386,8 @@ public class ServiceSessionImpl implements ServiceSession {
   }
 
   @Override
-  public IMetaStoreClient getMetaStoreClient() throws ServiceSQLException {
-    try {
-      return Hive.get(getHiveConf()).getMSC();
-    } catch (HiveException e) {
-      throw new ServiceSQLException("Failed to get metastore connection", e);
-    } catch (MetaException e) {
-      throw new ServiceSQLException("Failed to get metastore connection", e);
-    }
+  public SQLContext getSQLContext() {
+    return sqlContext;
   }
 
   @Override
@@ -575,11 +574,6 @@ public class ServiceSessionImpl implements ServiceSession {
   public OperationHandle getColumns(String catalogName, String schemaName,
       String tableName, String columnName)  throws ServiceSQLException {
     acquire(true);
-    String addedJars = Utilities.getResourceFiles(hiveConf, SessionState.ResourceType.JAR);
-    if (StringUtils.isNotBlank(addedJars)) {
-       IMetaStoreClient metastoreClient = getSession().getMetaStoreClient();
-       metastoreClient.setHiveAddedJars(addedJars);
-    }
     OperationManager operationManager = getOperationManager();
     SparkGetColumnsOperation operation = operationManager.newGetColumnsOperation(getSession(),
         catalogName, schemaName, tableName, columnName);

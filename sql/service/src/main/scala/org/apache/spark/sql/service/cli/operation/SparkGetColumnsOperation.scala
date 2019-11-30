@@ -39,7 +39,6 @@ import org.apache.spark.util.{Utils => SparkUtils}
 /**
  * Spark's own SparkGetColumnsOperation
  *
- * @param sqlContext SQLContext to use
  * @param parentSession a ServiceSession from SessionManager
  * @param catalogName catalog name. NULL if not applicable.
  * @param schemaName database name, NULL or a concrete database name
@@ -47,7 +46,6 @@ import org.apache.spark.util.{Utils => SparkUtils}
  * @param columnName column name
  */
 private[service] class SparkGetColumnsOperation(
-    sqlContext: SQLContext,
     parentSession: ServiceSession,
     catalogName: String,
     schemaName: String,
@@ -56,7 +54,7 @@ private[service] class SparkGetColumnsOperation(
   extends SparkMetadataOperation(parentSession, OperationType.GET_COLUMNS)
     with Logging {
 
-  val catalog: SessionCatalog = sqlContext.sessionState.catalog
+  val catalog: SessionCatalog = parentSession.getSQLContext.sessionState.catalog
 
   private var statementId: String = _
 
@@ -148,7 +146,7 @@ private[service] class SparkGetColumnsOperation(
 
     setState(OperationState.RUNNING)
     // Always use the latest class loader provided by executionHive's state.
-    val executionHiveClassLoader = sqlContext.sharedState.jarClassLoader
+    val executionHiveClassLoader = parentSession.getSQLContext.sharedState.jarClassLoader
     Thread.currentThread().setContextClassLoader(executionHiveClassLoader)
 
     SparkThriftServer2.listener.onStatementStart(

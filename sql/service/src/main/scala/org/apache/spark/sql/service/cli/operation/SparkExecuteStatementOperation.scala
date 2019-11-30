@@ -48,7 +48,7 @@ private[service] class SparkExecuteStatementOperation(
     statement: String,
     confOverlay: JMap[String, String],
     runInBackground: Boolean = true)
-    (sqlContext: SQLContext, sessionToActivePool: JMap[SessionHandle, String])
+    (sessionToActivePool: JMap[SessionHandle, String])
   extends ExecuteStatementOperation(parentSession, statement, confOverlay, runInBackground)
   with Logging {
 
@@ -127,7 +127,8 @@ private[service] class SparkExecuteStatementOperation(
     if ((order.equals(FetchOrientation.FETCH_FIRST) ||
         order.equals(FetchOrientation.FETCH_PRIOR)) && previousFetchEndOffset != 0) {
       // Reset the iterator to the beginning of the query.
-      iter = if (sqlContext.getConf(SQLConf.THRIFTSERVER_INCREMENTAL_COLLECT.key).toBoolean) {
+      iter = if (parentSession.getSQLContext
+        .getConf(SQLConf.THRIFTSERVER_INCREMENTAL_COLLECT.key).toBoolean) {
         resultList = None
         result.toLocalIterator.asScala
       } else {
@@ -271,11 +272,11 @@ private[service] class SparkExecuteStatementOperation(
         }
       }
       // Always use the latest class loader provided by executionHive's state.
-      val executionHiveClassLoader = sqlContext.sharedState.jarClassLoader
+      val executionHiveClassLoader = parentSession.getSQLContext.sharedState.jarClassLoader
       Thread.currentThread().setContextClassLoader(executionHiveClassLoader)
 
-      sqlContext.sparkContext.setJobGroup(statementId, statement)
-      result = sqlContext.sql(statement)
+      parentSession.getSQLContext.sparkContext.setJobGroup(statementId, statement)
+      result = parentSession.getSQLContext.sql(statement)
       logDebug(result.queryExecution.toString())
       result.queryExecution.logical match {
         case SetCommand(Some((SQLConf.THRIFTSERVER_POOL.key, Some(value)))) =>
@@ -286,7 +287,8 @@ private[service] class SparkExecuteStatementOperation(
       }
       SparkThriftServer2.listener.onStatementParsed(statementId, result.queryExecution.toString())
       iter = {
-        if (sqlContext.getConf(SQLConf.THRIFTSERVER_INCREMENTAL_COLLECT.key).toBoolean) {
+        if (parentSession.getSQLContext
+          .getConf(SQLConf.THRIFTSERVER_INCREMENTAL_COLLECT.key).toBoolean) {
           resultList = None
           result.toLocalIterator.asScala
         } else {
@@ -304,7 +306,7 @@ private[service] class SparkExecuteStatementOperation(
         // task interrupted, it may have start some spark job, so we need to cancel again to
         // make sure job was cancelled when background thread was interrupted
         if (statementId != null) {
-          sqlContext.sparkContext.cancelJobGroup(statementId)
+          parentSession.getSQLContext.sparkContext.cancelJobGroup(statementId)
         }
         val currentState = getStatus().getState()
         if (currentState.isTerminal) {
@@ -332,7 +334,7 @@ private[service] class SparkExecuteStatementOperation(
           SparkThriftServer2.listener.onStatementFinish(statementId)
         }
       }
-      sqlContext.sparkContext.clearJobGroup()
+      parentSession.getSQLContext.sparkContext.clearJobGroup()
     }
   }
 
@@ -355,20 +357,22 @@ private[service] class SparkExecuteStatementOperation(
       }
     }
     if (statementId != null) {
-      sqlContext.sparkContext.cancelJobGroup(statementId)
+      parentSession.getSQLContext.sparkContext.cancelJobGroup(statementId)
     }
   }
 
   private def withSchedulerPool[T](body: => T): T = {
     val pool = sessionToActivePool.get(parentSession.getSessionHandle)
     if (pool != null) {
-      sqlContext.sparkContext.setLocalProperty(SparkContext.SPARK_SCHEDULER_POOL, pool)
+      parentSession.getSQLContext.sparkContext
+        .setLocalProperty(SparkContext.SPARK_SCHEDULER_POOL, pool)
     }
     try {
       body
     } finally {
       if (pool != null) {
-        sqlContext.sparkContext.setLocalProperty(SparkContext.SPARK_SCHEDULER_POOL, null)
+        parentSession.getSQLContext.sparkContext
+          .setLocalProperty(SparkContext.SPARK_SCHEDULER_POOL, null)
       }
     }
   }

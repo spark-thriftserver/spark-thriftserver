@@ -32,11 +32,9 @@ import org.apache.spark.util.{Utils => SparkUtils}
 /**
  * Spark's own GetCatalogsOperation
  *
- * @param sqlContext SQLContext to use
  * @param parentSession a ServiceSession from SessionManager
  */
 private[service] class SparkGetCatalogsOperation(
-    sqlContext: SQLContext,
     parentSession: ServiceSession)
   extends SparkMetadataOperation(parentSession, OperationType.GET_CATALOGS) with Logging {
 
@@ -58,7 +56,7 @@ private[service] class SparkGetCatalogsOperation(
     logInfo(s"$logMsg with $statementId")
     setState(OperationState.RUNNING)
     // Always use the latest class loader provided by executionHive's state.
-    val executionHiveClassLoader = sqlContext.sharedState.jarClassLoader
+    val executionHiveClassLoader = parentSession.getSQLContext.sharedState.jarClassLoader
     Thread.currentThread().setContextClassLoader(executionHiveClassLoader)
 
     SparkThriftServer2.listener.onStatementStart(

@@ -50,15 +50,6 @@ private[service] class SparkSQLSessionManager(sparkServer: SparkServer2, sqlCont
       sessionConf: java.util.Map[String, String],
       withImpersonation: Boolean,
       delegationToken: String): SessionHandle = {
-    val sessionHandle =
-      super.openSession(protocol, username, passwd, ipAddress, sessionConf, withImpersonation,
-          delegationToken)
-    val session = super.getSession(sessionHandle)
-    logWarning(s"super.getSession ${session.getSessionHandle}")
-    SparkThriftServer2.listener.onSessionCreated(
-      session.getIpAddress, sessionHandle.getSessionId.toString, session.getUsername)
-    logWarning("create new session context")
-    logWarning(s"sqlContext = ${sqlContext}")
     val ctx = if (sqlContext.conf.hiveThriftServerSingleSession) {
       logWarning("single session")
       sqlContext
@@ -66,6 +57,17 @@ private[service] class SparkSQLSessionManager(sparkServer: SparkServer2, sqlCont
       logWarning("No single session")
       sqlContext.newSession()
     }
+
+    val sessionHandle =
+      super.openSession(protocol, username, passwd, ipAddress, sessionConf, withImpersonation,
+          delegationToken, ctx)
+    val session = super.getSession(sessionHandle)
+    logWarning(s"super.getSession ${session.getSessionHandle}")
+    SparkThriftServer2.listener.onSessionCreated(
+      session.getIpAddress, sessionHandle.getSessionId.toString, session.getUsername)
+    logWarning("create new session context")
+    logWarning(s"sqlContext = ${sqlContext}")
+
     ctx.setConf(HiveUtils.FAKE_HIVE_VERSION.key, HiveUtils.builtinHiveVersion)
     val hiveSessionState = session.getSessionState
     setConfMap(ctx, hiveSessionState.getOverriddenConfigurations)
@@ -73,7 +75,6 @@ private[service] class SparkSQLSessionManager(sparkServer: SparkServer2, sqlCont
     if (sessionConf != null && sessionConf.containsKey("use:database")) {
       ctx.sql(s"use ${sessionConf.get("use:database")}")
     }
-    sparkSqlOperationManager.sessionToContexts.put(sessionHandle, ctx)
     sessionHandle
   }
 
@@ -81,7 +82,6 @@ private[service] class SparkSQLSessionManager(sparkServer: SparkServer2, sqlCont
     SparkThriftServer2.listener.onSessionClosed(sessionHandle.getSessionId.toString)
     super.closeSession(sessionHandle)
     sparkSqlOperationManager.sessionToActivePool.remove(sessionHandle)
-    sparkSqlOperationManager.sessionToContexts.remove(sessionHandle)
   }
 
   def setConfMap(conf: SQLContext, confMap: java.util.Map[String, String]): Unit = {

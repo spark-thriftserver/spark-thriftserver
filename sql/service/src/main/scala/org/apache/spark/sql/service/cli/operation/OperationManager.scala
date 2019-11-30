@@ -44,7 +44,6 @@ class OperationManager
 
   private[this] lazy val logSchema: StructType = new StructType().add("operation_log", "string")
   private[this] val handleToOperation = new ConcurrentHashMap[OperationHandle, Operation]
-  val sessionToContexts = new ConcurrentHashMap[SessionHandle, SQLContext]()
   val sessionToActivePool = new ConcurrentHashMap[SessionHandle, String]()
 
   override def init(hiveConf: HiveConf): Unit = synchronized {
@@ -79,13 +78,10 @@ class OperationManager
                                    async: Boolean,
                                    queryTimeOut: Long): SparkExecuteStatementOperation = {
     synchronized {
-      val sqlContext = sessionToContexts.get(parentSession.getSessionHandle)
-      require(sqlContext != null, s"Session handle: ${parentSession.getSessionHandle} " +
-        s"has not been initialized or had already closed.")
-      val conf = sqlContext.sessionState.conf
+      val conf = parentSession.getSQLContext.sessionState.conf
       val runInBackground = async && conf.getConf(HiveUtils.HIVE_THRIFT_SERVER_ASYNC)
       val operation = new SparkExecuteStatementOperation(parentSession, statement, confOverlay,
-        runInBackground)(sqlContext, sessionToActivePool)
+        runInBackground)(sessionToActivePool)
       handleToOperation.put(operation.getHandle, operation)
       logDebug(s"Created Operation for $statement with session=$parentSession, " +
         s"runInBackground=$runInBackground")
@@ -95,10 +91,7 @@ class OperationManager
 
   def newGetTypeInfoOperation(session: ServiceSession): SparkGetTypeInfoOperation =
     synchronized {
-      val sqlContext = sessionToContexts.get(session.getSessionHandle)
-      require(sqlContext != null, s"Session handle: ${session.getSessionHandle} has not been" +
-        " initialized or had already closed.")
-      val operation = new SparkGetTypeInfoOperation(sqlContext, session)
+      val operation = new SparkGetTypeInfoOperation(session)
       handleToOperation.put(operation.getHandle, operation)
       logDebug(s"Created GetTypeInfoOperation with session=$session.")
       operation
@@ -106,10 +99,7 @@ class OperationManager
 
   def newGetCatalogsOperation(session: ServiceSession): SparkGetCatalogsOperation =
     synchronized {
-      val sqlContext = sessionToContexts.get(session.getSessionHandle)
-      require(sqlContext != null, s"Session handle: ${session.getSessionHandle} has not been" +
-        " initialized or had already closed.")
-      val operation = new SparkGetCatalogsOperation(sqlContext, session)
+      val operation = new SparkGetCatalogsOperation(session)
       handleToOperation.put(operation.getHandle, operation)
       logDebug(s"Created GetCatalogsOperation with session=$session.")
       operation
@@ -118,10 +108,7 @@ class OperationManager
   def newGetSchemasOperation(session: ServiceSession,
                              catalogName: String,
                              schemaName: String): SparkGetSchemasOperation = synchronized {
-    val sqlContext = sessionToContexts.get(session.getSessionHandle)
-    require(sqlContext != null, s"Session handle: ${session.getSessionHandle} has not been" +
-      " initialized or had already closed.")
-    val operation = new SparkGetSchemasOperation(sqlContext, session, catalogName, schemaName)
+    val operation = new SparkGetSchemasOperation(session, catalogName, schemaName)
     handleToOperation.put(operation.getHandle, operation)
     logDebug(s"Created GetSchemasOperation with session=$session.")
     operation
@@ -132,10 +119,7 @@ class OperationManager
                             schemaName: String,
                             tableName: String,
                             tableTypes: JList[String]): SparkMetadataOperation = synchronized {
-    val sqlContext = sessionToContexts.get(session.getSessionHandle)
-    require(sqlContext != null, s"Session handle: ${session.getSessionHandle} has not been" +
-      " initialized or had already closed.")
-    val operation = new SparkGetTablesOperation(sqlContext, session,
+    val operation = new SparkGetTablesOperation(session,
       catalogName, schemaName, tableName, tableTypes)
     handleToOperation.put(operation.getHandle, operation)
     logDebug(s"Created GetTablesOperation with session=$session.")
@@ -147,10 +131,7 @@ class OperationManager
                              schemaName: String,
                              tableName: String,
                              columnName: String): SparkGetColumnsOperation = synchronized {
-    val sqlContext = sessionToContexts.get(session.getSessionHandle)
-    require(sqlContext != null, s"Session handle: ${session.getSessionHandle} has not been" +
-      " initialized or had already closed.")
-    val operation = new SparkGetColumnsOperation(sqlContext, session,
+    val operation = new SparkGetColumnsOperation(session,
       catalogName, schemaName, tableName, columnName)
     handleToOperation.put(operation.getHandle, operation)
     logDebug(s"Created GetColumnsOperation with session=$session.")
@@ -159,10 +140,7 @@ class OperationManager
 
   def newGetTableTypesOperation(session: ServiceSession): SparkGetTableTypesOperation =
     synchronized {
-      val sqlContext = sessionToContexts.get(session.getSessionHandle)
-      require(sqlContext != null, s"Session handle: ${session.getSessionHandle} has not been" +
-        " initialized or had already closed.")
-      val operation = new SparkGetTableTypesOperation(sqlContext, session)
+      val operation = new SparkGetTableTypesOperation(session)
       handleToOperation.put(operation.getHandle, operation)
       logDebug(s"Created GetTableTypesOperation with session=$session.")
       operation
@@ -172,10 +150,7 @@ class OperationManager
                                catalogName: String,
                                schemaName: String,
                                functionName: String): SparkGetFunctionsOperation = synchronized {
-    val sqlContext = sessionToContexts.get(session.getSessionHandle)
-    require(sqlContext != null, s"Session handle: ${session.getSessionHandle} has not been" +
-      " initialized or had already closed.")
-    val operation = new SparkGetFunctionsOperation(sqlContext, session,
+    val operation = new SparkGetFunctionsOperation(session,
       catalogName, schemaName, functionName)
     handleToOperation.put(operation.getHandle, operation)
     logDebug(s"Created GetFunctionsOperation with session=$session.")

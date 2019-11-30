@@ -32,11 +32,9 @@ import org.apache.spark.util.{Utils => SparkUtils}
 /**
  * Spark's own GetTypeInfoOperation
  *
- * @param sqlContext    SQLContext to use
  * @param parentSession a ServiceSession from SessionManager
  */
 private[service] class SparkGetTypeInfoOperation(
-    sqlContext: SQLContext,
     parentSession: ServiceSession)
   extends SparkMetadataOperation(parentSession, OperationType.GET_TYPE_INFO) with Logging {
 
@@ -94,7 +92,7 @@ private[service] class SparkGetTypeInfoOperation(
     logInfo(s"$logMsg with $statementId")
     setState(OperationState.RUNNING)
     // Always use the latest class loader provided by executionHive's state.
-    val executionHiveClassLoader = sqlContext.sharedState.jarClassLoader
+    val executionHiveClassLoader = parentSession.getSQLContext.sharedState.jarClassLoader
     Thread.currentThread().setContextClassLoader(executionHiveClassLoader)
 
     if (isAuthV2Enabled) {
