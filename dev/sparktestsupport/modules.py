@@ -200,9 +200,9 @@ service = Module(
     ]
 )
 
-service = Module(
+cli = Module(
     name="cli",
-    dependencies=[service],
+    dependencies=[sql],
     source_file_regexes=[
         "sql/cli",
         "bin/spark-cli-sql",
