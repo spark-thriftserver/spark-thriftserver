@@ -447,10 +447,6 @@ public abstract class SparkBaseResultSet implements ResultSet {
         return new BigDecimal((String)value);
       case DATE_TYPE:
         return Date.valueOf((String) value);
-      case INTERVAL_YEAR_MONTH_TYPE:
-        return HiveIntervalYearMonth.valueOf((String) value);
-      case INTERVAL_DAY_TIME_TYPE:
-        return HiveIntervalDayTime.valueOf((String) value);
       case ARRAY_TYPE:
       case MAP_TYPE:
       case STRUCT_TYPE:

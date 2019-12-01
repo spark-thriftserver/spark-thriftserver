@@ -98,16 +98,8 @@ public class JdbcColumn {
       case Types.BINARY:
         return byte[].class.getName();
       case Types.OTHER:
-      case Types.JAVA_OBJECT: {
-        switch (hiveType) {
-          case INTERVAL_YEAR_MONTH_TYPE:
-            return HiveIntervalYearMonth.class.getName();
-          case INTERVAL_DAY_TIME_TYPE:
-            return HiveIntervalDayTime.class.getName();
-          default:
-            return String.class.getName();
-        }
-      }
+      case Types.JAVA_OBJECT:
+        return String.class.getName();
       case Types.ARRAY:
       case Types.STRUCT:
         return String.class.getName();
@@ -119,10 +111,6 @@ public class JdbcColumn {
   static Type typeStringToHiveType(String type) throws SQLException {
     if ("string".equalsIgnoreCase(type)) {
       return Type.STRING_TYPE;
-    } else if ("varchar".equalsIgnoreCase(type)) {
-      return Type.VARCHAR_TYPE;
-    } else if ("char".equalsIgnoreCase(type)) {
-      return Type.CHAR_TYPE;
     } else if ("float".equalsIgnoreCase(type)) {
       return Type.FLOAT_TYPE;
     } else if ("double".equalsIgnoreCase(type)) {
@@ -141,10 +129,6 @@ public class JdbcColumn {
       return Type.DATE_TYPE;
     } else if ("timestamp".equalsIgnoreCase(type)) {
       return Type.TIMESTAMP_TYPE;
-    } else if ("interval_year_month".equalsIgnoreCase(type)) {
-      return Type.INTERVAL_YEAR_MONTH_TYPE;
-    } else if ("interval_day_time".equalsIgnoreCase(type)) {
-      return Type.INTERVAL_DAY_TIME_TYPE;
     } else if ("decimal".equalsIgnoreCase(type)) {
       return Type.DECIMAL_TYPE;
     } else if ("binary".equalsIgnoreCase(type)) {
@@ -296,18 +280,8 @@ public class JdbcColumn {
     case Types.DECIMAL:
       return columnAttributes.precision;
     case Types.OTHER:
-    case Types.JAVA_OBJECT: {
-      switch (hiveType) {
-        case INTERVAL_YEAR_MONTH_TYPE:
-          // -yyyyyyy-mm  : should be more than enough
-          return 11;
-        case INTERVAL_DAY_TIME_TYPE:
-          // -ddddddddd hh:mm:ss.nnnnnnnnn
-          return 29;
-        default:
-          return Integer.MAX_VALUE;
-      }
-    }
+    case Types.JAVA_OBJECT:
+      return Integer.MAX_VALUE;
     case Types.ARRAY:
     case Types.STRUCT:
       return Integer.MAX_VALUE;
