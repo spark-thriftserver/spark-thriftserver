@@ -48,8 +48,8 @@ public class OperationLog {
     operationName = name;
     logFile = new LogFile(file);
 
-    if (Boolean.valueOf(sqlConf.getConfString(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_ENABLE().key()))) {
-      String logLevel = sqlConf.getConfString(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_LEVEL().key());
+    if (((boolean) sqlConf.getConf(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_ENABLE()))) {
+      String logLevel = (String) sqlConf.getConf(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_LEVEL());
       opLoggingLevel = getLoggingLevel(logLevel);
     }
   }

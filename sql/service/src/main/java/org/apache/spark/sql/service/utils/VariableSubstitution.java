@@ -60,12 +60,12 @@ public class VariableSubstitution extends SystemVariables {
     if (expr == null) {
       return expr;
     }
-    if (Boolean.valueOf(conf.getConfString(ServiceConf.THRIFTSERVER_VARIABLE_SUBSTITUTE().key()))) {
+    if ((boolean) conf.getConf(ServiceConf.THRIFTSERVER_VARIABLE_SUBSTITUTE())) {
       l4j.debug("Substitution is on: " + expr);
     } else {
       return expr;
     }
-    int depth = Integer.valueOf(conf.getConfString(ServiceConf.THRIFTSERVER_VARIABLE_SUBSTITUTE_DEPTH().key()));
+    int depth = (int) conf.getConf(ServiceConf.THRIFTSERVER_VARIABLE_SUBSTITUTE_DEPTH());
     return substitute(conf, expr, depth);
   }
 }

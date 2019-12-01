@@ -61,13 +61,13 @@ public class ThriftBinaryCLIService extends ThriftCLIService {
       TProcessorFactory processorFactory = sparkAuthFactory.getAuthProcFactory(this);
       TServerSocket serverSocket = null;
       List<String> sslVersionBlacklist = new ArrayList<String>();
-      for (String sslVersion : sqlConf.getConfString(ServiceConf.THRIFTSERVER_SSL_PROTOCOL_BLACKLIST().key()).split(",")) {
+      for (String sslVersion : sqlConf.getConf(ServiceConf.THRIFTSERVER_SSL_PROTOCOL_BLACKLIST()).split(",")) {
         sslVersionBlacklist.add(sslVersion);
       }
-      if (!Boolean.valueOf(sqlConf.getConfString(ServiceConf.THRIFTSERVER_USE_SSL().key()))) {
+      if (!((boolean) sqlConf.getConf(ServiceConf.THRIFTSERVER_USE_SSL()))) {
         serverSocket = SparkAuthUtils.getServerSocket(sparkHost, portNum);
       } else {
-        String keyStorePath = sqlConf.getConfString(ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PATH().key()).trim();
+        String keyStorePath = sqlConf.getConf(ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PATH()).trim();
         if (keyStorePath.isEmpty()) {
           throw new IllegalArgumentException(ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PATH().key()
               + " Not configured for SSL connection");
@@ -80,9 +80,9 @@ public class ThriftBinaryCLIService extends ThriftCLIService {
       }
 
       // Server args
-      int maxMessageSize = Integer.valueOf(sqlConf.getConfString(ServiceConf.THRIFTSERVER_MAX_MESSAGE_SIZE().key()));
-      int requestTimeout = Integer.valueOf(sqlConf.getConfString(ServiceConf.THRIFTSERVER_THRIFT_LOGIN_TIMEOUT().key()));
-      int beBackoffSlotLength = Integer.valueOf(sqlConf.getConfString(ServiceConf.THRIFTSERVER_THRIFT_LOGIN_BEBACKOFF_SLOT_LENGTH().key()));
+      int maxMessageSize = (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_MAX_MESSAGE_SIZE());
+      int requestTimeout = (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_LOGIN_TIMEOUT());
+      int beBackoffSlotLength = (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_LOGIN_BEBACKOFF_SLOT_LENGTH());
       TThreadPoolServer.Args sargs = new TThreadPoolServer.Args(serverSocket)
           .processorFactory(processorFactory).transportFactory(transportFactory)
           .protocolFactory(new TBinaryProtocol.Factory())

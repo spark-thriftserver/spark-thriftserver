@@ -311,7 +311,7 @@ private[spark] class SparkThriftServer2(sqlContext: SQLContext)
   }
 
   private def isHTTPTransportMode(sqlConf: SQLConf): Boolean = {
-    val transportMode = sqlConf.getConfString(ServiceConf.THRIFTSERVER_TRANSPORT_MODE.key)
+    val transportMode = sqlConf.getConf(ServiceConf.THRIFTSERVER_TRANSPORT_MODE)
     transportMode.toLowerCase(Locale.ROOT).equals("http")
   }
 

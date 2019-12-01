@@ -150,26 +150,26 @@ public abstract class ThriftCLIService extends AbstractService
     }
     // HTTP mode
     if (SparkServer2.isHTTPTransportMode(sqlConf)) {
-      workerKeepAliveTime =Long.valueOf(sqlConf.getConfString(ServiceConf.THRIFTSERVER_THRIFT_HTTP_WORKER_KEEPALIVE_TIME().key()));
+      workerKeepAliveTime = (long) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_WORKER_KEEPALIVE_TIME());
       portString = System.getenv("SPARK_THRIFTSERVER_THRIFT_HTTP_PORT");
       if (portString != null) {
         portNum = Integer.valueOf(portString);
       } else {
-        portNum = Integer.valueOf(sqlConf.getConfString(ServiceConf.THRIFTSERVER_HTTP_PORT().key()));
+        portNum = (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_HTTP_PORT());
       }
     }
     // Binary mode
     else {
-      workerKeepAliveTime =Long.valueOf(sqlConf.getConfString(ServiceConf.THRIFTSERVER_THRIFT_HTTP_WORKER_KEEPALIVE_TIME().key()));
+      workerKeepAliveTime =(long) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_WORKER_KEEPALIVE_TIME());
       portString = System.getenv("SPARK_THRIFTSERVER_THRIFT_PORT");
       if (portString != null) {
         portNum = Integer.valueOf(portString);
       } else {
-        portNum = Integer.valueOf(sqlConf.getConfString(ServiceConf.THRIFTSERVER_HTTP_PORT().key()));
+        portNum = (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_HTTP_PORT());
       }
     }
-    minWorkerThreads = Integer.valueOf(sqlConf.getConfString(ServiceConf.THRIFTSERVER_THRIFT_MIN_WORKER_THREADS().key()));
-    maxWorkerThreads = Integer.valueOf(sqlConf.getConfString(ServiceConf.THRIFTSERVER_THRIFT_MAX_WORKER_THREADS().key()));
+    minWorkerThreads = (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_MIN_WORKER_THREADS());
+    maxWorkerThreads = (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_MAX_WORKER_THREADS());
     super.init(sqlConf);
   }
 
@@ -266,8 +266,8 @@ public abstract class ThriftCLIService extends AbstractService
     String clientIpAddress;
     // Http transport mode.
     // We set the thread local ip address, in ThriftHttpServlet.
-    if (cliService.getSqlConf().getConfString(
-        ServiceConf.THRIFTSERVER_TRANSPORT_MODE().key()).equalsIgnoreCase("http")) {
+    if (cliService.getSqlConf().getConf(
+        ServiceConf.THRIFTSERVER_TRANSPORT_MODE()).equalsIgnoreCase("http")) {
       clientIpAddress = SessionManager.getIpAddress();
     }
     else {
@@ -306,8 +306,8 @@ public abstract class ThriftCLIService extends AbstractService
     }
     // Http transport mode.
     // We set the thread local username, in ThriftHttpServlet.
-    if (cliService.getSqlConf().getConfString(
-            ServiceConf.THRIFTSERVER_TRANSPORT_MODE().key()).equalsIgnoreCase("http")) {
+    if (cliService.getSqlConf().getConf(
+            ServiceConf.THRIFTSERVER_TRANSPORT_MODE()).equalsIgnoreCase("http")) {
       userName = SessionManager.getUserName();
     }
     if (userName == null) {
@@ -348,7 +348,7 @@ public abstract class ThriftCLIService extends AbstractService
         req.getClient_protocol());
     res.setServerProtocolVersion(protocol);
     SessionHandle sessionHandle;
-    if (Boolean.valueOf(cliService.getSqlConf().getConfString(ServiceConf.THRIFTSERVER_ENABLE_DOAS().key())) &&
+    if (((boolean) cliService.getSqlConf().getConf(ServiceConf.THRIFTSERVER_ENABLE_DOAS())) &&
         (userName != null)) {
       String delegationTokenStr = "";
       sessionHandle = cliService.openSessionWithImpersonation(protocol, userName,
@@ -675,8 +675,8 @@ public abstract class ThriftCLIService extends AbstractService
     String proxyUser = null;
     // Http transport mode.
     // We set the thread local proxy username, in ThriftHttpServlet.
-    if (cliService.getSqlConf().getConfString(
-        ServiceConf.THRIFTSERVER_TRANSPORT_MODE().key()).equalsIgnoreCase("http")) {
+    if (cliService.getSqlConf().getConf(
+        ServiceConf.THRIFTSERVER_TRANSPORT_MODE()).equalsIgnoreCase("http")) {
       proxyUser = SessionManager.getProxyUserName();
       LOG.debug("Proxy user from query string: " + proxyUser);
     }
@@ -693,13 +693,13 @@ public abstract class ThriftCLIService extends AbstractService
     }
 
     // check whether substitution is allowed
-    if (!Boolean.valueOf(sqlConf.getConfString(ServiceConf.THRIFTSERVER_ALLOW_USER_SUBSTITUTION().key()))) {
+    if (!((boolean) sqlConf.getConf(ServiceConf.THRIFTSERVER_ALLOW_USER_SUBSTITUTION()))) {
       throw new ServiceSQLException("Proxy user substitution is not allowed");
     }
 
     // If there's no authentication, then directly substitute the user
     if (SparkAuthFactory.AuthTypes.NONE.toString()
-        .equalsIgnoreCase(sqlConf.getConfString(ServiceConf.THRIFTSERVER_AUTHENTICATION().key()))) {
+        .equalsIgnoreCase(sqlConf.getConf(ServiceConf.THRIFTSERVER_AUTHENTICATION()))) {
       return proxyUser;
     }
 
@@ -710,7 +710,7 @@ public abstract class ThriftCLIService extends AbstractService
   }
 
   private boolean isKerberosAuthMode() {
-    return cliService.getSqlConf().getConfString(ServiceConf.THRIFTSERVER_AUTHENTICATION().key())
+    return cliService.getSqlConf().getConf(ServiceConf.THRIFTSERVER_AUTHENTICATION())
         .equalsIgnoreCase(SparkAuthFactory.AuthTypes.KERBEROS.toString());
   }
 }
