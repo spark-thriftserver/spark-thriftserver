@@ -28,30 +28,6 @@ import org.apache.spark.sql.internal.SQLConf.buildConf
 
 object ServiceConf {
 
-  // This is only used for the thriftserver
-  val THRIFTSERVER_POOL = buildConf("spark.sql.thriftserver.scheduler.pool")
-    .doc("Set a Fair Scheduler pool for a JDBC client session.")
-    .stringConf
-    .createOptional
-
-  val THRIFTSERVER_INCREMENTAL_COLLECT =
-    buildConf("spark.sql.thriftServer.incrementalCollect")
-      .internal()
-      .doc("When true, enable incremental collection for execution in Thrift Server.")
-      .booleanConf
-      .createWithDefault(false)
-
-  val THRIFTSERVER_UI_STATEMENT_LIMIT =
-    buildConf("spark.sql.thriftserver.ui.retainedStatements")
-      .doc("The number of SQL statements kept in the JDBC/ODBC web UI history.")
-      .intConf
-      .createWithDefault(200)
-
-  val THRIFTSERVER_UI_SESSION_LIMIT = buildConf("spark.sql.thriftserver.ui.retainedSessions")
-    .doc("The number of SQL client sessions kept in the JDBC/ODBC web UI history.")
-    .intConf
-    .createWithDefault(200)
-
   val THRIFTSERVER_TRANSPORT_MODE = buildConf("spark.sql.thriftserver.transport.mode")
     .internal()
     .doc("Transport mode of SparkServer2: 1. binary  2. http")
