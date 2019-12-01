@@ -59,7 +59,7 @@ object ServiceConf {
     buildConf("spark.sql.thriftserver.max.message.size")
       .internal()
       .doc("Maximum message size in bytes a SS2 server will accept.")
-      .longConf
+      .intConf
       .createWithDefault(104857600)
 
   val THRIFTSERVER_THRIFT_HTTP_MAX_IDLE_TIME =
