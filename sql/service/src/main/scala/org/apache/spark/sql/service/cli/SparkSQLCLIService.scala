@@ -112,7 +112,7 @@ private[service] trait ReflectedCompositeService { this: AbstractService =>
 
     // Emulating `AbstractService.init(hiveConf)`
     invoke(classOf[AbstractService], this, "ensureCurrentState", classOf[STATE] -> STATE.NOTINITED)
-    setAncestorField(this, 3, "hiveConf", sqlConf)
+    setAncestorField(this, 3, "sqlConf", sqlConf)
     invoke(classOf[AbstractService], this, "changeState", classOf[STATE] -> STATE.INITED)
     getAncestorField[Logger](this, 3, "LOG").info(s"Service: $getName is inited.")
   }

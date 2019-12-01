@@ -39,7 +39,7 @@ object ServiceConf {
     .internal()
     .doc("Bind host on which to run the SparkServer2 Thrift service.")
     .stringConf
-    .createWithDefault("binary")
+    .createWithDefault("")
 
 
   val THRIFTSERVER_HTTP_PORT = buildConf("spark.sql.thriftserver.http.port")
@@ -235,7 +235,7 @@ object ServiceConf {
         "  PAM: Pluggable authentication module" +
         "  NOSASL:  Raw transport")
       .stringConf
-      .createWithDefault("")
+      .createWithDefault("NONE")
 
   val THRIFTSERVER_ALLOW_USER_SUBSTITUTION =
     buildConf("spark.sql.thriftserver.allow.user.substitution")

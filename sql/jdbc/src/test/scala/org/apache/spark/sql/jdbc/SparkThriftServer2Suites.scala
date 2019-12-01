@@ -49,6 +49,7 @@ import org.apache.spark.sql.service.cli.FetchType
 import org.apache.spark.sql.service.cli.GetInfoType
 import org.apache.spark.sql.service.cli.RowSet
 import org.apache.spark.sql.service.cli.thrift.ThriftCLIServiceClient
+import org.apache.spark.sql.service.internal.ServiceConf
 import org.apache.spark.sql.service.rpc.thrift.TCLIService.Client
 import org.apache.spark.sql.test.ProcessTestUtils.ProcessOutputCapturer
 import org.apache.spark.util.{Utils => SparkUtils}
@@ -1009,9 +1010,9 @@ abstract class SparkThriftServer2Test extends SparkFunSuite with BeforeAndAfterA
 
   protected def serverStartCommand(port: Int) = {
     val portConf = if (mode == ServerMode.binary) {
-      ConfVars.HIVE_SERVER2_THRIFT_PORT
+      ServiceConf.THRIFTSERVER_THRIFT_PORT.key
     } else {
-      ConfVars.HIVE_SERVER2_THRIFT_HTTP_PORT
+      ServiceConf.THRIFTSERVER_HTTP_PORT.key
     }
 
     val driverClassPath = {
@@ -1034,13 +1035,13 @@ abstract class SparkThriftServer2Test extends SparkFunSuite with BeforeAndAfterA
 
     s"""$startScript
        |  --master local
-       |  --sparkconf ${ConfVars.METASTORECONNECTURLKEY}=$metastoreJdbcUri
-       |  --sparkconf ${ConfVars.METASTOREWAREHOUSE}=$warehousePath
-       |  --sparkconf ${ConfVars.HIVE_SERVER2_THRIFT_BIND_HOST}=localhost
-       |  --sparkconf ${ConfVars.HIVE_SERVER2_TRANSPORT_MODE}=$mode
-       |  --sparkconf ${ConfVars.HIVE_SERVER2_LOGGING_OPERATION_LOG_LOCATION}=$operationLogPath
-       |  --sparkconf ${ConfVars.LOCALSCRATCHDIR}=$lScratchDir
-       |  --sparkconf $portConf=$port
+       |  --hiveconf ${ConfVars.METASTORECONNECTURLKEY}=$metastoreJdbcUri
+       |  --hiveconf ${ConfVars.METASTOREWAREHOUSE}=$warehousePath
+       |  --conf ${ServiceConf.THRIFTSERVER_BIND_HOST.key}=localhost
+       |  --conf ${ServiceConf.THRIFTSERVER_TRANSPORT_MODE.key}=$mode
+       |  --conf ${ServiceConf.THRIFTSERVER_LOGGING_OPERATION_LOG_LOCATION.key}=$operationLogPath
+       |  --hiveconf ${ConfVars.LOCALSCRATCHDIR}=$lScratchDir
+       |  --conf $portConf=$port
        |  --driver-class-path $driverClassPath
        |  --driver-java-options -Dlog4j.debug
        |  --conf spark.ui.enabled=false

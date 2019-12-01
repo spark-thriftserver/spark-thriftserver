@@ -23,17 +23,15 @@ import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.mapred.JobStatus;
-import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.*;
 import org.apache.hadoop.mapred.lib.CombineFileSplit;
 import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
 import org.apache.hadoop.mapreduce.OutputFormat;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapreduce.TaskID;
-import org.apache.hadoop.mapreduce.*;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Progressable;
@@ -272,15 +270,15 @@ public interface HadoopShims {
 
     public TaskAttemptID createTaskAttemptID();
 
-    public org.apache.hadoop.mapreduce.TaskAttemptContext createTaskAttemptContext(Configuration conf,
+    public TaskAttemptContext createTaskAttemptContext(Configuration conf,
                                                                                    TaskAttemptID taskId);
 
-    public org.apache.hadoop.mapred.TaskAttemptContext createTaskAttemptContext(JobConf conf,
-                                                                                org.apache.hadoop.mapred.TaskAttemptID taskId, Progressable progressable);
+    public TaskAttemptContext createTaskAttemptContext(JobConf conf,
+                                                                                TaskAttemptID taskId, Progressable progressable);
 
     public JobContext createJobContext(Configuration conf, JobID jobId);
 
-    public org.apache.hadoop.mapred.JobContext createJobContext(JobConf conf, JobID jobId, Progressable progressable);
+    public JobContext createJobContext(JobConf conf, JobID jobId, Progressable progressable);
 
     public void commitJob(OutputFormat outputFormat, Job job) throws IOException;
 
@@ -311,17 +309,17 @@ public interface HadoopShims {
      *
      * @return Profile of the job, or null if not found.
      */
-    public JobProfile getJobProfile(org.apache.hadoop.mapred.JobID jobid) throws IOException;
+    public JobProfile getJobProfile(JobID jobid) throws IOException;
     /**
      * Grab a handle to a job that is already known to the JobTracker.
      *
      * @return Status of the job, or null if not found.
      */
-    public JobStatus getJobStatus(org.apache.hadoop.mapred.JobID jobid) throws IOException;
+    public JobStatus getJobStatus(JobID jobid) throws IOException;
     /**
      * Kill a job.
      */
-    public void killJob(org.apache.hadoop.mapred.JobID jobid) throws IOException;
+    public void killJob(JobID jobid) throws IOException;
     /**
      * Get all the jobs submitted.
      */
@@ -390,7 +388,7 @@ public interface HadoopShims {
    * @param context job context
    * @return job conf
    */
-  public JobConf getJobConf(org.apache.hadoop.mapred.JobContext context);
+  public JobConf getJobConf(JobContext context);
 
   public FileSystem getNonCachedFileSystem(URI uri, Configuration conf) throws IOException;
 
