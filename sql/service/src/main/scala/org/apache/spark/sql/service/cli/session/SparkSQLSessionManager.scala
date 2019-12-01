@@ -90,7 +90,8 @@ private[service] class SparkSQLSessionManager(
     val iterator = confMap.entrySet().iterator()
     while (iterator.hasNext) {
       val kv = iterator.next()
-      conf.setConf(kv.getKey, kv.getValue)
+      // TODO revisit it later.
+      // conf.setConf(kv.getKey, kv.getValue)
     }
   }
 }

@@ -54,7 +54,7 @@ object SparkThriftServer2 extends Logging {
   def startWithContext(sqlContext: SQLContext): SparkThriftServer2 = {
     val server = new SparkThriftServer2(sqlContext)
 
-    server.init(SparkSQLEnv.sqlContext.conf)
+    server.init(sqlContext.conf)
     server.start()
     listener = new SparkThriftServer2Listener(server, sqlContext.conf)
     sqlContext.sparkContext.addSparkListener(listener)

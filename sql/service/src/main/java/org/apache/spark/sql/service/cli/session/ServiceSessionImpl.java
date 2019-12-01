@@ -148,6 +148,9 @@ public class ServiceSessionImpl implements ServiceSession {
   }
 
   private void configureSession(Map<String, String> sessionConfMap) throws ServiceSQLException {
+//    org.apache.spark.sql.internal.VariableSubstitution variableSubstitution =
+//        new org.apache.spark.sql.internal.VariableSubstitution(sqlConf);
+//    variableSubstitution.substitute()
     for (Map.Entry<String, String> entry : sessionConfMap.entrySet()) {
       String key = entry.getKey();
       if (key.startsWith("set:")) {

@@ -393,7 +393,7 @@ public class CLIService extends CompositeService implements ICLIService {
      */
     if (operation.shouldRunAsync()) {
       SQLConf conf = operation.getParentSession().getSQLConf();
-      long timeout = Long.valueOf(conf.getConfString(ServiceConf.THRIFTSERVER_LONG_POLLING_TIMEOUT().key()));
+      long timeout = (long) conf.getConf(ServiceConf.THRIFTSERVER_LONG_POLLING_TIMEOUT());
       try {
         operation.getBackgroundHandle().get(timeout, TimeUnit.MILLISECONDS);
       } catch (TimeoutException e) {

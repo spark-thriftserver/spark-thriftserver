@@ -127,7 +127,7 @@ private[service] class SparkExecuteStatementOperation(
     if ((order.equals(FetchOrientation.FETCH_FIRST) ||
         order.equals(FetchOrientation.FETCH_PRIOR)) && previousFetchEndOffset != 0) {
       // Reset the iterator to the beginning of the query.
-      iter = if (sqlContext.getConf(ServiceConf.THRIFTSERVER_INCREMENTAL_COLLECT.key).toBoolean) {
+      iter = if (sqlContext.getConf(SQLConf.THRIFTSERVER_INCREMENTAL_COLLECT.key).toBoolean) {
         resultList = None
         result.toLocalIterator.asScala
       } else {
@@ -286,7 +286,7 @@ private[service] class SparkExecuteStatementOperation(
       }
       SparkThriftServer2.listener.onStatementParsed(statementId, result.queryExecution.toString())
       iter = {
-        if (sqlContext.getConf(ServiceConf.THRIFTSERVER_INCREMENTAL_COLLECT.key).toBoolean) {
+        if (sqlContext.getConf(SQLConf.THRIFTSERVER_INCREMENTAL_COLLECT.key).toBoolean) {
           resultList = None
           result.toLocalIterator.asScala
         } else {

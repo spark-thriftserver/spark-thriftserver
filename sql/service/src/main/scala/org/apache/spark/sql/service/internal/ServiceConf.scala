@@ -39,8 +39,7 @@ object ServiceConf {
     .internal()
     .doc("Bind host on which to run the SparkServer2 Thrift service.")
     .stringConf
-    .createWithDefault("binary")
-
+    .createWithDefault("localhost")
 
   val THRIFTSERVER_HTTP_PORT = buildConf("spark.sql.thriftserver.http.port")
     .internal()
@@ -164,7 +163,7 @@ object ServiceConf {
       .internal()
       .doc("Binary exponential backoff slot time for Thrift clients during login to SparkServer2," +
         "for retries until hitting Thrift client timeout")
-      .timeConf(TimeUnit.MILLISECONDS)
+      .intConf
       .createWithDefault(100)
 
 
@@ -235,7 +234,7 @@ object ServiceConf {
         "  PAM: Pluggable authentication module" +
         "  NOSASL:  Raw transport")
       .stringConf
-      .createWithDefault("")
+      .createWithDefault("NONE")
 
   val THRIFTSERVER_ALLOW_USER_SUBSTITUTION =
     buildConf("spark.sql.thriftserver.allow.user.substitution")
