@@ -19,10 +19,6 @@
 
 package org.apache.spark.sql.service.server;
 
-import java.util.Map;
-
-import org.apache.hadoop.hive.metastore.HiveMetaStore;
-import org.apache.hadoop.hive.metastore.RawStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,9 +29,6 @@ import org.slf4j.LoggerFactory;
  */
 public class ThreadWithGarbageCleanup extends Thread {
   private static final Logger LOG = LoggerFactory.getLogger(ThreadWithGarbageCleanup.class);
-
-  Map<Long, RawStore> threadRawStoreMap =
-      ThreadFactoryWithGarbageCleanup.getThreadRawStoreMap();
 
   public ThreadWithGarbageCleanup(Runnable runnable) {
     super(runnable);
@@ -52,26 +45,11 @@ public class ThreadWithGarbageCleanup extends Thread {
   }
 
   private void cleanRawStore() {
-    Long threadId = this.getId();
-    RawStore threadLocalRawStore = threadRawStoreMap.get(threadId);
-    if (threadLocalRawStore != null) {
-      LOG.debug("RawStore: " + threadLocalRawStore + ", for the thread: " +
-          this.getName()  +  " will be closed now.");
-      threadLocalRawStore.shutdown();
-      threadRawStoreMap.remove(threadId);
-    }
   }
 
   /**
    * Cache the ThreadLocal RawStore object. Called from the corresponding thread.
    */
   public void cacheThreadLocalRawStore() {
-    Long threadId = this.getId();
-    RawStore threadLocalRawStore = HiveMetaStore.HMSHandler.getRawStore();
-    if (threadLocalRawStore != null && !threadRawStoreMap.containsKey(threadId)) {
-      LOG.debug("Adding RawStore: " + threadLocalRawStore + ", for the thread: " +
-          this.getName() + " to threadRawStoreMap for future cleanup.");
-      threadRawStoreMap.put(threadId, threadLocalRawStore);
-    }
   }
 }

@@ -22,10 +22,10 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Timestamp;
 
-import org.apache.hadoop.hive.common.type.HiveChar;
-import org.apache.hadoop.hive.common.type.HiveIntervalDayTime;
-import org.apache.hadoop.hive.common.type.HiveIntervalYearMonth;
-import org.apache.hadoop.hive.common.type.HiveVarchar;
+import org.apache.spark.sql.service.cli.common.type.SparkChar;
+import org.apache.spark.sql.service.cli.common.type.SparkIntervalDayTime;
+import org.apache.spark.sql.service.cli.common.type.SparkIntervalYearMonth;
+import org.apache.spark.sql.service.cli.common.type.SparkVarchar;
 import org.apache.spark.sql.service.rpc.thrift.TBoolValue;
 import org.apache.spark.sql.service.rpc.thrift.TByteValue;
 import org.apache.spark.sql.service.rpc.thrift.TColumnValue;
@@ -107,7 +107,7 @@ public class ColumnValue {
     return TColumnValue.stringVal(tStringValue);
   }
 
-  private static TColumnValue stringValue(HiveChar value) {
+  private static TColumnValue stringValue(SparkChar value) {
     TStringValue tStringValue = new TStringValue();
     if (value != null) {
       tStringValue.setValue(value.toString());
@@ -115,7 +115,7 @@ public class ColumnValue {
     return TColumnValue.stringVal(tStringValue);
   }
 
-  private static TColumnValue stringValue(HiveVarchar value) {
+  private static TColumnValue stringValue(SparkVarchar value) {
     TStringValue tStringValue = new TStringValue();
     if (value != null) {
       tStringValue.setValue(value.toString());
@@ -139,7 +139,7 @@ public class ColumnValue {
     return TColumnValue.stringVal(tStringValue);
   }
 
-  private static TColumnValue stringValue(HiveIntervalYearMonth value) {
+  private static TColumnValue stringValue(SparkIntervalYearMonth value) {
     TStringValue tStrValue = new TStringValue();
     if (value != null) {
       tStrValue.setValue(value.toString());
@@ -147,7 +147,7 @@ public class ColumnValue {
     return TColumnValue.stringVal(tStrValue);
   }
 
-  private static TColumnValue stringValue(HiveIntervalDayTime value) {
+  private static TColumnValue stringValue(SparkIntervalDayTime value) {
     TStringValue tStrValue = new TStringValue();
     if (value != null) {
       tStrValue.setValue(value.toString());
@@ -176,17 +176,17 @@ public class ColumnValue {
     case STRING_TYPE:
       return stringValue((String)value);
     case CHAR_TYPE:
-      return stringValue((HiveChar)value);
+      return stringValue((SparkChar)value);
     case VARCHAR_TYPE:
-      return stringValue((HiveVarchar)value);
+      return stringValue((SparkVarchar)value);
     case DATE_TYPE:
       return dateValue((Date)value);
     case TIMESTAMP_TYPE:
       return timestampValue((Timestamp)value);
     case INTERVAL_YEAR_MONTH_TYPE:
-      return stringValue((HiveIntervalYearMonth) value);
+      return stringValue((SparkIntervalYearMonth) value);
     case INTERVAL_DAY_TIME_TYPE:
-      return stringValue((HiveIntervalDayTime) value);
+      return stringValue((SparkIntervalDayTime) value);
     case DECIMAL_TYPE:
       return stringValue(((BigDecimal)value).toPlainString());
     case BINARY_TYPE:

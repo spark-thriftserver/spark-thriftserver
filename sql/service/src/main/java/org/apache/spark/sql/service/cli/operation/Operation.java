@@ -23,11 +23,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
-import org.apache.hadoop.hive.ql.session.OperationLog;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.cli.*;
 import org.apache.spark.sql.service.cli.ServiceSQLException;
@@ -225,7 +221,7 @@ public abstract class Operation {
       // create OperationLog object with above log file
       try {
         operationLog =
-            new OperationLog(opHandle.toString(), operationLogFile, parentSession.getHiveConf());
+            new OperationLog(opHandle.toString(), operationLogFile, parentSession.getSQLConf());
       } catch (FileNotFoundException e) {
         LOG.warn("Unable to instantiate OperationLog object for operation: " +
             opHandle, e);
@@ -325,15 +321,6 @@ public abstract class Operation {
       throw new ServiceSQLException("The fetch type " + orientation.toString() +
           " is not supported for this resultset", "HY106");
     }
-  }
-
-  protected ServiceSQLException toSQLException(String prefix, CommandProcessorResponse response) {
-    ServiceSQLException ex = new ServiceSQLException(prefix + ": " + response.getErrorMessage(),
-        response.getSQLState(), response.getResponseCode());
-    if (response.getException() != null) {
-      ex.initCause(response.getException());
-    }
-    return ex;
   }
 
   protected Map<String, String> getConfOverlay() {

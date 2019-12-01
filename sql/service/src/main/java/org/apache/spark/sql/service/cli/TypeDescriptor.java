@@ -19,9 +19,8 @@
 package org.apache.spark.sql.service.cli;
 
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
-import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 import org.apache.spark.sql.service.rpc.thrift.TPrimitiveTypeEntry;
 import org.apache.spark.sql.service.rpc.thrift.TTypeDesc;
 import org.apache.spark.sql.service.rpc.thrift.TTypeEntry;
@@ -35,6 +34,23 @@ public class TypeDescriptor {
   private final Type type;
   private String typeName = null;
   private TypeQualifiers typeQualifiers = null;
+  private static ConcurrentHashMap<String, Type> cachedPrimitiveTypeInfo = new ConcurrentHashMap();
+
+  static {
+    cachedPrimitiveTypeInfo.put("void", Type.NULL_TYPE);
+    cachedPrimitiveTypeInfo.put("boolean", Type.BOOLEAN_TYPE);
+    cachedPrimitiveTypeInfo.put("int", Type.INT_TYPE);
+    cachedPrimitiveTypeInfo.put("bigint", Type.BIGINT_TYPE);
+    cachedPrimitiveTypeInfo.put("string", Type.STRING_TYPE);
+    cachedPrimitiveTypeInfo.put("float", Type.FLOAT_TYPE);
+    cachedPrimitiveTypeInfo.put("double", Type.DOUBLE_TYPE);
+    cachedPrimitiveTypeInfo.put("tinyint", Type.TINYINT_TYPE);
+    cachedPrimitiveTypeInfo.put("smallint", Type.SMALLINT_TYPE);
+    cachedPrimitiveTypeInfo.put("date", Type.DATE_TYPE);
+    cachedPrimitiveTypeInfo.put("timestamp", Type.TIMESTAMP_TYPE);
+    cachedPrimitiveTypeInfo.put("binary", Type.BINARY_TYPE);
+    cachedPrimitiveTypeInfo.put("decimal", Type.DECIMAL_TYPE);
+  }
 
   public TypeDescriptor(Type type) {
     this.type = type;
@@ -54,9 +70,19 @@ public class TypeDescriptor {
     if (this.type.isComplexType()) {
       this.typeName = typeName;
     } else if (this.type.isQualifiedType()) {
-      PrimitiveTypeInfo pti = TypeInfoFactory.getPrimitiveTypeInfo(typeName);
-      setTypeQualifiers(TypeQualifiers.fromTypeInfo(pti));
+      Type type = getTypeInfo(typeName);
+      setTypeQualifiers(TypeQualifiers.fromTypeInfo(type));
     }
+  }
+
+  public Type getTypeInfo(String typeName) {
+    Type type = cachedPrimitiveTypeInfo.getOrDefault(typeName, Type.STRING_TYPE);
+    if (typeName.equalsIgnoreCase("decimal")) {
+      // Todo add parser for decimal(m,n), but seem spark won't get this.
+      type.setSpecifiedPrecision(38);
+      type.setSpecifiedScala(5);
+    }
+    return type;
   }
 
   public Type getType() {
@@ -108,9 +134,6 @@ public class TypeDescriptor {
     case STRING_TYPE:
     case BINARY_TYPE:
       return Integer.MAX_VALUE;
-    case CHAR_TYPE:
-    case VARCHAR_TYPE:
-      return typeQualifiers.getCharacterMaximumLength();
     case DATE_TYPE:
       return 10;
     case TIMESTAMP_TYPE:
@@ -156,4 +179,6 @@ public class TypeDescriptor {
       return null;
     }
   }
+
+
 }

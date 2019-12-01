@@ -19,11 +19,7 @@
 
 package org.apache.spark.sql.service.server;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadFactory;
-
-import org.apache.hadoop.hive.metastore.RawStore;
 
 /**
  * A ThreadFactory for constructing new SparkServer2 threads that lets you plug
@@ -44,8 +40,6 @@ import org.apache.hadoop.hive.metastore.RawStore;
  */
 public class ThreadFactoryWithGarbageCleanup implements ThreadFactory {
 
-  private static Map<Long, RawStore> threadRawStoreMap = new ConcurrentHashMap<Long, RawStore>();
-
   private final String namePrefix;
 
   public ThreadFactoryWithGarbageCleanup(String threadPoolName) {
@@ -59,7 +53,4 @@ public class ThreadFactoryWithGarbageCleanup implements ThreadFactory {
     return newThread;
   }
 
-  public static Map<Long, RawStore> getThreadRawStoreMap() {
-    return threadRawStoreMap;
-  }
 }

@@ -18,7 +18,6 @@
 
 package org.apache.spark.sql.service.cli.thrift;
 
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.cli.CLIService;
 import org.apache.spark.sql.service.cli.ICLIService;
@@ -31,9 +30,8 @@ import org.apache.spark.sql.service.cli.ICLIService;
 public class EmbeddedThriftBinaryCLIService extends ThriftBinaryCLIService {
 
   public EmbeddedThriftBinaryCLIService() {
-    super(new CLIService(null, null));
+    super(new CLIService(null));
     isEmbedded = true;
-    HiveConf.setLoadHiveServer2Config(true);
   }
 
   @Override

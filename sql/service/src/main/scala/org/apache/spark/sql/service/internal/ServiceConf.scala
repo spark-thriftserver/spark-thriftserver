@@ -20,7 +20,6 @@ package org.apache.spark.sql.service.internal
 import java.io.File
 import java.util.concurrent.TimeUnit
 
-import org.apache.spark.internal.config.ConfigEntry
 import org.apache.spark.sql.internal.SQLConf.buildConf
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -161,7 +160,7 @@ object ServiceConf {
       "protection for SparkServer2 communication with clients." +
       "Setting hadoop.rpc.protection to a higher level than SparkServer2 does not" +
       "make sense in most situations. HiveServer2 ignores hadoop.rpc.protection in favor" +
-      "of hive.server2.thrift.sasl.qop." +
+      "of spark.sql.thriftserver.thrift.sasl.qop." +
       "  \"auth\" - authentication only (default)" +
       "  \"auth-int\" - authentication plus integrity protection" +
       "  \"auth-conf\" - authentication plus integrity and confidentiality protection" +
@@ -256,7 +255,7 @@ object ServiceConf {
         "  LDAP: LDAP/AD based authentication" +
         "  KERBEROS: Kerberos/GSSAPI authentication" +
         "  CUSTOM: Custom authentication provider" +
-        "          (Use with property hive.server2.custom.authentication.class)" +
+        "          (Use with property spark.sql.thriftserver.custom.authentication.class)" +
         "  PAM: Pluggable authentication module" +
         "  NOSASL:  Raw transport")
       .stringConf
@@ -344,7 +343,7 @@ object ServiceConf {
         "The implementation may optionally implement Hadoop's" +
         "org.apache.hadoop.conf.Configurable class to grab Spark's Configuration object.")
       .stringConf
-      .createWithDefault("org.apache.spark.sql.service.auth.PasswdAuthenticationProvider")
+      .createWithDefault("")
 
   val THRIFTSERVER_PAM_SERVICES =
     buildConf("spark.sql.thriftserver.authentication.pam.services")
@@ -377,14 +376,14 @@ object ServiceConf {
       .createWithDefault(false)
 
   val THRIFTSERVER_SSL_KEYSTORE_PATH =
-    buildConf("spark.sql.thriftserver.ssl.keystore.path")
+    buildConf("spark.hadoop.spark.sql.thriftserver.ssl.keystore.path")
       .internal()
       .doc("SSL certificate keystore location.")
       .stringConf
       .createWithDefault("")
 
   val THRIFTSERVER_SSL_KEYSTORE_PASSWORD =
-    buildConf("spark.sql.thriftserver.ssl.keystore.password")
+    buildConf("spark.hadoop.spark.sql.thriftserver.ssl.keystore.password")
       .internal()
       .doc("SSL certificate keystore password.")
       .stringConf
@@ -392,10 +391,10 @@ object ServiceConf {
 
   val THRIFTSERVER_SSL_PROTOCOL_BLACKLIST =
     buildConf("spark.sql.thriftserver.ssl.protocol.blacklist")
-    .internal()
-    .doc("SSL Versions to disable for all Hive Servers")
-    .stringConf
-    .createWithDefault("SSLv2,SSLv3")
+      .internal()
+      .doc("SSL Versions to disable for all Hive Servers")
+      .stringConf
+      .createWithDefault("SSLv2,SSLv3")
 
   val THRIFTSERVER_BUILTIN_UDF_WHITELIST =
     buildConf("spark.sql.thriftserver.builtin.udf.whitelist")
@@ -484,9 +483,10 @@ object ServiceConf {
     buildConf("spark.sql.thriftserver.cluster.delegation.token.store.class")
       .internal()
       .doc("The delegation token store implementation. " +
-        "Set to org.apache.hadoop.hive.thrift.ZooKeeperTokenStore for load-balanced cluster.")
+        "Set to org.apache.spark.sql.service.auth.thrift.ZooKeeperTokenStore " +
+        "for load-balanced cluster.")
       .stringConf
-      .createWithDefault("org.apache.hadoop.hive.thrift.MemoryTokenStore")
+      .createWithDefault("org.apache.spark.sql.service.auth.thrift.MemoryTokenStore")
 
   val THRIFTSERVER_VARIABLE_SUBSTITUTE =
     buildConf("spark.sql.thriftserver.variable.substitute")
@@ -501,4 +501,13 @@ object ServiceConf {
       .doc("The maximum replacements the substitution engine will do.")
       .intConf
       .createWithDefault(40)
+
+  val THRIFTSERVER_GLOABLE_INIT_FILE_LOCATION =
+    buildConf("spark.sql.thriftserver.global.init.file.location")
+      .internal()
+      .doc("Either the location of a SS2 global init file or a directory containing" +
+        " a .hiverc file. If the property is set, the value must be a valid path " +
+        "to an init file or directory where the init file is located.")
+      .stringConf
+      .createWithDefault("${env:SPARK_CONF_DIR}")
 }

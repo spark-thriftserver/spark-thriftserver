@@ -27,8 +27,6 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.control.NonFatal
 
 import org.apache.commons.lang3.exception.ExceptionUtils
-import org.apache.hadoop.hive.metastore.api.FieldSchema
-import org.apache.hadoop.hive.shims.Utils
 
 import org.apache.spark.SparkContext
 import org.apache.spark.internal.Logging
@@ -40,6 +38,7 @@ import org.apache.spark.sql.service.SparkThriftServer2
 import org.apache.spark.sql.service.cli._
 import org.apache.spark.sql.service.cli.session.ServiceSession
 import org.apache.spark.sql.service.internal.ServiceConf
+import org.apache.spark.sql.service.utils.Utils
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.CalendarInterval
 import org.apache.spark.util.{Utils => SparkUtils}

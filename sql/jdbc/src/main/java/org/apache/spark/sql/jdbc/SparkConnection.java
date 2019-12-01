@@ -623,7 +623,7 @@ public class SparkConnection implements java.sql.Connection {
       // check delegation token in job conf if any
       try {
         tokenStr = org.apache.hadoop.hive.shims.Utils
-            .getTokenStrForm(SparkAuthFactory.HS2_CLIENT_TOKEN);
+            .getTokenStrForm(SparkAuthFactory.SS2_CLIENT_TOKEN);
       } catch (IOException e) {
         throw new SQLException("Error reading token ", e);
       }
@@ -651,9 +651,9 @@ public class SparkConnection implements java.sql.Connection {
 
     // set the session configuration
     Map<String, String> sessVars = connParams.getSessionVars();
-    if (sessVars.containsKey(SparkAuthFactory.HS2_PROXY_USER)) {
-      openConf.put(SparkAuthFactory.HS2_PROXY_USER,
-          sessVars.get(SparkAuthFactory.HS2_PROXY_USER));
+    if (sessVars.containsKey(SparkAuthFactory.SS2_PROXY_USER)) {
+      openConf.put(SparkAuthFactory.SS2_PROXY_USER,
+          sessVars.get(SparkAuthFactory.SS2_PROXY_USER));
     }
     openReq.setConfiguration(openConf);
 

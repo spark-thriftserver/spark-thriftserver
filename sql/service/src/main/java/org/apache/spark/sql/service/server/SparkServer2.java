@@ -20,7 +20,6 @@ package org.apache.spark.sql.service.server;
 
 import java.util.Properties;
 
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.CompositeService;
 import org.apache.spark.sql.service.cli.CLIService;
@@ -37,8 +36,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.hadoop.hive.common.LogUtils;
-import org.apache.hadoop.hive.common.LogUtils.LogInitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,16 +50,14 @@ public class SparkServer2 extends CompositeService {
 
   private CLIService cliService;
   private ThriftCLIService thriftCLIService;
-  private HiveConf hiveConf;
 
-  public SparkServer2(HiveConf hiveConf) {
+  public SparkServer2() {
     super(SparkServer2.class.getSimpleName());
-    this.hiveConf = hiveConf;
   }
 
   @Override
   public synchronized void init(SQLConf sqlConf) {
-    cliService = new CLIService(this, hiveConf);
+    cliService = new CLIService(this);
     addService(cliService);
     if (isHTTPTransportMode(sqlConf)) {
       thriftCLIService = new ThriftHttpCLIService(cliService);
@@ -119,17 +114,12 @@ public class SparkServer2 extends CompositeService {
       ServerOptionsProcessor oproc = new ServerOptionsProcessor("sparkserver2");
       ServerOptionsProcessorResponse oprocResponse = oproc.parse(args);
 
-      // NOTE: It is critical to do this here so that log4j is reinitialized
-      // before any of the other core hive classes are loaded
-      String initLog4jMessage = LogUtils.initHiveLog4j();
-      LOG.debug(initLog4jMessage);
-
       // Log debug message from "oproc" after log4j initialize properly
       LOG.debug(oproc.getDebugMessage().toString());
 
       // Call the executor which will execute the appropriate command based on the parsed options
       oprocResponse.getServerOptionsExecutor().execute();
-    } catch (LogInitializationException e) {
+    } catch (Exception e) {
       LOG.error("Error initializing log: " + e.getMessage(), e);
       System.exit(-1);
     }

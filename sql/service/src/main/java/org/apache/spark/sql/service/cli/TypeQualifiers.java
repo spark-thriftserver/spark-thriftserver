@@ -21,10 +21,6 @@ package org.apache.spark.sql.service.cli;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.hadoop.hive.serde2.typeinfo.CharTypeInfo;
-import org.apache.hadoop.hive.serde2.typeinfo.DecimalTypeInfo;
-import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
-import org.apache.hadoop.hive.serde2.typeinfo.VarcharTypeInfo;
 import org.apache.spark.sql.service.rpc.thrift.TCLIServiceConstants;
 import org.apache.spark.sql.service.rpc.thrift.TTypeQualifierValue;
 import org.apache.spark.sql.service.rpc.thrift.TTypeQualifiers;
@@ -98,18 +94,12 @@ public class TypeQualifiers {
     return ret;
   }
 
-  public static TypeQualifiers fromTypeInfo(PrimitiveTypeInfo pti) {
+  public static TypeQualifiers fromTypeInfo(Type type) {
     TypeQualifiers result = null;
-    if (pti instanceof VarcharTypeInfo) {
+    if (type.isQualifiedType()) {
       result = new TypeQualifiers();
-      result.setCharacterMaximumLength(((VarcharTypeInfo)pti).getLength());
-    }  else if (pti instanceof CharTypeInfo) {
-      result = new TypeQualifiers();
-      result.setCharacterMaximumLength(((CharTypeInfo)pti).getLength());
-    } else if (pti instanceof DecimalTypeInfo) {
-      result = new TypeQualifiers();
-      result.setPrecision(((DecimalTypeInfo)pti).precision());
-      result.setScale(((DecimalTypeInfo)pti).scale());
+      result.setPrecision(type.getSpecifiedPrecision());
+      result.setScale(type.getSpecifiedScala());
     }
     return result;
   }

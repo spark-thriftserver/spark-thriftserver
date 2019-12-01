@@ -40,7 +40,6 @@ private[service] object SparkSQLEnv extends Logging {
       // the default appName [SparkSQLCLIDriver] in cli or beeline.
       val maybeAppName = sparkConf
         .getOption("spark.app.name")
-        .filterNot(_ == classOf[SparkSQLCLIDriver].getName)
         .filterNot(_ == classOf[SparkThriftServer2].getName)
 
       sparkConf

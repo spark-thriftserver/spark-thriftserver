@@ -21,15 +21,12 @@ package org.apache.spark.sql.service.cli.session;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.cli.*;
 
 public interface ServiceSession extends ServiceSessionBase {
 
   void open(Map<String, String> sessionConfMap) throws Exception;
-
-  IMetaStoreClient getMetaStoreClient() throws ServiceSQLException;
 
   /**
    * getInfo operation handler

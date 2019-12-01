@@ -21,7 +21,7 @@ package org.apache.spark.sql.service.cli;
 import java.sql.DatabaseMetaData;
 import java.util.Locale;
 
-import org.apache.hadoop.hive.common.type.HiveDecimal;
+import org.apache.spark.sql.service.cli.common.type.SparkDecimal;
 import org.apache.spark.sql.service.rpc.thrift.TTypeId;
 
 /**
@@ -56,26 +56,12 @@ public enum Type {
   STRING_TYPE("STRING",
           java.sql.Types.VARCHAR,
           TTypeId.STRING_TYPE),
-  CHAR_TYPE("CHAR",
-          java.sql.Types.CHAR,
-          TTypeId.CHAR_TYPE,
-          true, false, false),
-  VARCHAR_TYPE("VARCHAR",
-          java.sql.Types.VARCHAR,
-          TTypeId.VARCHAR_TYPE,
-          true, false, false),
   DATE_TYPE("DATE",
           java.sql.Types.DATE,
           TTypeId.DATE_TYPE),
   TIMESTAMP_TYPE("TIMESTAMP",
           java.sql.Types.TIMESTAMP,
           TTypeId.TIMESTAMP_TYPE),
-  INTERVAL_YEAR_MONTH_TYPE("INTERVAL_YEAR_MONTH",
-          java.sql.Types.OTHER,
-          TTypeId.INTERVAL_YEAR_MONTH_TYPE),
-  INTERVAL_DAY_TIME_TYPE("INTERVAL_DAY_TIME",
-          java.sql.Types.OTHER,
-          TTypeId.INTERVAL_DAY_TIME_TYPE),
   BINARY_TYPE("BINARY",
           java.sql.Types.BINARY,
           TTypeId.BINARY_TYPE),
@@ -94,14 +80,6 @@ public enum Type {
   STRUCT_TYPE("STRUCT",
           java.sql.Types.STRUCT,
           TTypeId.STRUCT_TYPE,
-          true, false),
-  UNION_TYPE("UNIONTYPE",
-          java.sql.Types.OTHER,
-          TTypeId.UNION_TYPE,
-          true, false),
-  USER_DEFINED_TYPE("USER_DEFINED",
-          java.sql.Types.OTHER,
-          TTypeId.USER_DEFINED_TYPE,
           true, false);
 
   private final String name;
@@ -110,6 +88,8 @@ public enum Type {
   private final boolean isQualified;
   private final boolean isComplex;
   private final boolean isCollection;
+  private Integer scala = 0;
+  private Integer precision = 0;
 
   Type(String name, int javaSQLType, TTypeId tType, boolean isQualified,
        boolean isComplex, boolean isCollection) {
@@ -201,7 +181,7 @@ public enum Type {
       case DOUBLE_TYPE:
         return 15;
       case DECIMAL_TYPE:
-        return HiveDecimal.MAX_PRECISION;
+        return SparkDecimal.MAX_PRECISION;
       default:
         return null;
     }
@@ -347,4 +327,12 @@ public enum Type {
   public String getName() {
     return name;
   }
+  public Integer getSpecifiedPrecision() {return scala;}
+
+  public void setSpecifiedPrecision(Integer scala) {this.scala =  scala;}
+
+  public Integer getSpecifiedScala() {return precision;}
+
+  public void setSpecifiedScala(Integer scala) {this.precision =  scala;}
+
 }

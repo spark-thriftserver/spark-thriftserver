@@ -22,7 +22,6 @@ import java.util.Collections;
 
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 
-
 /**
  * CLIServiceClient.
  *

@@ -24,8 +24,6 @@ import java.util.concurrent.ConcurrentHashMap
 
 import scala.collection.JavaConverters._
 
-import org.apache.hadoop.hive.metastore.api.{FieldSchema, Schema}
-import org.apache.hadoop.hive.ql.session.OperationLog
 import org.apache.log4j.Logger
 
 import org.apache.spark.internal.Logging

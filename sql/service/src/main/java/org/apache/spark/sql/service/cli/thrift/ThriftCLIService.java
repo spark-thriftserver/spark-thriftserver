@@ -25,11 +25,11 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.AbstractService;
 import org.apache.spark.sql.service.ServiceException;
 import org.apache.spark.sql.service.ServiceUtils;
+import org.apache.spark.sql.service.SparkSQLEnv;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.auth.TSetIpAddressProcessor;
 import org.apache.spark.sql.service.cli.*;
@@ -69,7 +69,6 @@ public abstract class ThriftCLIService extends AbstractService
   protected boolean isEmbedded = false;
 
   protected SQLConf sqlConf;
-  protected HiveConf hiveConf;
 
   protected int minWorkerThreads;
   protected int maxWorkerThreads;
@@ -284,8 +283,8 @@ public abstract class ThriftCLIService extends AbstractService
 
   /**
    * Returns the effective username.
-   * 1. If hive.server2.allow.user.substitution = false: the username of the connecting user
-   * 2. If hive.server2.allow.user.substitution = true: the username of the end user,
+   * 1. If spark.sql.thriftserver.allow.user.substitution = false: the username of the connecting user
+   * 2. If spark.sql.thriftserver.allow.user.substitution = true: the username of the end user,
    * that the connecting user is trying to proxy for.
    * This includes a check whether the connecting user is allowed to proxy for the end user.
    * @param req
@@ -348,7 +347,7 @@ public abstract class ThriftCLIService extends AbstractService
     SessionHandle sessionHandle;
     if (Boolean.valueOf(cliService.getSqlConf().getConfString(ServiceConf.THRIFTSERVER_ENABLE_DOAS().key())) &&
         (userName != null)) {
-      String delegationTokenStr = getDelegationToken(userName);
+      String delegationTokenStr = "";
       sessionHandle = cliService.openSessionWithImpersonation(protocol, userName,
           req.getPassword(), ipAddress, req.getConfiguration(), delegationTokenStr);
     } else {
@@ -356,21 +355,6 @@ public abstract class ThriftCLIService extends AbstractService
           ipAddress, req.getConfiguration());
     }
     return sessionHandle;
-  }
-
-
-  private String getDelegationToken(String userName)
-      throws ServiceSQLException, LoginException, IOException {
-    if (userName == null || !cliService.getSqlConf().getConfString(ServiceConf.THRIFTSERVER_AUTHENTICATION().key())
-        .equalsIgnoreCase(SparkAuthFactory.AuthTypes.KERBEROS.toString())) {
-      return null;
-    }
-    try {
-      return cliService.getDelegationTokenFromMetaStore(userName);
-    } catch (UnsupportedOperationException e) {
-      // The delegation token is not applicable in the given deployment mode
-    }
-    return null;
   }
 
   private TProtocolVersion getMinVersion(TProtocolVersion... versions) {
@@ -695,8 +679,8 @@ public abstract class ThriftCLIService extends AbstractService
     }
 
     if (proxyUser == null && sessionConf != null &&
-        sessionConf.containsKey(SparkAuthFactory.HS2_PROXY_USER)) {
-      String proxyUserFromThriftBody = sessionConf.get(SparkAuthFactory.HS2_PROXY_USER);
+        sessionConf.containsKey(SparkAuthFactory.SS2_PROXY_USER)) {
+      String proxyUserFromThriftBody = sessionConf.get(SparkAuthFactory.SS2_PROXY_USER);
       LOG.debug("Proxy user from thrift body: " + proxyUserFromThriftBody);
       proxyUser = proxyUserFromThriftBody;
     }
@@ -717,7 +701,7 @@ public abstract class ThriftCLIService extends AbstractService
     }
 
     // Verify proxy user privilege of the realUser for the proxyUser
-    SparkAuthFactory.verifyProxyAccess(realUser, proxyUser, ipAddress, hiveConf);
+    SparkAuthFactory.verifyProxyAccess(realUser, proxyUser, ipAddress, SparkSQLEnv.sparkContext().hadoopConfiguration());
     LOG.debug("Verified proxy user: " + proxyUser);
     return proxyUser;
   }

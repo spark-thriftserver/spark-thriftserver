@@ -23,41 +23,28 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.hive.common.cli.HiveFileProcessor;
-import org.apache.hadoop.hive.common.cli.IHiveFileProcessor;
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
-import org.apache.hadoop.hive.metastore.IMetaStoreClient;
-import org.apache.hadoop.hive.metastore.api.MetaException;
-import org.apache.hadoop.hive.ql.exec.Utilities;
-import org.apache.hadoop.hive.ql.history.HiveHistory;
-import org.apache.hadoop.hive.ql.metadata.Hive;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.ql.session.SessionState;
-import org.apache.hive.common.util.HiveVersionInfo;
 import org.apache.spark.sql.internal.SQLConf;
+import org.apache.spark.sql.service.SparkSQLEnv;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.cli.*;
 import org.apache.spark.sql.service.cli.ServiceSQLException;
+import org.apache.spark.sql.service.cli.file.ISparkFileProcessor;
+import org.apache.spark.sql.service.cli.file.SparkFileProcessor;
 import org.apache.spark.sql.service.cli.operation.*;
+import org.apache.spark.sql.service.internal.ServiceConf;
 import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
 import org.apache.spark.sql.service.server.ThreadWithGarbageCleanup;
 import org.apache.spark.sql.service.utils.VariableSubstitution;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.hadoop.hive.conf.SystemVariables.ENV_PREFIX;
-import static org.apache.hadoop.hive.conf.SystemVariables.HIVECONF_PREFIX;
-import static org.apache.hadoop.hive.conf.SystemVariables.HIVEVAR_PREFIX;
-import static org.apache.hadoop.hive.conf.SystemVariables.METACONF_PREFIX;
-import static org.apache.hadoop.hive.conf.SystemVariables.SYSTEM_PREFIX;
+import static org.apache.spark.sql.service.utils.SystemVariables.ENV_PREFIX;
+import static org.apache.spark.sql.service.utils.SystemVariables.SPARKCONF_PREFIX;
+import static org.apache.spark.sql.service.utils.SystemVariables.SPARKVAR_PREFIX;
+import static org.apache.spark.sql.service.utils.SystemVariables.SYSTEM_PREFIX;
 
 /**
  * ServiceSession
@@ -68,11 +55,7 @@ public class ServiceSessionImpl implements ServiceSession {
   private String username;
   private final String password;
   private SQLConf sqlConf;
-  private HiveConf hiveConf;
-  private SessionState sessionState;
   private String ipAddress;
-  private static final String FETCH_WORK_SERDE_CLASS =
-      "org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe";
   private static final Logger LOG = LoggerFactory.getLogger(ServiceSessionImpl.class);
   private SessionManager sessionManager;
   private OperationManager operationManager;
@@ -81,20 +64,15 @@ public class ServiceSessionImpl implements ServiceSession {
   private File sessionLogDir;
   private volatile long lastAccessTime;
   private volatile long lastIdleTime;
+  private Map<String, String> sparkVariables = new HashMap<String, String>();
 
   public ServiceSessionImpl(TProtocolVersion protocol, String username, String password,
-                            HiveConf serverhiveConf, SQLConf sqlConf, String ipAddress) {
+                            SQLConf sqlConf, String ipAddress) {
     this.username = username;
     this.password = password;
     this.sessionHandle = new SessionHandle(protocol);
-    this.hiveConf = new HiveConf(serverhiveConf);
     this.ipAddress = ipAddress;
     this.sqlConf = sqlConf;
-
-    // Set an explicit session name to control the download directory name
-    hiveConf.set(ConfVars.HIVESESSIONID.varname,
-        sessionHandle.getHandleIdentifier().toString());
-    // Use thrift transportable formatter
   }
 
   @Override
@@ -108,10 +86,6 @@ public class ServiceSessionImpl implements ServiceSession {
    * That's why it is important to create SessionState here rather than in the constructor.
    */
   public void open(Map<String, String> sessionConfMap) throws ServiceSQLException {
-    sessionState = new SessionState(hiveConf, username);
-    sessionState.setUserIpAddress(ipAddress);
-    sessionState.setIsHiveServerQuery(true);
-    SessionState.start(sessionState);
     // Process global init file: .hiverc
     processGlobalInitFile();
     if (sessionConfMap != null) {
@@ -124,7 +98,7 @@ public class ServiceSessionImpl implements ServiceSession {
   /**
    * It is used for processing hiverc file from SparkServer2 side.
    */
-  private class GlobalHivercFileProcessor extends HiveFileProcessor {
+  private class GlobalHivercFileProcessor extends SparkFileProcessor {
     @Override
     protected BufferedReader loadFile(String fileName) throws IOException {
       FileInputStream initStream = null;
@@ -149,32 +123,31 @@ public class ServiceSessionImpl implements ServiceSession {
   }
 
   private void processGlobalInitFile() {
-    IHiveFileProcessor processor = new GlobalHivercFileProcessor();
+    ISparkFileProcessor processor = new GlobalHivercFileProcessor();
 
     try {
-      String hiverc = hiveConf.getVar(ConfVars.HIVE_SERVER2_GLOBAL_INIT_FILE_LOCATION);
-      if (hiverc != null) {
-        File hivercFile = new File(hiverc);
-        if (hivercFile.isDirectory()) {
-          hivercFile = new File(hivercFile, SessionManager.HIVERCFILE);
+      String sparkrc = sqlConf.getConf(ServiceConf.THRIFTSERVER_GLOABLE_INIT_FILE_LOCATION());
+      if (sparkrc != null) {
+        File sparkrcFile = new File(sparkrc);
+        if (sparkrcFile.isDirectory()) {
+          sparkrcFile = new File(sparkrcFile, SessionManager.HIVERCFILE);
         }
-        if (hivercFile.isFile()) {
-          LOG.info("Running global init file: " + hivercFile);
-          int rc = processor.processFile(hivercFile.getAbsolutePath());
+        if (sparkrcFile.isFile()) {
+          LOG.info("Running global init file: " + sparkrcFile);
+          int rc = processor.processFile(sparkrcFile.getAbsolutePath());
           if (rc != 0) {
-            LOG.error("Failed on initializing global .hiverc file");
+            LOG.error("Failed on initializing global .sparkrc file");
           }
         } else {
-          LOG.debug("Global init file " + hivercFile + " does not exist");
+          LOG.debug("Global init file " + sparkrcFile + " does not exist");
         }
       }
     } catch (IOException e) {
-      LOG.warn("Failed on initializing global .hiverc file", e);
+      LOG.warn("Failed on initializing global .sparkrc file", e);
     }
   }
 
   private void configureSession(Map<String, String> sessionConfMap) throws ServiceSQLException {
-    SessionState.setCurrentSessionState(sessionState);
     for (Map.Entry<String, String> entry : sessionConfMap.entrySet()) {
       String key = entry.getKey();
       if (key.startsWith("set:")) {
@@ -183,39 +156,30 @@ public class ServiceSessionImpl implements ServiceSession {
         } catch (Exception e) {
           throw new ServiceSQLException(e);
         }
-      } else if (key.startsWith("use:")) {
-        SessionState.get().setCurrentDatabase(entry.getValue());
-      } else {
-        hiveConf.verifyAndSet(key, entry.getValue());
       }
     }
   }
 
   // Copy from org.apache.hadoop.hive.ql.processors.SetProcessor, only change:
-  // setConf(varname, propName, varvalue, true) when varname.startsWith(HIVECONF_PREFIX)
-  public static int setVariable(String varname, String varvalue) throws Exception {
-    SessionState ss = SessionState.get();
-    VariableSubstitution substitution = new VariableSubstitution(ss.getHiveVariables());
+  // setConf(varname, propName, varvalue, true) when varname.startsWith(SPARKCONF_PREFIX)
+  private int setVariable(String varname, String varvalue) throws Exception {
+    VariableSubstitution substitution = new VariableSubstitution(sparkVariables);
     if (varvalue.contains("\n")){
-      ss.err.println("Warning: Value had a \\n character in it.");
+      LOG.error("Warning: Value had a \\n character in it.");
     }
     varname = varname.trim();
     if (varname.startsWith(ENV_PREFIX)){
-      ss.err.println("env:* variables can not be set.");
+      LOG.error("env:* variables can not be set.");
       return 1;
     } else if (varname.startsWith(SYSTEM_PREFIX)){
       String propName = varname.substring(SYSTEM_PREFIX.length());
-      System.getProperties().setProperty(propName, substitution.substitute(ss.getConf(),varvalue));
-    } else if (varname.startsWith(HIVECONF_PREFIX)){
-      String propName = varname.substring(HIVECONF_PREFIX.length());
+      System.getProperties().setProperty(propName, substitution.substitute(sqlConf,varvalue));
+    } else if (varname.startsWith(SPARKCONF_PREFIX)){
+      String propName = varname.substring(SPARKCONF_PREFIX.length());
       setConf(varname, propName, varvalue, true);
-    } else if (varname.startsWith(HIVEVAR_PREFIX)) {
-      String propName = varname.substring(HIVEVAR_PREFIX.length());
-      ss.getHiveVariables().put(propName, substitution.substitute(ss.getConf(),varvalue));
-    } else if (varname.startsWith(METACONF_PREFIX)) {
-      String propName = varname.substring(METACONF_PREFIX.length());
-      Hive hive = Hive.get(ss.getConf());
-      hive.setMetaConf(propName, substitution.substitute(ss.getConf(), varvalue));
+    } else if (varname.startsWith(SPARKVAR_PREFIX)) {
+      String propName = varname.substring(SPARKVAR_PREFIX.length());
+      sparkVariables.put(propName, substitution.substitute(sqlConf,varvalue));
     } else {
       setConf(varname, varname, varvalue, true);
     }
@@ -223,37 +187,12 @@ public class ServiceSessionImpl implements ServiceSession {
   }
 
   // returns non-null string for validation fail
-  private static void setConf(String varname, String key, String varvalue, boolean register)
+  private void setConf(String varname, String key, String varvalue, boolean register)
           throws IllegalArgumentException {
     VariableSubstitution substitution =
-        new VariableSubstitution(SessionState.get().getHiveVariables());
-    HiveConf conf = SessionState.get().getConf();
-    String value = substitution.substitute(conf, varvalue);
-    if (conf.getBoolVar(HiveConf.ConfVars.HIVECONFVALIDATION)) {
-      HiveConf.ConfVars confVars = HiveConf.getConfVars(key);
-      if (confVars != null) {
-        if (!confVars.isType(value)) {
-          StringBuilder message = new StringBuilder();
-          message.append("'SET ").append(varname).append('=').append(varvalue);
-          message.append("' FAILED because ").append(key).append(" expects ");
-          message.append(confVars.typeString()).append(" type value.");
-          throw new IllegalArgumentException(message.toString());
-        }
-        String fail = confVars.validate(value);
-        if (fail != null) {
-          StringBuilder message = new StringBuilder();
-          message.append("'SET ").append(varname).append('=').append(varvalue);
-          message.append("' FAILED in validation : ").append(fail).append('.');
-          throw new IllegalArgumentException(message.toString());
-        }
-      } else if (key.startsWith("hive.")) {
-        throw new IllegalArgumentException("hive configuration " + key + " does not exists.");
-      }
-    }
-    conf.verifyAndSet(key, value);
-    if (register) {
-      SessionState.get().getOverriddenConfigurations().put(key, value);
-    }
+        new VariableSubstitution(sparkVariables);
+    String value = substitution.substitute(sqlConf, varvalue);
+    sqlConf.setConfWithCheck(key, value);
   }
 
   @Override
@@ -319,9 +258,6 @@ public class ServiceSessionImpl implements ServiceSession {
   }
 
   protected synchronized void acquire(boolean userAccess) {
-    // Need to make sure that the this SparkServer2's session's SessionState is
-    // stored in the thread local for the handler thread.
-    SessionState.setCurrentSessionState(sessionState);
     if (userAccess) {
       lastAccessTime = System.currentTimeMillis();
     }
@@ -335,7 +271,6 @@ public class ServiceSessionImpl implements ServiceSession {
    * @see ThreadWithGarbageCleanup#finalize()
    */
   protected synchronized void release(boolean userAccess) {
-    SessionState.detachSession();
     if (ThreadWithGarbageCleanup.currentThread() instanceof ThreadWithGarbageCleanup) {
       ThreadWithGarbageCleanup currentThread =
           (ThreadWithGarbageCleanup) ThreadWithGarbageCleanup.currentThread();
@@ -367,25 +302,13 @@ public class ServiceSessionImpl implements ServiceSession {
   }
 
   @Override
-  public HiveConf getHiveConf() {
-    hiveConf.setVar(HiveConf.ConfVars.HIVEFETCHOUTPUTSERDE, FETCH_WORK_SERDE_CLASS);
-    return hiveConf;
-  }
-
-  @Override
   public SQLConf getSQLConf() {
     return sqlConf;
   }
 
   @Override
-  public IMetaStoreClient getMetaStoreClient() throws ServiceSQLException {
-    try {
-      return Hive.get(getHiveConf()).getMSC();
-    } catch (HiveException e) {
-      throw new ServiceSQLException("Failed to get metastore connection", e);
-    } catch (MetaException e) {
-      throw new ServiceSQLException("Failed to get metastore connection", e);
-    }
+  public Map<String, String> getVariables() {
+    return sparkVariables;
   }
 
   @Override
@@ -393,23 +316,7 @@ public class ServiceSessionImpl implements ServiceSession {
       throws ServiceSQLException {
     acquire(true);
     try {
-      switch (getInfoType) {
-      case CLI_SERVER_NAME:
-        return new GetInfoValue("Hive");
-      case CLI_DBMS_NAME:
-        return new GetInfoValue("Apache Hive");
-      case CLI_DBMS_VER:
-        return new GetInfoValue(HiveVersionInfo.getVersion());
-      case CLI_MAX_COLUMN_NAME_LEN:
-        return new GetInfoValue(128);
-      case CLI_MAX_SCHEMA_NAME_LEN:
-        return new GetInfoValue(128);
-      case CLI_MAX_TABLE_NAME_LEN:
-        return new GetInfoValue(128);
-      case CLI_TXN_CAPABLE:
-      default:
-        throw new ServiceSQLException("Unrecognized GetInfoType value: " + getInfoType.toString());
-      }
+      throw new ServiceSQLException("Unrecognized GetInfoType value: " + getInfoType.toString());
     } finally {
       release(true);
     }
@@ -572,11 +479,6 @@ public class ServiceSessionImpl implements ServiceSession {
   public OperationHandle getColumns(String catalogName, String schemaName,
       String tableName, String columnName)  throws ServiceSQLException {
     acquire(true);
-    String addedJars = Utilities.getResourceFiles(hiveConf, SessionState.ResourceType.JAR);
-    if (StringUtils.isNotBlank(addedJars)) {
-       IMetaStoreClient metastoreClient = getSession().getMetaStoreClient();
-       metastoreClient.setHiveAddedJars(addedJars);
-    }
     OperationManager operationManager = getOperationManager();
     SparkGetColumnsOperation operation = operationManager.newGetColumnsOperation(getSession(),
         catalogName, schemaName, tableName, columnName);
@@ -625,45 +527,10 @@ public class ServiceSessionImpl implements ServiceSession {
       opHandleSet.clear();
       // Cleanup session log directory.
       cleanupSessionLogDir();
-      // Cleanup pipeout file.
-      cleanupPipeoutFile();
-      HiveHistory hiveHist = sessionState.getHiveHistory();
-      if (null != hiveHist) {
-        hiveHist.closeStream();
-      }
-      try {
-        sessionState.close();
-      } finally {
-        sessionState = null;
-      }
-    } catch (IOException ioe) {
-      throw new ServiceSQLException("Failure to close", ioe);
+    } catch (Exception e) {
+      throw new ServiceSQLException("Failure to close", e);
     } finally {
-      if (sessionState != null) {
-        try {
-          sessionState.close();
-        } catch (Throwable t) {
-          LOG.warn("Error closing session", t);
-        }
-        sessionState = null;
-      }
       release(true);
-    }
-  }
-
-  private void cleanupPipeoutFile() {
-    String lScratchDir = hiveConf.getVar(ConfVars.LOCALSCRATCHDIR);
-    String sessionID = hiveConf.getVar(ConfVars.HIVESESSIONID);
-
-    File[] fileAry = new File(lScratchDir).listFiles(
-            (dir, name) -> name.startsWith(sessionID) && name.endsWith(".pipeout"));
-
-    for (File file : fileAry) {
-      try {
-        FileUtils.forceDelete(file);
-      } catch (Exception e) {
-        LOG.error("Failed to cleanup pipeout file: " + file, e);
-      }
     }
   }
 
@@ -675,11 +542,6 @@ public class ServiceSessionImpl implements ServiceSession {
         LOG.error("Failed to cleanup session log dir: " + sessionHandle, e);
       }
     }
-  }
-
-  @Override
-  public SessionState getSessionState() {
-    return sessionState;
   }
 
   @Override
@@ -791,7 +653,7 @@ public class ServiceSessionImpl implements ServiceSession {
   @Override
   public String getDelegationToken(SparkAuthFactory authFactory, String owner, String renewer)
       throws ServiceSQLException {
-    SparkAuthFactory.verifyProxyAccess(getUsername(), owner, getIpAddress(), getHiveConf());
+    SparkAuthFactory.verifyProxyAccess(getUsername(), owner, getIpAddress(), SparkSQLEnv.sparkContext().hadoopConfiguration());
     return authFactory.getDelegationToken(owner, renewer, getIpAddress());
   }
 
@@ -799,7 +661,7 @@ public class ServiceSessionImpl implements ServiceSession {
   public void cancelDelegationToken(SparkAuthFactory authFactory, String tokenStr)
       throws ServiceSQLException {
     SparkAuthFactory.verifyProxyAccess(getUsername(), getUserFromToken(authFactory, tokenStr),
-        getIpAddress(), getHiveConf());
+        getIpAddress(), SparkSQLEnv.sparkContext().hadoopConfiguration());
     authFactory.cancelDelegationToken(tokenStr);
   }
 
@@ -807,7 +669,7 @@ public class ServiceSessionImpl implements ServiceSession {
   public void renewDelegationToken(SparkAuthFactory authFactory, String tokenStr)
       throws ServiceSQLException {
     SparkAuthFactory.verifyProxyAccess(getUsername(), getUserFromToken(authFactory, tokenStr),
-        getIpAddress(), getHiveConf());
+        getIpAddress(), SparkSQLEnv.sparkContext().hadoopConfiguration());
     authFactory.renewDelegationToken(tokenStr);
   }
 

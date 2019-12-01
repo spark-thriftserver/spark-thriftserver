@@ -23,8 +23,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-import org.apache.hadoop.hive.conf.HiveConf
-
 import org.apache.spark.SparkContext
 import org.apache.spark.annotation.DeveloperApi
 import org.apache.spark.internal.Logging
@@ -54,7 +52,7 @@ object SparkThriftServer2 extends Logging {
    */
   @DeveloperApi
   def startWithContext(sqlContext: SQLContext): SparkThriftServer2 = {
-    val server = new SparkThriftServer2(sqlContext, new HiveConf())
+    val server = new SparkThriftServer2(sqlContext)
 
     server.init(SparkSQLEnv.sqlContext.conf)
     server.start()
@@ -89,7 +87,7 @@ object SparkThriftServer2 extends Logging {
     }
 
     try {
-      val server = new SparkThriftServer2(SparkSQLEnv.sqlContext, new HiveConf())
+      val server = new SparkThriftServer2(SparkSQLEnv.sqlContext)
       server.init(SparkSQLEnv.sqlContext.conf)
       server.start()
       logInfo("SparkThriftServer2 started")
@@ -288,15 +286,15 @@ object SparkThriftServer2 extends Logging {
   }
 }
 
-private[spark] class SparkThriftServer2(sqlContext: SQLContext, hiveConf: HiveConf)
-  extends SparkServer2(hiveConf)
+private[spark] class SparkThriftServer2(sqlContext: SQLContext)
+  extends SparkServer2
   with ReflectedCompositeService {
   // state is tracked internally so that the server only attempts to shut down if it successfully
   // started, and then once only.
   private val started = new AtomicBoolean(false)
 
   override def init(sqlConf: SQLConf): Unit = {
-    val sparkSqlCliService = new SparkSQLCLIService(this, sqlContext, hiveConf)
+    val sparkSqlCliService = new SparkSQLCLIService(this, sqlContext)
     setSuperField(this, "cliService", sparkSqlCliService)
     addService(sparkSqlCliService)
 

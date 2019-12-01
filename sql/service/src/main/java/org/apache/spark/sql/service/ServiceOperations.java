@@ -18,7 +18,6 @@
 
 package org.apache.spark.sql.service;
 
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.spark.sql.internal.SQLConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

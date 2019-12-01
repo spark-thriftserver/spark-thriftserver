@@ -21,8 +21,6 @@ package org.apache.spark.sql.service.cli;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.metastore.api.Schema;
 import org.apache.spark.sql.service.rpc.thrift.TColumnDesc;
 import org.apache.spark.sql.service.rpc.thrift.TTableSchema;
 

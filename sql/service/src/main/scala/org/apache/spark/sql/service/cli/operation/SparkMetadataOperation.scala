@@ -17,12 +17,6 @@
 
 package org.apache.spark.sql.service.cli.operation
 
-import java.util
-
-import org.apache.hadoop.hive.conf.HiveConf
-import org.apache.hadoop.hive.ql.security.authorization.plugin._
-import org.apache.hadoop.hive.ql.session.SessionState
-
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.catalog.CatalogTableType
 import org.apache.spark.sql.catalyst.catalog.CatalogTableType.{EXTERNAL, MANAGED, VIEW}
@@ -97,33 +91,5 @@ private[service] abstract class SparkMetadataOperation(
       .replaceAll("([^\\\\])_", "$1.")
       .replaceAll("\\\\_", "_")
       .replaceAll("^_", ".")
-  }
-
-  protected def isAuthV2Enabled: Boolean = {
-    val ss: SessionState = SessionState.get
-    ss.isAuthorizationModeV2 && HiveConf.getBoolVar(ss.getConf,
-      HiveConf.ConfVars.HIVE_AUTHORIZATION_ENABLED)
-  }
-
-  @throws[ServiceSQLException]
-  protected def authorizeMetaGets(opType: HiveOperationType,
-                                  inpObjs: util.List[HivePrivilegeObject]): Unit = {
-    authorizeMetaGets(opType, inpObjs, null)
-  }
-
-  @throws[ServiceSQLException]
-  protected def authorizeMetaGets(opType: HiveOperationType,
-                                  inpObjs: util.List[HivePrivilegeObject],
-                                  cmdString: String): Unit = {
-    val ss: SessionState = SessionState.get
-    val ctxBuilder: HiveAuthzContext.Builder = new HiveAuthzContext.Builder
-    ctxBuilder.setUserIpAddress(ss.getUserIpAddress)
-    ctxBuilder.setCommandString(cmdString)
-    try {
-      ss.getAuthorizerV2.checkPrivileges(opType, inpObjs, null, ctxBuilder.build)
-    } catch {
-      case e@(_: HiveAuthzPluginException | _: HiveAccessControlException) =>
-        throw new ServiceSQLException(e.getMessage, e)
-    }
   }
 }

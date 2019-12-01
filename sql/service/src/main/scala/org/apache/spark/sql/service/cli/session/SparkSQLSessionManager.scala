@@ -17,7 +17,7 @@
 
 package org.apache.spark.sql.service.cli.session
 
-import org.apache.hadoop.hive.conf.HiveConf
+import scala.collection.JavaConverters._
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SQLContext
@@ -33,9 +33,8 @@ import org.apache.spark.sql.service.server.SparkServer2
 
 private[service] class SparkSQLSessionManager(
     sparkServer: SparkServer2,
-    sqlContext: SQLContext,
-    hiveConf: HiveConf)
-  extends SessionManager(sparkServer, hiveConf)
+    sqlContext: SQLContext)
+  extends SessionManager(sparkServer)
   with ReflectedCompositeService
   with Logging {
 
@@ -71,9 +70,8 @@ private[service] class SparkSQLSessionManager(
       sqlContext.newSession()
     }
     ctx.setConf(HiveUtils.FAKE_HIVE_VERSION.key, HiveUtils.builtinHiveVersion)
-    val hiveSessionState = session.getSessionState
-    setConfMap(ctx, hiveSessionState.getOverriddenConfigurations)
-    setConfMap(ctx, hiveSessionState.getHiveVariables)
+    setConfMap(ctx, session.getVariables)
+    setConfMap(ctx, session.getSQLConf.getAllConfs.asJava)
     if (sessionConf != null && sessionConf.containsKey("use:database")) {
       ctx.sql(s"use ${sessionConf.get("use:database")}")
     }

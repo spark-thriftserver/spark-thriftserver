@@ -66,6 +66,12 @@
             <artifactId>guava</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-yarn-server-resourcemanager</artifactId>
+            <version>${hadoop.version}</version>
+            <scope>${hadoop.deps.scope}</scope>
+        </dependency>
+        <dependency>
             <groupId>${hive.group}</groupId>
             <artifactId>hive-cli</artifactId>
         </dependency>

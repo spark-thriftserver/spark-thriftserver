@@ -20,7 +20,6 @@ package org.apache.spark.sql.service.cli.operation
 import java.util.UUID
 
 import org.apache.commons.lang3.exception.ExceptionUtils
-import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveOperationType
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SQLContext
@@ -96,10 +95,6 @@ private[service] class SparkGetTypeInfoOperation(
     // Always use the latest class loader provided by executionHive's state.
     val executionHiveClassLoader = sqlContext.sharedState.jarClassLoader
     Thread.currentThread().setContextClassLoader(executionHiveClassLoader)
-
-    if (isAuthV2Enabled) {
-      authorizeMetaGets(HiveOperationType.GET_TYPEINFO, null)
-    }
 
     SparkThriftServer2.listener.onStatementStart(
       statementId,

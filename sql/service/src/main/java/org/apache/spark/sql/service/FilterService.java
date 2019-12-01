@@ -18,7 +18,6 @@
 
 package org.apache.spark.sql.service;
 
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.spark.sql.internal.SQLConf;
 
 /**
@@ -26,7 +25,6 @@ import org.apache.spark.sql.internal.SQLConf;
  *
  */
 public class FilterService implements Service {
-
 
   private final Service service;
   private final long startTime = System.currentTimeMillis();

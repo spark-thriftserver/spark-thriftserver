@@ -17,49 +17,34 @@
  */
 package org.apache.spark.sql.service.auth;
 
+import org.apache.hadoop.security.SecurityUtil;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.authorize.ProxyUsers;
+import org.apache.spark.sql.internal.SQLConf;
+import org.apache.spark.sql.service.ReflectionUtils;
+import org.apache.spark.sql.service.SparkSQLEnv;
+import org.apache.spark.sql.service.auth.shims.HadoopShims.KerberosNameShim;
+import org.apache.spark.sql.service.auth.shims.ShimLoader;
+import org.apache.spark.sql.service.auth.thrift.HadoopThriftAuthBridge;
+import org.apache.spark.sql.service.auth.thrift.HadoopThriftAuthBridge.Server.ServerMode;
+import org.apache.spark.sql.service.auth.thrift.SparkDelegationTokenManager;
+import org.apache.spark.sql.service.cli.ServiceSQLException;
+import org.apache.spark.sql.service.cli.thrift.ThriftCLIService;
+import org.apache.spark.sql.service.internal.ServiceConf;
+import org.apache.thrift.TProcessorFactory;
+import org.apache.thrift.transport.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.net.ssl.SSLServerSocket;
+import javax.security.auth.login.LoginException;
+import javax.security.sasl.Sasl;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-
-import javax.net.ssl.SSLServerSocket;
-import javax.security.auth.login.LoginException;
-import javax.security.sasl.Sasl;
-
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.HiveMetaStore;
-import org.apache.hadoop.hive.metastore.HiveMetaStore.HMSHandler;
-import org.apache.hadoop.hive.metastore.api.MetaException;
-import org.apache.hadoop.hive.shims.HadoopShims.KerberosNameShim;
-import org.apache.hadoop.hive.shims.ShimLoader;
-import org.apache.hadoop.hive.thrift.DBTokenStore;
-import org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge;
-import org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge.Server.ServerMode;
-import org.apache.hadoop.security.SecurityUtil;
-import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.security.authorize.ProxyUsers;
-import org.apache.spark.sql.internal.SQLConf;
-import org.apache.spark.sql.service.cli.ServiceSQLException;
-import org.apache.spark.sql.service.cli.thrift.ThriftCLIService;
-import org.apache.spark.sql.service.ReflectionUtils;
-import org.apache.spark.sql.service.internal.ServiceConf;
-import org.apache.thrift.TProcessorFactory;
-import org.apache.thrift.transport.TSSLTransportFactory;
-import org.apache.thrift.transport.TServerSocket;
-import org.apache.thrift.transport.TSocket;
-import org.apache.thrift.transport.TTransport;
-import org.apache.thrift.transport.TTransportException;
-import org.apache.thrift.transport.TTransportFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.*;
 
 /**
  * This class helps in some aspects of authentication. It creates the proper Thrift classes for the
@@ -94,8 +79,8 @@ public class SparkAuthFactory {
   private final SQLConf conf;
   private SparkDelegationTokenManager delegationTokenManager = null;
 
-  public static final String HS2_PROXY_USER = "hive.server2.proxy.user";
-  public static final String HS2_CLIENT_TOKEN = "sparkserver2ClientToken";
+  public static final String SS2_PROXY_USER = "spark.sql.thriftserver.proxy.user";
+  public static final String SS2_CLIENT_TOKEN = "sparkserver2ClientToken";
 
   private static Field keytabFile = null;
   private static Method getKeytab = null;
@@ -120,7 +105,7 @@ public class SparkAuthFactory {
     }
   }
 
-  public SparkAuthFactory(SQLConf conf, HiveConf hiveConf) throws TTransportException, IOException {
+  public SparkAuthFactory(SQLConf conf) throws TTransportException, IOException {
     this.conf = conf;
     transportMode = conf.getConf(ServiceConf.THRIFTSERVER_TRANSPORT_MODE());
     authTypeStr = conf.getConf(ServiceConf.THRIFTSERVER_AUTHENTICATION());
@@ -147,25 +132,9 @@ public class SparkAuthFactory {
 
         // start delegation token manager
         delegationTokenManager = new SparkDelegationTokenManager();
-        try {
-          // rawStore is only necessary for DBTokenStore
-          Object rawStore = null;
-          String tokenStoreClass = conf.getConf(
-              ServiceConf.THRIFTSERVER_CLUSTER_DELEGATION_TOKEN_STORE_CLS());
-
-          if (tokenStoreClass.equals(DBTokenStore.class.getName())) {
-            HMSHandler baseHandler = new HiveMetaStore.HMSHandler(
-                "new db based metaserver", hiveConf, true);
-            rawStore = baseHandler.getMS();
-          }
-
           delegationTokenManager.startDelegationTokenSecretManager(
-              hiveConf, rawStore, ServerMode.HIVESERVER2);
+                  SparkSQLEnv.sparkContext().hadoopConfiguration(), ServerMode.HIVESERVER2);
           ReflectionUtils.setSuperField(saslServer, "secretManager", delegationTokenManager);
-        }
-        catch (MetaException|IOException e) {
-          throw new TTransportException("Failed to start token manager", e);
-        }
       }
     }
   }
@@ -330,7 +299,7 @@ public class SparkAuthFactory {
 
     try {
       String tokenStr = delegationTokenManager.getDelegationTokenWithService(owner, renewer,
-          HS2_CLIENT_TOKEN, remoteAddr);
+              SS2_CLIENT_TOKEN, remoteAddr);
       if (tokenStr == null || tokenStr.isEmpty()) {
         throw new ServiceSQLException(
             "Received empty retrieving delegation token for user " + owner, "08S01");
@@ -399,7 +368,7 @@ public class SparkAuthFactory {
   }
 
   public static void verifyProxyAccess(String realUser, String proxyUser, String ipAddress,
-    HiveConf hiveConf) throws ServiceSQLException {
+    org.apache.hadoop.conf.Configuration conf) throws ServiceSQLException {
     try {
       UserGroupInformation sessionUgi;
       if (UserGroupInformation.isSecurityEnabled()) {
@@ -410,9 +379,9 @@ public class SparkAuthFactory {
         sessionUgi = UserGroupInformation.createRemoteUser(realUser);
       }
       if (!proxyUser.equalsIgnoreCase(realUser)) {
-        ProxyUsers.refreshSuperUserGroupsConfiguration(hiveConf);
+        ProxyUsers.refreshSuperUserGroupsConfiguration(conf);
         ProxyUsers.authorize(UserGroupInformation.createProxyUser(proxyUser, sessionUgi),
-            ipAddress, hiveConf);
+            ipAddress, null);
       }
     } catch (IOException e) {
       throw new ServiceSQLException(

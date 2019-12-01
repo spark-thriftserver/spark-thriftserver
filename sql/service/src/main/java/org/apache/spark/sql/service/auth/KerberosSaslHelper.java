@@ -21,9 +21,9 @@ import java.io.IOException;
 import java.util.Map;
 import javax.security.sasl.SaslException;
 
-import org.apache.hadoop.hive.shims.ShimLoader;
-import org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge;
-import org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge.Server;
+import org.apache.spark.sql.service.auth.shims.ShimLoader;
+import org.apache.spark.sql.service.auth.thrift.HadoopThriftAuthBridge;
+import org.apache.spark.sql.service.auth.thrift.HadoopThriftAuthBridge.Server;
 import org.apache.spark.sql.service.cli.thrift.ThriftCLIService;
 import org.apache.spark.sql.service.rpc.thrift.TCLIService;
 import org.apache.spark.sql.service.rpc.thrift.TCLIService.Iface;
@@ -35,7 +35,7 @@ import org.apache.thrift.transport.TTransport;
 public final class KerberosSaslHelper {
 
   public static TProcessorFactory getKerberosProcessorFactory(Server saslServer,
-    ThriftCLIService service) {
+                                                              ThriftCLIService service) {
     return new CLIServiceProcessorFactory(saslServer, service);
   }
 

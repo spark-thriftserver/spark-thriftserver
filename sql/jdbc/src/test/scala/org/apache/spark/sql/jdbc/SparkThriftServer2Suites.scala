@@ -668,7 +668,7 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
     }
   }
 
-  test("SPARK-28463: Thriftserver throws BigDecimal incompatible with HiveDecimal") {
+  test("SPARK-28463: Thriftserver throws BigDecimal incompatible with SparkDecimal") {
     withJdbcStatement() { statement =>
       val rs = statement.executeQuery("SELECT CAST(1 AS decimal(38, 18))")
       assert(rs.next())

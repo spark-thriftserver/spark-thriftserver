@@ -33,8 +33,8 @@ import javax.ws.rs.core.NewCookie;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.StringUtils;
-import org.apache.hadoop.hive.shims.HadoopShims.KerberosNameShim;
-import org.apache.hadoop.hive.shims.ShimLoader;
+import org.apache.spark.sql.service.auth.shims.HadoopShims.KerberosNameShim;
+import org.apache.spark.sql.service.auth.shims.ShimLoader;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.CookieSigner;
@@ -72,7 +72,7 @@ public class ThriftHttpServlet extends TServlet {
 
   // Class members for cookie based authentication.
   private CookieSigner signer;
-  public static final String AUTH_COOKIE = "hive.server2.auth";
+  public static final String AUTH_COOKIE = "spark.sql.thriftserver.auth";
   private static final Random RAN = new Random();
   private boolean isCookieAuthEnabled;
   private String cookieDomain;
@@ -201,7 +201,7 @@ public class ThriftHttpServlet extends TServlet {
     String currName, currValue;
 
     // Following is the main loop which iterates through all the cookies send by the client.
-    // The HS2 generated cookies are of the format hive.server2.auth=<value>
+    // The HS2 generated cookies are of the format spark.sql.thriftserver.auth=<value>
     // A cookie which is identified as a sparkserver2 generated cookie is validated
     // by calling signer.verifyAndExtract(). If the validation passes, send the
     // username for which the cookie is validated to the caller. If no client side

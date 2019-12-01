@@ -23,7 +23,6 @@ import java.util.regex.Pattern
 import scala.collection.JavaConverters._
 
 import org.apache.commons.lang3.exception.ExceptionUtils
-import org.apache.hadoop.hive.ql.security.authorization.plugin.{HiveOperationType, HivePrivilegeObjectUtils}
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SQLContext
@@ -115,12 +114,6 @@ private[service] class SparkGetTablesOperation(
     val schemaPattern = convertSchemaPattern(schemaName)
     val tablePattern = convertIdentifierPattern(tableName, true)
     val matchingDbs = catalog.listDatabases(schemaPattern)
-
-    if (isAuthV2Enabled) {
-      val privObjs =
-        HivePrivilegeObjectUtils.getHivePrivDbObjects(seqAsJavaListConverter(matchingDbs).asJava)
-      authorizeMetaGets(HiveOperationType.GET_TABLES, privObjs, cmdStr)
-    }
 
     SparkThriftServer2.listener.onStatementStart(
       statementId,
