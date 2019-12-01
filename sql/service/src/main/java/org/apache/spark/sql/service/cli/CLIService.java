@@ -29,6 +29,7 @@ import java.util.concurrent.TimeoutException;
 import javax.security.auth.login.LoginException;
 
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.CompositeService;
 import org.apache.spark.sql.service.ServiceException;
@@ -59,21 +60,23 @@ public class CLIService extends CompositeService implements ICLIService {
   private final Logger LOG = LoggerFactory.getLogger(CLIService.class.getName());
 
   private SQLConf sqlConf;
+  private SQLContext sqlContext;
   private SessionManager sessionManager;
   private UserGroupInformation serviceUGI;
   private UserGroupInformation httpUGI;
   // The SparkServer2 instance running this service
   private final SparkServer2 sparkServer2;
 
-  public CLIService(SparkServer2 sparkServer2) {
+  public CLIService(SparkServer2 sparkServer2, SQLContext sqlContext) {
     super(CLIService.class.getSimpleName());
     this.sparkServer2 = sparkServer2;
+    this.sqlContext = sqlContext;
   }
 
   @Override
   public synchronized void init(SQLConf sqlConf) {
     this.sqlConf = sqlConf;
-    sessionManager = new SessionManager(sparkServer2);
+    sessionManager = new SessionManager(sparkServer2, sqlContext);
     addService(sessionManager);
     //  If the hadoop cluster is secure, do a kerberos login for the service from the keytab
     if (UserGroupInformation.isSecurityEnabled()) {

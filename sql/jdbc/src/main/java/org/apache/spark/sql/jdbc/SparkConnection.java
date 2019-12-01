@@ -637,16 +637,16 @@ public class SparkConnection implements java.sql.Connection {
     Map<String, String> openConf = new HashMap<String, String>();
     // for remote JDBC client, try to set the conf var using 'set foo=bar'
     for (Entry<String, String> hiveConf : connParams.getHiveConfs().entrySet()) {
-      openConf.put("set:hiveconf:" + hiveConf.getKey(), hiveConf.getValue());
+      openConf.put("set:sparkconf:" + hiveConf.getKey(), hiveConf.getValue());
     }
-    // For remote JDBC client, try to set the hive var using 'set hivevar:key=value'
+    // For remote JDBC client, try to set the hive var using 'set sparkvar:key=value'
     for (Entry<String, String> hiveVar : connParams.getHiveVars().entrySet()) {
-      openConf.put("set:hivevar:" + hiveVar.getKey(), hiveVar.getValue());
+      openConf.put("set:sparkvar:" + hiveVar.getKey(), hiveVar.getValue());
     }
     // switch the database
     openConf.put("use:database", connParams.getDbName());
     // set the fetchSize
-    // openConf.put("set:hiveconf:hive.server2.thrift.resultset.default.fetch.size",
+    // openConf.put("set:sparkconf:spark.sql.thriftserver.thrift.resultset.default.fetch.size",
     //  Integer.toString(fetchSize));
 
     // set the session configuration
@@ -676,7 +676,7 @@ public class SparkConnection implements java.sql.Connection {
 
       // Update fetchSize if modified by server
       // String serverFetchSize =
-      //   openResp.getConfiguration().get("hive.server2.thrift.resultset.default.fetch.size");
+      //   openResp.getConfiguration().get("spark.sql.thriftserver.thrift.resultset.default.fetch.size");
       // if (serverFetchSize != null) {
       //   fetchSize = Integer.parseInt(serverFetchSize);
       // }

@@ -20,6 +20,7 @@ package org.apache.spark.sql.service.auth;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.ProxyUsers;
+import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.ReflectionUtils;
 import org.apache.spark.sql.service.SparkSQLEnv;
@@ -77,6 +78,7 @@ public class SparkAuthFactory {
   private String authTypeStr;
   private final String transportMode;
   private final SQLConf conf;
+  private SQLContext sqlContext;
   private SparkDelegationTokenManager delegationTokenManager = null;
 
   public static final String SS2_PROXY_USER = "spark.sql.thriftserver.proxy.user";
@@ -105,8 +107,9 @@ public class SparkAuthFactory {
     }
   }
 
-  public SparkAuthFactory(SQLConf conf) throws TTransportException, IOException {
-    this.conf = conf;
+  public SparkAuthFactory(SQLContext sqlContext) throws TTransportException, IOException {
+    this.conf = sqlContext.conf();
+    this.sqlContext = sqlContext;
     transportMode = conf.getConf(ServiceConf.THRIFTSERVER_TRANSPORT_MODE());
     authTypeStr = conf.getConf(ServiceConf.THRIFTSERVER_AUTHENTICATION());
 
@@ -133,7 +136,7 @@ public class SparkAuthFactory {
         // start delegation token manager
         delegationTokenManager = new SparkDelegationTokenManager();
           delegationTokenManager.startDelegationTokenSecretManager(
-                  SparkSQLEnv.sparkContext().hadoopConfiguration(), ServerMode.HIVESERVER2);
+                  sqlContext.sparkContext().hadoopConfiguration(), ServerMode.HIVESERVER2);
           ReflectionUtils.setSuperField(saslServer, "secretManager", delegationTokenManager);
       }
     }

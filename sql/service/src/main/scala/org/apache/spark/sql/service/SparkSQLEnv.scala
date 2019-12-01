@@ -63,6 +63,11 @@ private[service] object SparkSQLEnv extends Logging {
     }
   }
 
+  def setSQLContext(sqlContext: SQLContext): Unit = {
+    this.sqlContext = sqlContext
+    this.sparkContext = sqlContext.sparkContext
+  }
+
   /** Cleans up and shuts down the Spark SQL environments. */
   def stop(): Unit = {
     logDebug("Shutting down Spark SQL Environment")

@@ -52,9 +52,10 @@ object SparkThriftServer2 extends Logging {
    */
   @DeveloperApi
   def startWithContext(sqlContext: SQLContext): SparkThriftServer2 = {
+    SparkSQLEnv.setSQLContext(sqlContext)
     val server = new SparkThriftServer2(sqlContext)
 
-    server.init(SparkSQLEnv.sqlContext.conf)
+    server.init(sqlContext.conf)
     server.start()
     listener = new SparkThriftServer2Listener(server, sqlContext.conf)
     sqlContext.sparkContext.addSparkListener(listener)
@@ -287,7 +288,7 @@ object SparkThriftServer2 extends Logging {
 }
 
 private[spark] class SparkThriftServer2(sqlContext: SQLContext)
-  extends SparkServer2
+  extends SparkServer2(sqlContext)
   with ReflectedCompositeService {
   // state is tracked internally so that the server only attempts to shut down if it successfully
   // started, and then once only.
@@ -299,9 +300,9 @@ private[spark] class SparkThriftServer2(sqlContext: SQLContext)
     addService(sparkSqlCliService)
 
     val thriftCliService = if (isHTTPTransportMode(sqlConf)) {
-      new ThriftHttpCLIService(sparkSqlCliService)
+      new ThriftHttpCLIService(sparkSqlCliService, sqlContext)
     } else {
-      new ThriftBinaryCLIService(sparkSqlCliService)
+      new ThriftBinaryCLIService(sparkSqlCliService, sqlContext)
     }
 
     setSuperField(this, "thriftCLIService", thriftCliService)

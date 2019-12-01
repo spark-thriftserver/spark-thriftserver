@@ -68,7 +68,7 @@ public class ThriftHttpServlet extends TServlet {
   private final String authType;
   private final UserGroupInformation serviceUGI;
   private final UserGroupInformation httpUGI;
-  private SQLConf sqlConf = SQLConf.get();
+  private SQLConf sqlConf;
 
   // Class members for cookie based authentication.
   private CookieSigner signer;
@@ -85,8 +85,9 @@ public class ThriftHttpServlet extends TServlet {
 
   public ThriftHttpServlet(TProcessor processor, TProtocolFactory protocolFactory,
       String authType, UserGroupInformation serviceUGI, UserGroupInformation httpUGI,
-      SparkAuthFactory sparkAuthFactory) {
+      SparkAuthFactory sparkAuthFactory, SQLConf sqlConf) {
     super(processor, protocolFactory);
+    this.sqlConf = sqlConf;
     this.authType = authType;
     this.serviceUGI = serviceUGI;
     this.httpUGI = httpUGI;

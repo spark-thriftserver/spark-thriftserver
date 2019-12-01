@@ -30,7 +30,7 @@ import org.apache.spark.sql.service.cli.ICLIService;
 public class EmbeddedThriftBinaryCLIService extends ThriftBinaryCLIService {
 
   public EmbeddedThriftBinaryCLIService() {
-    super(new CLIService(null));
+    super(new CLIService(null, null), null);
     isEmbedded = true;
   }
 

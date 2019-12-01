@@ -30,6 +30,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.CompositeService;
 import org.apache.spark.sql.service.cli.ServiceSQLException;
@@ -51,6 +52,7 @@ public class SessionManager extends CompositeService {
   private static final Logger LOG = LoggerFactory.getLogger(SessionManager.class);
   public static final String HIVERCFILE = ".hiverc";
   private SQLConf sqlConf;
+  private SQLContext sqlContext;
   private final Map<SessionHandle, ServiceSession> handleToSession =
       new ConcurrentHashMap<SessionHandle, ServiceSession>();
   private final OperationManager operationManager = new OperationManager();
@@ -66,9 +68,10 @@ public class SessionManager extends CompositeService {
   // The SparkServer2 instance running this service
   private final SparkServer2 sparkServer2;
 
-  public SessionManager(SparkServer2 sparkServer2) {
+  public SessionManager(SparkServer2 sparkServer2, SQLContext sqlContext) {
     super(SessionManager.class.getSimpleName());
     this.sparkServer2 = sparkServer2;
+    this.sqlContext = sqlContext;
   }
 
   @Override
@@ -241,11 +244,11 @@ public class SessionManager extends CompositeService {
     // Within the proxy object, we wrap the method call in a UserGroupInformation#doAs
     if (withImpersonation) {
       ServiceSessionImplwithUGI sessionWithUGI = new ServiceSessionImplwithUGI(protocol, username,
-          password, sqlConf, ipAddress, delegationToken);
+          password, sqlContext, ipAddress, delegationToken);
       session = ServiceSessionProxy.getProxy(sessionWithUGI, sessionWithUGI.getSessionUgi());
       sessionWithUGI.setProxySession(session);
     } else {
-      session = new ServiceSessionImpl(protocol, username, password, sqlConf, ipAddress);
+      session = new ServiceSessionImpl(protocol, username, password, sqlContext, ipAddress);
     }
     session.setSessionManager(this);
     session.setOperationManager(operationManager);

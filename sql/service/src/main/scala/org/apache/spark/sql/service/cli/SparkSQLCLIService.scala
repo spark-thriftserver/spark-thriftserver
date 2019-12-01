@@ -40,7 +40,7 @@ import org.apache.spark.sql.service.utils.Utils
 private[service] class SparkSQLCLIService(
      sparkServer: SparkServer2,
      sqlContext: SQLContext)
-  extends CLIService(sparkServer)
+  extends CLIService(sparkServer, sqlContext)
   with ReflectedCompositeService {
 
   override def init(sqlConf: SQLConf): Unit = {

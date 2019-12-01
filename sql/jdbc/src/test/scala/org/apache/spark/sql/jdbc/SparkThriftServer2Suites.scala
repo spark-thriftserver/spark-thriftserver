@@ -143,7 +143,7 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
     }
   }
 
-  test("Support beeline --hiveconf and --hivevar") {
+  test("Support beeline --sparkconf and --sparkvar") {
     withJdbcStatement() { statement =>
       executeTest(hiveConfList)
       executeTest(hiveVarList)
@@ -926,8 +926,8 @@ abstract class SparkThriftJdbcTest extends SparkThriftServer2Test {
   private def jdbcUri = if (mode == ServerMode.http) {
     s"""jdbc:spark://localhost:$serverPort/
        |default?
-       |hive.server2.transport.mode=http;
-       |hive.server2.thrift.http.path=cliservice;
+       |spark.sql.thriftserver.transport.mode=http;
+       |spark.sql.thriftserver.thrift.http.path=cliservice;
        |${hiveConfList}#${hiveVarList}
      """.stripMargin.split("\n").mkString.trim
   } else {
@@ -1034,13 +1034,13 @@ abstract class SparkThriftServer2Test extends SparkFunSuite with BeforeAndAfterA
 
     s"""$startScript
        |  --master local
-       |  --hiveconf ${ConfVars.METASTORECONNECTURLKEY}=$metastoreJdbcUri
-       |  --hiveconf ${ConfVars.METASTOREWAREHOUSE}=$warehousePath
-       |  --hiveconf ${ConfVars.HIVE_SERVER2_THRIFT_BIND_HOST}=localhost
-       |  --hiveconf ${ConfVars.HIVE_SERVER2_TRANSPORT_MODE}=$mode
-       |  --hiveconf ${ConfVars.HIVE_SERVER2_LOGGING_OPERATION_LOG_LOCATION}=$operationLogPath
-       |  --hiveconf ${ConfVars.LOCALSCRATCHDIR}=$lScratchDir
-       |  --hiveconf $portConf=$port
+       |  --sparkconf ${ConfVars.METASTORECONNECTURLKEY}=$metastoreJdbcUri
+       |  --sparkconf ${ConfVars.METASTOREWAREHOUSE}=$warehousePath
+       |  --sparkconf ${ConfVars.HIVE_SERVER2_THRIFT_BIND_HOST}=localhost
+       |  --sparkconf ${ConfVars.HIVE_SERVER2_TRANSPORT_MODE}=$mode
+       |  --sparkconf ${ConfVars.HIVE_SERVER2_LOGGING_OPERATION_LOG_LOCATION}=$operationLogPath
+       |  --sparkconf ${ConfVars.LOCALSCRATCHDIR}=$lScratchDir
+       |  --sparkconf $portConf=$port
        |  --driver-class-path $driverClassPath
        |  --driver-java-options -Dlog4j.debug
        |  --conf spark.ui.enabled=false

@@ -25,6 +25,7 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.AbstractService;
 import org.apache.spark.sql.service.ServiceException;
@@ -69,6 +70,7 @@ public abstract class ThriftCLIService extends AbstractService
   protected boolean isEmbedded = false;
 
   protected SQLConf sqlConf;
+  protected SQLContext sqlContext;
 
   protected int minWorkerThreads;
   protected int maxWorkerThreads;
@@ -89,9 +91,10 @@ public abstract class ThriftCLIService extends AbstractService
     }
   }
 
-  public ThriftCLIService(CLIService service, String serviceName) {
+  public ThriftCLIService(CLIService service, SQLContext sqlContext, String serviceName) {
     super(serviceName);
     this.cliService = service;
+    this.sqlContext = sqlContext;
     currentServerContext = new ThreadLocal<ServerContext>();
     serverEventHandler = new TServerEventHandler() {
       @Override
@@ -701,7 +704,7 @@ public abstract class ThriftCLIService extends AbstractService
     }
 
     // Verify proxy user privilege of the realUser for the proxyUser
-    SparkAuthFactory.verifyProxyAccess(realUser, proxyUser, ipAddress, SparkSQLEnv.sparkContext().hadoopConfiguration());
+    SparkAuthFactory.verifyProxyAccess(realUser, proxyUser, ipAddress, sqlContext.sparkContext().hadoopConfiguration());
     LOG.debug("Verified proxy user: " + proxyUser);
     return proxyUser;
   }

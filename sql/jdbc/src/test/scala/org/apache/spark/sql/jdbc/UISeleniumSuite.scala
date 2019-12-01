@@ -65,12 +65,12 @@ class UISeleniumSuite
 
     s"""$startScript
         |  --master local
-        |  --hiveconf hive.root.logger=INFO,console
-        |  --hiveconf ${ConfVars.METASTORECONNECTURLKEY}=$metastoreJdbcUri
-        |  --hiveconf ${ConfVars.METASTOREWAREHOUSE}=$warehousePath
-        |  --hiveconf ${ConfVars.HIVE_SERVER2_THRIFT_BIND_HOST}=localhost
-        |  --hiveconf ${ConfVars.HIVE_SERVER2_TRANSPORT_MODE}=$mode
-        |  --hiveconf $portConf=$port
+        |  --sparkconf hive.root.logger=INFO,console
+        |  --sparkconf ${ConfVars.METASTORECONNECTURLKEY}=$metastoreJdbcUri
+        |  --sparkconf ${ConfVars.METASTOREWAREHOUSE}=$warehousePath
+        |  --sparkconf ${ConfVars.HIVE_SERVER2_THRIFT_BIND_HOST}=localhost
+        |  --sparkconf ${ConfVars.HIVE_SERVER2_TRANSPORT_MODE}=$mode
+        |  --sparkconf $portConf=$port
         |  --driver-class-path ${sys.props("java.class.path")}
         |  --conf spark.ui.enabled=true
         |  --conf spark.ui.port=$uiPort

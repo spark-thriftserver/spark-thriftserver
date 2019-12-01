@@ -34,7 +34,7 @@ import org.apache.spark.sql.service.server.SparkServer2
 private[service] class SparkSQLSessionManager(
     sparkServer: SparkServer2,
     sqlContext: SQLContext)
-  extends SessionManager(sparkServer)
+  extends SessionManager(sparkServer, sqlContext)
   with ReflectedCompositeService
   with Logging {
 

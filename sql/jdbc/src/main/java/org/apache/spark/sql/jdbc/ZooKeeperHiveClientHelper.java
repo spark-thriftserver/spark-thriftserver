@@ -123,34 +123,34 @@ class ZooKeeperHiveClientHelper {
               + " published by the server.");
         }
         // Set host
-        if (matcher.group(1).equals("hive.server2.thrift.bind.host")) {
+        if (matcher.group(1).equals("spark.sql.thriftserver.thrift.bind.host")) {
           connParams.setHost(matcher.group(2));
         }
         // Set transportMode
-        if ((matcher.group(1).equals("hive.server2.transport.mode"))
+        if ((matcher.group(1).equals("spark.sql.thriftserver.transport.mode"))
             && !(connParams.getSessionVars().containsKey(JdbcConnectionParams.TRANSPORT_MODE))) {
           connParams.getSessionVars().put(JdbcConnectionParams.TRANSPORT_MODE, matcher.group(2));
         }
         // Set port
-        if (matcher.group(1).equals("hive.server2.thrift.port")) {
+        if (matcher.group(1).equals("spark.sql.thriftserver.thrift.port")) {
           connParams.setPort(Integer.parseInt(matcher.group(2)));
         }
-        if ((matcher.group(1).equals("hive.server2.thrift.http.port"))
+        if ((matcher.group(1).equals("spark.sql.thriftserver.thrift.http.port"))
             && !(connParams.getPort() > 0)) {
           connParams.setPort(Integer.parseInt(matcher.group(2)));
         }
         // Set sasl qop
-        if ((matcher.group(1).equals("hive.server2.thrift.sasl.qop"))
+        if ((matcher.group(1).equals("spark.sql.thriftserver.thrift.sasl.qop"))
             && !(connParams.getSessionVars().containsKey(JdbcConnectionParams.AUTH_QOP))) {
           connParams.getSessionVars().put(JdbcConnectionParams.AUTH_QOP, matcher.group(2));
         }
         // Set http path
-        if ((matcher.group(1).equals("hive.server2.thrift.http.path"))
+        if ((matcher.group(1).equals("spark.sql.thriftserver.thrift.http.path"))
             && !(connParams.getSessionVars().containsKey(JdbcConnectionParams.HTTP_PATH))) {
           connParams.getSessionVars().put(JdbcConnectionParams.HTTP_PATH, matcher.group(2));
         }
         // Set SSL
-        if ((matcher.group(1) != null) && (matcher.group(1).equals("hive.server2.use.SSL"))
+        if ((matcher.group(1) != null) && (matcher.group(1).equals("spark.sql.thriftserver.use.SSL"))
             && !(connParams.getSessionVars().containsKey(JdbcConnectionParams.USE_SSL))) {
           connParams.getSessionVars().put(JdbcConnectionParams.USE_SSL, matcher.group(2));
         }
@@ -164,7 +164,7 @@ class ZooKeeperHiveClientHelper {
          * JdbcConnectionParams.AUTH_TYPE==JdbcConnectionParams.AUTH_TOKEN uses delegation token.
          * Otherwise password based (which includes NONE, PAM, LDAP, CUSTOM)
          */
-        if (matcher.group(1).equals("hive.server2.authentication")) {
+        if (matcher.group(1).equals("spark.sql.thriftserver.authentication")) {
           // NOSASL
           if (matcher.group(2).equalsIgnoreCase("NOSASL")
               && !(connParams.getSessionVars().containsKey(JdbcConnectionParams.AUTH_TYPE)
@@ -176,7 +176,7 @@ class ZooKeeperHiveClientHelper {
         }
         // KERBEROS
         // If delegation token is passed from the client side, do not set the principal
-        if (matcher.group(1).equalsIgnoreCase("hive.server2.authentication.kerberos.principal")
+        if (matcher.group(1).equalsIgnoreCase("spark.sql.thriftserver.authentication.kerberos.principal")
             && !(connParams.getSessionVars().containsKey(JdbcConnectionParams.AUTH_TYPE)
             && connParams.getSessionVars().get(JdbcConnectionParams.AUTH_TYPE)
                 .equalsIgnoreCase(JdbcConnectionParams.AUTH_TOKEN))

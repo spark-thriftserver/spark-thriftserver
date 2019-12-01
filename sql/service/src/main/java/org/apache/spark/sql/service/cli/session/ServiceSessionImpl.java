@@ -26,6 +26,7 @@ import java.io.InputStreamReader;
 import java.util.*;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.SparkSQLEnv;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
@@ -55,6 +56,7 @@ public class ServiceSessionImpl implements ServiceSession {
   private String username;
   private final String password;
   private SQLConf sqlConf;
+  private SQLContext sqlContext;
   private String ipAddress;
   private static final Logger LOG = LoggerFactory.getLogger(ServiceSessionImpl.class);
   private SessionManager sessionManager;
@@ -67,12 +69,13 @@ public class ServiceSessionImpl implements ServiceSession {
   private Map<String, String> sparkVariables = new HashMap<String, String>();
 
   public ServiceSessionImpl(TProtocolVersion protocol, String username, String password,
-                            SQLConf sqlConf, String ipAddress) {
+                            SQLContext sqlContext, String ipAddress) {
     this.username = username;
     this.password = password;
     this.sessionHandle = new SessionHandle(protocol);
     this.ipAddress = ipAddress;
-    this.sqlConf = sqlConf;
+    this.sqlConf = sqlContext.conf();
+    this.sqlContext = sqlContext;
   }
 
   @Override
@@ -653,7 +656,7 @@ public class ServiceSessionImpl implements ServiceSession {
   @Override
   public String getDelegationToken(SparkAuthFactory authFactory, String owner, String renewer)
       throws ServiceSQLException {
-    SparkAuthFactory.verifyProxyAccess(getUsername(), owner, getIpAddress(), SparkSQLEnv.sparkContext().hadoopConfiguration());
+    SparkAuthFactory.verifyProxyAccess(getUsername(), owner, getIpAddress(), sqlContext.sparkContext().hadoopConfiguration());
     return authFactory.getDelegationToken(owner, renewer, getIpAddress());
   }
 
@@ -661,7 +664,7 @@ public class ServiceSessionImpl implements ServiceSession {
   public void cancelDelegationToken(SparkAuthFactory authFactory, String tokenStr)
       throws ServiceSQLException {
     SparkAuthFactory.verifyProxyAccess(getUsername(), getUserFromToken(authFactory, tokenStr),
-        getIpAddress(), SparkSQLEnv.sparkContext().hadoopConfiguration());
+        getIpAddress(), sqlContext.sparkContext().hadoopConfiguration());
     authFactory.cancelDelegationToken(tokenStr);
   }
 
@@ -669,7 +672,7 @@ public class ServiceSessionImpl implements ServiceSession {
   public void renewDelegationToken(SparkAuthFactory authFactory, String tokenStr)
       throws ServiceSQLException {
     SparkAuthFactory.verifyProxyAccess(getUsername(), getUserFromToken(authFactory, tokenStr),
-        getIpAddress(), SparkSQLEnv.sparkContext().hadoopConfiguration());
+        getIpAddress(), sqlContext.sparkContext().hadoopConfiguration());
     authFactory.renewDelegationToken(tokenStr);
   }
 

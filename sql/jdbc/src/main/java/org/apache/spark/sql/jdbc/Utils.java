@@ -60,7 +60,7 @@ public class Utils {
 
   // This value is set to true by the setServiceUnavailableRetryStrategy()
   // when the server returns 401
-  static final String HIVE_SERVER2_RETRY_KEY = "hive.server2.retryserver";
+  static final String HIVE_SERVER2_RETRY_KEY = "spark.sql.thriftserver.retryserver";
   static final String HIVE_SERVER2_RETRY_TRUE = "true";
   static final String HIVE_SERVER2_RETRY_FALSE = "false";
 
@@ -95,11 +95,11 @@ public class Utils {
     public static final String SSL_TRUST_STORE_PASSWORD = "trustStorePassword";
     // We're deprecating the name and placement of this in the parsed map (from hive conf vars to
     // hive session vars).
-    static final String TRANSPORT_MODE_DEPRECATED = "hive.server2.transport.mode";
+    static final String TRANSPORT_MODE_DEPRECATED = "spark.sql.thriftserver.transport.mode";
     public static final String TRANSPORT_MODE = "transportMode";
     // We're deprecating the name and placement of this in the parsed map (from hive conf vars to
     // hive session vars).
-    static final String HTTP_PATH_DEPRECATED = "hive.server2.thrift.http.path";
+    static final String HTTP_PATH_DEPRECATED = "spark.sql.thriftserver.thrift.http.path";
     public static final String HTTP_PATH = "httpPath";
     public static final String SERVICE_DISCOVERY_MODE = "serviceDiscoveryMode";
     public static final String PROPERTY_DRIVER        = "driver";
@@ -116,7 +116,7 @@ public class Utils {
     static final String COOKIE_AUTH_FALSE = "false";
     static final String COOKIE_NAME = "cookieName";
     // The default value of the cookie name when CookieAuth=true
-    static final String DEFAULT_COOKIE_NAMES_HS2 = "hive.server2.auth";
+    static final String DEFAULT_COOKIE_NAMES_HS2 = "spark.sql.thriftserver.auth";
     // The http header prefix for additional headers which have to be appended to the request
     static final String HTTP_HEADER_PREFIX = "http.header.";
     // Set the fetchSize
@@ -138,8 +138,8 @@ public class Utils {
     // Currently supports JKS keystore format
     static final String SSL_TRUST_STORE_TYPE = "JKS";
 
-    private static final String HIVE_VAR_PREFIX = "hivevar:";
-    private static final String HIVE_CONF_PREFIX = "hiveconf:";
+    private static final String SPARK_VAR_PREFIX = "sparkvar:";
+    private static final String SPARK_CONF_PREFIX = "sparkconf:";
     private String host = null;
     private int port = 0;
     private String jdbcUriString;
@@ -292,8 +292,8 @@ public class Utils {
    *  jdbc:spark://ubuntu:11000/db2;user=foo;password=bar
    *
    *  Connect to http://server:10001/hs2, with specified basicAuth credentials and initial database:
-   *  jdbc:spark://server:10001/db;user=foo;password=bar?hive.server2.transport.mode=http;
-   *      hive.server2.thrift.http.path=hs2
+   *  jdbc:spark://server:10001/db;user=foo;password=bar?spark.sql.thriftserver.transport.mode=http;
+   *      spark.sql.thriftserver.thrift.http.path=hs2
    *
    * @param uri
    * @return
@@ -390,12 +390,12 @@ public class Utils {
     for (Map.Entry<Object, Object> kv : info.entrySet()) {
       if ((kv.getKey() instanceof String)) {
         String key = (String) kv.getKey();
-        if (key.startsWith(JdbcConnectionParams.HIVE_VAR_PREFIX)) {
+        if (key.startsWith(JdbcConnectionParams.SPARK_VAR_PREFIX)) {
           connParams.getHiveVars().put(
-              key.substring(JdbcConnectionParams.HIVE_VAR_PREFIX.length()), info.getProperty(key));
-        } else if (key.startsWith(JdbcConnectionParams.HIVE_CONF_PREFIX)) {
+              key.substring(JdbcConnectionParams.SPARK_VAR_PREFIX.length()), info.getProperty(key));
+        } else if (key.startsWith(JdbcConnectionParams.SPARK_CONF_PREFIX)) {
           connParams.getHiveConfs().put(
-              key.substring(JdbcConnectionParams.HIVE_CONF_PREFIX.length()), info.getProperty(key));
+              key.substring(JdbcConnectionParams.SPARK_CONF_PREFIX.length()), info.getProperty(key));
         }
       }
     }

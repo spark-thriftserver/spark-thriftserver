@@ -18,6 +18,7 @@
 
 package org.apache.spark.sql.service.cli.thrift;
 
+import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.service.SparkSQLEnv;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.auth.SparkAuthUtils;
@@ -41,8 +42,8 @@ import java.util.concurrent.TimeUnit;
 
 public class ThriftBinaryCLIService extends ThriftCLIService {
 
-  public ThriftBinaryCLIService(CLIService cliService) {
-    super(cliService, ThriftBinaryCLIService.class.getSimpleName());
+  public ThriftBinaryCLIService(CLIService cliService, SQLContext sqlContext) {
+    super(cliService, sqlContext, ThriftBinaryCLIService.class.getSimpleName());
   }
 
   @Override
@@ -55,7 +56,7 @@ public class ThriftBinaryCLIService extends ThriftCLIService {
           new ThreadFactoryWithGarbageCleanup(threadPoolName));
 
       // Thrift configs
-      sparkAuthFactory = new SparkAuthFactory(sqlConf);
+      sparkAuthFactory = new SparkAuthFactory(sqlContext);
       TTransportFactory transportFactory = sparkAuthFactory.getAuthTransFactory();
       TProcessorFactory processorFactory = sparkAuthFactory.getAuthProcFactory(this);
       TServerSocket serverSocket = null;
@@ -71,7 +72,7 @@ public class ThriftBinaryCLIService extends ThriftCLIService {
           throw new IllegalArgumentException(ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PATH().key()
               + " Not configured for SSL connection");
         }
-        org.apache.hadoop.conf.Configuration hadoopConf = SparkSQLEnv.sparkContext().hadoopConfiguration();
+        org.apache.hadoop.conf.Configuration hadoopConf = sqlContext.sparkContext().hadoopConfiguration();
         String keyStorePassword = ShimLoader.getHadoopShims().getPassword(hadoopConf,
             ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PASSWORD().key().substring("spark.hadoop.".length()));
         serverSocket = SparkAuthUtils.getServerSSLSocket(sparkHost, portNum, keyStorePath,

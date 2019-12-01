@@ -20,6 +20,7 @@ package org.apache.spark.sql.service.server;
 
 import java.util.Properties;
 
+import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.CompositeService;
 import org.apache.spark.sql.service.cli.CLIService;
@@ -50,19 +51,21 @@ public class SparkServer2 extends CompositeService {
 
   private CLIService cliService;
   private ThriftCLIService thriftCLIService;
+  private SQLContext sqlContext;
 
-  public SparkServer2() {
+  public SparkServer2(SQLContext sqlContext) {
     super(SparkServer2.class.getSimpleName());
+    this.sqlContext = sqlContext;
   }
 
   @Override
   public synchronized void init(SQLConf sqlConf) {
-    cliService = new CLIService(this);
+    cliService = new CLIService(this, sqlContext);
     addService(cliService);
     if (isHTTPTransportMode(sqlConf)) {
-      thriftCLIService = new ThriftHttpCLIService(cliService);
+      thriftCLIService = new ThriftHttpCLIService(cliService, sqlContext);
     } else {
-      thriftCLIService = new ThriftBinaryCLIService(cliService);
+      thriftCLIService = new ThriftBinaryCLIService(cliService, sqlContext);
     }
     addService(thriftCLIService);
     super.init(sqlConf);
@@ -127,7 +130,7 @@ public class SparkServer2 extends CompositeService {
 
   /**
    * ServerOptionsProcessor.
-   * Process arguments given to SparkServer2 (-hiveconf property=value)
+   * Process arguments given to SparkServer2 (-sparkconf property=value)
    * Set properties in System properties
    * Create an appropriate response object,
    * which has executor to execute the appropriate command based on the parsed options.
@@ -141,12 +144,12 @@ public class SparkServer2 extends CompositeService {
     @SuppressWarnings("static-access")
     public ServerOptionsProcessor(String serverName) {
       this.serverName = serverName;
-      // -hiveconf x=y
+      // -sparkconf x=y
       options.addOption(OptionBuilder
           .withValueSeparator()
           .hasArgs(2)
           .withArgName("property=value")
-          .withLongOpt("hiveconf")
+          .withLongOpt("sparkconf")
           .withDescription("Use value for given property")
           .create());
       options.addOption(new Option("H", "help", false, "Print help information"));
@@ -155,9 +158,9 @@ public class SparkServer2 extends CompositeService {
     public ServerOptionsProcessorResponse parse(String[] argv) {
       try {
         commandLine = new GnuParser().parse(options, argv);
-        // Process --hiveconf
-        // Get hiveconf param values and set the System property values
-        Properties confProps = commandLine.getOptionProperties("hiveconf");
+        // Process --sparkconf
+        // Get sparkconf param values and set the System property values
+        Properties confProps = commandLine.getOptionProperties("sparkconf");
         for (String propKey : confProps.stringPropertyNames()) {
           // save logging message for log4j output latter after log4j initialize properly
           debugMessage.append("Setting " + propKey + "=" + confProps.getProperty(propKey) + ";\n");

@@ -22,6 +22,7 @@ import java.io.IOException;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.cli.ServiceSQLException;
@@ -42,9 +43,9 @@ public class ServiceSessionImplwithUGI extends ServiceSessionImpl {
   static final Logger LOG = LoggerFactory.getLogger(ServiceSessionImplwithUGI.class);
 
   public ServiceSessionImplwithUGI(TProtocolVersion protocol, String username, String password,
-                                   SQLConf sqlConf, String ipAddress, String delegationToken)
+                                   SQLContext sqlContext, String ipAddress, String delegationToken)
       throws ServiceSQLException {
-    super(protocol, username, password, sqlConf, ipAddress);
+    super(protocol, username, password, sqlContext, ipAddress);
     setSessionUGI(username);
   }
 
