@@ -18,7 +18,6 @@
 package org.apache.spark.sql.service.auth.shims;
 
 import org.apache.hadoop.util.VersionInfo;
-import org.apache.log4j.AppenderSkeleton;
 import org.apache.spark.sql.service.auth.thrift.HadoopThriftAuthBridge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,10 +34,7 @@ public abstract class ShimLoader {
   public static final String HADOOP23VERSIONNAME = "0.23";
 
   private static volatile HadoopShims hadoopShims;
-  private static JettyShims jettyShims;
-  private static AppenderSkeleton eventCounter;
   private static HadoopThriftAuthBridge hadoopThriftAuthBridge;
-  private static SchedulerShim schedulerShim;
 
   /**
    * The names of the classes for shimming Hadoop for each major version.
@@ -72,10 +68,6 @@ public abstract class ShimLoader {
         "org.apache.spark.sql.service.auth.thrift.HadoopThriftAuthBridge23");
   }
 
-
-  private static final String SCHEDULER_SHIM_CLASSE =
-    "org.apache.spark.sql.service.auth.thrift.FairSchedulerShim";
-
   /**
    * Factory method to get an instance of HadoopShims based on the
    * version of Hadoop on the classpath.
@@ -96,26 +88,12 @@ public abstract class ShimLoader {
     return hadoopShims;
   }
 
-  public static synchronized AppenderSkeleton getEventCounter() {
-    if (eventCounter == null) {
-      eventCounter = loadShims(EVENT_COUNTER_SHIM_CLASSES, AppenderSkeleton.class);
-    }
-    return eventCounter;
-  }
-
   public static synchronized HadoopThriftAuthBridge getHadoopThriftAuthBridge() {
     if (hadoopThriftAuthBridge == null) {
       hadoopThriftAuthBridge = loadShims(HADOOP_THRIFT_AUTH_BRIDGE_CLASSES,
           HadoopThriftAuthBridge.class);
     }
     return hadoopThriftAuthBridge;
-  }
-
-  public static synchronized SchedulerShim getSchedulerShims() {
-    if (schedulerShim == null) {
-      schedulerShim = createShim(SCHEDULER_SHIM_CLASSE, SchedulerShim.class);
-    }
-    return schedulerShim;
   }
 
   private static <T> T loadShims(Map<String, String> classMap, Class<T> xface) {
