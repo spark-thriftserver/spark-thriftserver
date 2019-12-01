@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.spark.sql.service.cli.common.util;
+package org.apache.spark.sql.service.utils;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -51,12 +51,12 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 
 /**
- * HiveStringUtils
+ * SparkStringUtils
  * General string utils
  *
  * Originally copied from o.a.hadoop.util.StringUtils
  */
-public class HiveStringUtils {
+public class SparkStringUtils {
 
   /**
    * Priority of the StringUtils shutdown hook.
@@ -554,10 +554,10 @@ public class HiveStringUtils {
    */
   public static String insertValue(String key, String newValue,
                                    String strKvPairs) {
-    String[] keyValuePairs = HiveStringUtils.split(strKvPairs);
+    String[] keyValuePairs = SparkStringUtils.split(strKvPairs);
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < keyValuePairs.length; i++) {
-      String[] pair = HiveStringUtils.split(keyValuePairs[i], ESCAPE_CHAR, EQUALS);
+      String[] pair = SparkStringUtils.split(keyValuePairs[i], ESCAPE_CHAR, EQUALS);
       if (pair.length != 2) {
         throw new RuntimeException("Error parsing the keyvalue pair " + keyValuePairs[i]);
       }

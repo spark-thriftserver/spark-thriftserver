@@ -80,7 +80,7 @@ public class TypeDescriptor {
     if (typeName.equalsIgnoreCase("decimal")) {
       // Todo add parser for decimal(m,n), but seem spark won't get this.
       type.setSpecifiedPrecision(38);
-      type.setSpecifiedScala(5);
+      type.setSpecifiedScala(38);
     }
     return type;
   }

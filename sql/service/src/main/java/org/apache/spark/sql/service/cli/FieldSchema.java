@@ -6,7 +6,7 @@
  */
 package org.apache.spark.sql.service.cli;
 
-import org.apache.spark.sql.service.cli.common.util.HiveStringUtils;
+import org.apache.spark.sql.service.utils.SparkStringUtils;
 import org.apache.thrift.scheme.IScheme;
 import org.apache.thrift.scheme.SchemeFactory;
 import org.apache.thrift.scheme.StandardScheme;
@@ -130,9 +130,9 @@ public class FieldSchema implements org.apache.thrift.TBase<FieldSchema, FieldSc
           String comment)
   {
     this();
-    this.name = HiveStringUtils.intern(name);
-    this.type = HiveStringUtils.intern(type);
-    this.comment = HiveStringUtils.intern(comment);
+    this.name = SparkStringUtils.intern(name);
+    this.type = SparkStringUtils.intern(type);
+    this.comment = SparkStringUtils.intern(comment);
   }
 
   /**
@@ -140,13 +140,13 @@ public class FieldSchema implements org.apache.thrift.TBase<FieldSchema, FieldSc
    */
   public FieldSchema(FieldSchema other) {
     if (other.isSetName()) {
-      this.name = HiveStringUtils.intern(other.name);
+      this.name = SparkStringUtils.intern(other.name);
     }
     if (other.isSetType()) {
-      this.type = HiveStringUtils.intern(other.type);
+      this.type = SparkStringUtils.intern(other.type);
     }
     if (other.isSetComment()) {
-      this.comment = HiveStringUtils.intern(other.comment);
+      this.comment = SparkStringUtils.intern(other.comment);
     }
   }
 
@@ -166,7 +166,7 @@ public class FieldSchema implements org.apache.thrift.TBase<FieldSchema, FieldSc
   }
 
   public void setName(String name) {
-    this.name = HiveStringUtils.intern(name);
+    this.name = SparkStringUtils.intern(name);
   }
 
   public void unsetName() {
@@ -189,7 +189,7 @@ public class FieldSchema implements org.apache.thrift.TBase<FieldSchema, FieldSc
   }
 
   public void setType(String type) {
-    this.type = HiveStringUtils.intern(type);
+    this.type = SparkStringUtils.intern(type);
   }
 
   public void unsetType() {
@@ -212,7 +212,7 @@ public class FieldSchema implements org.apache.thrift.TBase<FieldSchema, FieldSc
   }
 
   public void setComment(String comment) {
-    this.comment = HiveStringUtils.intern(comment);
+    this.comment = SparkStringUtils.intern(comment);
   }
 
   public void unsetComment() {

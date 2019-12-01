@@ -22,10 +22,6 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Timestamp;
 
-import org.apache.spark.sql.service.cli.common.type.SparkChar;
-import org.apache.spark.sql.service.cli.common.type.SparkIntervalDayTime;
-import org.apache.spark.sql.service.cli.common.type.SparkIntervalYearMonth;
-import org.apache.spark.sql.service.cli.common.type.SparkVarchar;
 import org.apache.spark.sql.service.rpc.thrift.TBoolValue;
 import org.apache.spark.sql.service.rpc.thrift.TByteValue;
 import org.apache.spark.sql.service.rpc.thrift.TColumnValue;
@@ -107,22 +103,6 @@ public class ColumnValue {
     return TColumnValue.stringVal(tStringValue);
   }
 
-  private static TColumnValue stringValue(SparkChar value) {
-    TStringValue tStringValue = new TStringValue();
-    if (value != null) {
-      tStringValue.setValue(value.toString());
-    }
-    return TColumnValue.stringVal(tStringValue);
-  }
-
-  private static TColumnValue stringValue(SparkVarchar value) {
-    TStringValue tStringValue = new TStringValue();
-    if (value != null) {
-      tStringValue.setValue(value.toString());
-    }
-    return TColumnValue.stringVal(tStringValue);
-  }
-
   private static TColumnValue dateValue(Date value) {
     TStringValue tStringValue = new TStringValue();
     if (value != null) {
@@ -139,21 +119,6 @@ public class ColumnValue {
     return TColumnValue.stringVal(tStringValue);
   }
 
-  private static TColumnValue stringValue(SparkIntervalYearMonth value) {
-    TStringValue tStrValue = new TStringValue();
-    if (value != null) {
-      tStrValue.setValue(value.toString());
-    }
-    return TColumnValue.stringVal(tStrValue);
-  }
-
-  private static TColumnValue stringValue(SparkIntervalDayTime value) {
-    TStringValue tStrValue = new TStringValue();
-    if (value != null) {
-      tStrValue.setValue(value.toString());
-    }
-    return TColumnValue.stringVal(tStrValue);
-  }
 
   public static TColumnValue toTColumnValue(TypeDescriptor typeDescriptor, Object value) {
     Type type = typeDescriptor.getType();
@@ -175,18 +140,10 @@ public class ColumnValue {
       return doubleValue((Double)value);
     case STRING_TYPE:
       return stringValue((String)value);
-    case CHAR_TYPE:
-      return stringValue((SparkChar)value);
-    case VARCHAR_TYPE:
-      return stringValue((SparkVarchar)value);
     case DATE_TYPE:
       return dateValue((Date)value);
     case TIMESTAMP_TYPE:
       return timestampValue((Timestamp)value);
-    case INTERVAL_YEAR_MONTH_TYPE:
-      return stringValue((SparkIntervalYearMonth) value);
-    case INTERVAL_DAY_TIME_TYPE:
-      return stringValue((SparkIntervalDayTime) value);
     case DECIMAL_TYPE:
       return stringValue(((BigDecimal)value).toPlainString());
     case BINARY_TYPE:
@@ -195,8 +152,6 @@ public class ColumnValue {
     case ARRAY_TYPE:
     case MAP_TYPE:
     case STRUCT_TYPE:
-    case UNION_TYPE:
-    case USER_DEFINED_TYPE:
       return stringValue((String)value);
     case NULL_TYPE:
       return stringValue((String)value);
