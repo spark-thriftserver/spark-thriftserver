@@ -17,13 +17,9 @@
 
 package org.apache.spark.sql.service
 
-import java.io.PrintStream
-import java.nio.charset.StandardCharsets.UTF_8
-
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{SparkSession, SQLContext}
-import org.apache.spark.sql.hive.{HiveExternalCatalog}
 import org.apache.spark.util.Utils
 
 /** A singleton object for the master program. The slaves should not access this. */
@@ -45,7 +41,11 @@ private[service] object SparkSQLEnv extends Logging {
       sparkConf
         .setAppName(maybeAppName.getOrElse(s"SparkSQL::${Utils.localHostName()}"))
 
-      val sparkSession = SparkSession.builder.config(sparkConf).enableHiveSupport().getOrCreate()
+      val sparkSession = SparkSession
+        .builder
+        .config(sparkConf)
+//        .enableHiveSupport()
+        .getOrCreate()
       sparkContext = sparkSession.sparkContext
       sqlContext = sparkSession.sqlContext
 
@@ -54,11 +54,11 @@ private[service] object SparkSQLEnv extends Logging {
       // different class loader).
       sparkSession.sessionState
 
-      val metadataHive = sparkSession
-        .sharedState.externalCatalog.unwrapped.asInstanceOf[HiveExternalCatalog].client
-      metadataHive.setOut(new PrintStream(System.out, true, UTF_8.name()))
-      metadataHive.setInfo(new PrintStream(System.err, true, UTF_8.name()))
-      metadataHive.setError(new PrintStream(System.err, true, UTF_8.name()))
+      // val metadataHive = sparkSession
+      //   .sharedState.externalCatalog.unwrapped.asInstanceOf[HiveExternalCatalog].client
+      // metadataHive.setOut(new PrintStream(System.out, true, UTF_8.name()))
+      // metadataHive.setInfo(new PrintStream(System.err, true, UTF_8.name()))
+      // metadataHive.setError(new PrintStream(System.err, true, UTF_8.name()))
     }
   }
 

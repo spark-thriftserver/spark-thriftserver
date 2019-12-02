@@ -17,23 +17,25 @@
 
 package org.apache.spark.sql.service
 
+import java.io.File
+
 import org.apache.spark.SparkFunSuite
 import org.apache.spark.launcher.SparkLauncher
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.hive.HiveUtils.{HIVE_METASTORE_JARS, HIVE_METASTORE_VERSION}
-import org.apache.spark.sql.hive.test.TestHiveContext
 import org.apache.spark.sql.internal.StaticSQLConf.{QUERY_EXECUTION_LISTENERS, STREAMING_QUERY_LISTENERS, WAREHOUSE_PATH}
+import org.apache.spark.util.Utils
 
 class SparkSQLEnvSuite extends SparkFunSuite {
   test("SPARK-29604 external listeners should be initialized with Spark classloader") {
     withSystemProperties(
       QUERY_EXECUTION_LISTENERS.key -> classOf[DummyQueryExecutionListener].getCanonicalName,
       STREAMING_QUERY_LISTENERS.key -> classOf[DummyStreamingQueryListener].getCanonicalName,
-      WAREHOUSE_PATH.key -> TestHiveContext.makeWarehouseDir().toURI.getPath,
+      WAREHOUSE_PATH.key -> makeWarehouseDir().toURI.getPath,
       // The issue occured from "maven" and list of custom jars, but providing list of custom
       // jars to initialize HiveClient isn't trivial, so just use "maven".
-      HIVE_METASTORE_JARS.key -> "maven",
-      HIVE_METASTORE_VERSION.key -> null,
+      // Todo : enable hive test
+      // HIVE_METASTORE_JARS.key -> "maven",
+      // HIVE_METASTORE_VERSION.key -> null,
       SparkLauncher.SPARK_MASTER -> "local[2]",
       "spark.app.name" -> "testApp") {
 
@@ -50,6 +52,12 @@ class SparkSQLEnvSuite extends SparkFunSuite {
         SparkSQLEnv.stop()
       }
     }
+  }
+
+  def makeWarehouseDir(): File = {
+    val warehouseDir = Utils.createTempDir(namePrefix = "warehouse")
+    warehouseDir.delete()
+    warehouseDir
   }
 
   private def withSystemProperties(pairs: (String, String)*)(f: => Unit): Unit = {
