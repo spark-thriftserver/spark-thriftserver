@@ -71,7 +71,7 @@ private[service] class SparkSQLSessionManager(
     }
     ctx.setConf(HiveUtils.FAKE_HIVE_VERSION.key, HiveUtils.builtinHiveVersion)
     setConfMap(ctx, session.getVariables)
-    setConfMap(ctx, session.getSQLConf.getAllConfs.asJava)
+    setConfMap(ctx, session.getOverriddenConf)
     if (sessionConf != null && sessionConf.containsKey("use:database")) {
       ctx.sql(s"use ${sessionConf.get("use:database")}")
     }

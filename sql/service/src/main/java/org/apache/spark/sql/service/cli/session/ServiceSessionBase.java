@@ -78,6 +78,8 @@ public interface ServiceSessionBase {
 
   Map<String, String> getVariables();
 
+  Map<String, String> getOverriddenConf();
+
   String getUserName();
 
   void setUserName(String userName);

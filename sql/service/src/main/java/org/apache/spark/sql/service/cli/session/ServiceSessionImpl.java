@@ -28,7 +28,6 @@ import java.util.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.internal.SQLConf;
-import org.apache.spark.sql.service.SparkSQLEnv;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.cli.*;
 import org.apache.spark.sql.service.cli.ServiceSQLException;
@@ -66,7 +65,8 @@ public class ServiceSessionImpl implements ServiceSession {
   private File sessionLogDir;
   private volatile long lastAccessTime;
   private volatile long lastIdleTime;
-  private Map<String, String> sparkVariables = new HashMap<String, String>();
+  private Map<String, String> sessionVariables = new HashMap<String, String>();
+  private Map<String, String> sessionOverriddenConf = new HashMap<String, String>();
 
   public ServiceSessionImpl(TProtocolVersion protocol, String username, String password,
                             SQLContext sqlContext, String ipAddress) {
@@ -166,7 +166,7 @@ public class ServiceSessionImpl implements ServiceSession {
   // Copy from org.apache.hadoop.hive.ql.processors.SetProcessor, only change:
   // setConf(varname, propName, varvalue, true) when varname.startsWith(SPARKCONF_PREFIX)
   private int setVariable(String varname, String varvalue) throws Exception {
-    VariableSubstitution substitution = new VariableSubstitution(sparkVariables);
+    VariableSubstitution substitution = new VariableSubstitution(sessionVariables);
     if (varvalue.contains("\n")){
       LOG.error("Warning: Value had a \\n character in it.");
     }
@@ -182,7 +182,7 @@ public class ServiceSessionImpl implements ServiceSession {
       setConf(varname, propName, varvalue, true);
     } else if (varname.startsWith(SPARKVAR_PREFIX)) {
       String propName = varname.substring(SPARKVAR_PREFIX.length());
-      sparkVariables.put(propName, substitution.substitute(sqlConf,varvalue));
+      sessionVariables.put(propName, substitution.substitute(sqlConf,varvalue));
     } else {
       setConf(varname, varname, varvalue, true);
     }
@@ -193,9 +193,9 @@ public class ServiceSessionImpl implements ServiceSession {
   private void setConf(String varname, String key, String varvalue, boolean register)
           throws IllegalArgumentException {
     VariableSubstitution substitution =
-        new VariableSubstitution(sparkVariables);
+        new VariableSubstitution(sessionVariables);
     String value = substitution.substitute(sqlConf, varvalue);
-    sqlConf.setConfWithCheck(key, value);
+    sessionOverriddenConf.put(key, value);
   }
 
   @Override
@@ -311,7 +311,12 @@ public class ServiceSessionImpl implements ServiceSession {
 
   @Override
   public Map<String, String> getVariables() {
-    return sparkVariables;
+    return sessionVariables;
+  }
+
+  @Override
+  public Map<String, String> getOverriddenConf() {
+    return sessionOverriddenConf;
   }
 
   @Override
