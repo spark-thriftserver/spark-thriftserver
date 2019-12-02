@@ -783,6 +783,7 @@ class SingleSessionSuite extends SparkThriftJdbcTest {
     s"--conf ${HIVE_THRIFT_SERVER_SINGLESESSION.key}=true" :: Nil
 
   test("share the temporary functions across JDBC connections") {
+    assume(hiveClassesArePresent, "Test without Hive support.")
     withMultipleConnectionJdbcStatement()(
       { statement =>
         val jarPath = "../hive/src/test/resources/TestUDTF.jar"
