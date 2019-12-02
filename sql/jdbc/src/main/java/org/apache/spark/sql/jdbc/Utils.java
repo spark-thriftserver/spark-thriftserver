@@ -269,7 +269,7 @@ public class Utils {
   }
 
   public static JdbcConnectionParams parseURL(String uri) throws JdbcUriParseException,
-          SQLException, ZooKeeperHiveClientException {
+          SQLException, ZooKeeperSparkClientException {
     return parseURL(uri, new Properties());
   }
   /**
@@ -300,7 +300,7 @@ public class Utils {
    * @throws SQLException
    */
   static JdbcConnectionParams parseURL(String uri, Properties info) throws JdbcUriParseException,
-      SQLException, ZooKeeperHiveClientException {
+      SQLException, ZooKeeperSparkClientException {
     JdbcConnectionParams connParams = new JdbcConnectionParams();
 
     if (!uri.startsWith(URL_PREFIX)) {
@@ -515,7 +515,7 @@ public class Utils {
   }
 
   private static void configureConnParams(JdbcConnectionParams connParams)
-      throws JdbcUriParseException, ZooKeeperHiveClientException {
+      throws JdbcUriParseException, ZooKeeperSparkClientException {
     String serviceDiscoveryMode =
         connParams.getSessionVars().get(JdbcConnectionParams.SERVICE_DISCOVERY_MODE);
     String authority = connParams.getAuthorityList()[0];

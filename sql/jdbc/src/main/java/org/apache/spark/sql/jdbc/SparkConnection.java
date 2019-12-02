@@ -135,7 +135,7 @@ public class SparkConnection implements java.sql.Connection {
     setupLoginTimeout();
     try {
       connParams = Utils.parseURL(uri, info);
-    } catch (ZooKeeperHiveClientException e) {
+    } catch (ZooKeeperSparkClientException e) {
       throw new SQLException(e);
     }
     jdbcUriString = connParams.getJdbcUriString();

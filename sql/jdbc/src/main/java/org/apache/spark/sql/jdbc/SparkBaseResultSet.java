@@ -45,9 +45,6 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.hadoop.hive.common.type.HiveIntervalDayTime;
-import org.apache.hadoop.hive.common.type.HiveIntervalYearMonth;
-
 import org.apache.spark.sql.service.cli.Type;
 import org.apache.spark.sql.service.cli.TableSchema;
 

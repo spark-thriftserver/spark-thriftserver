@@ -33,8 +33,8 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.spark.sql.jdbc.Utils.JdbcConnectionParams;
 
-class ZooKeeperHiveClientHelper {
-  static final Logger LOG = LoggerFactory.getLogger(ZooKeeperHiveClientHelper.class.getName());
+class ZooKeeperSparkClientHelper {
+  static final Logger LOG = LoggerFactory.getLogger(ZooKeeperSparkClientHelper.class.getName());
   // Pattern for key1=value1;key2=value2
   private static final Pattern kvPattern = Pattern.compile("([^=;]*)=([^;]*)[;]?");
   /**
@@ -47,7 +47,7 @@ class ZooKeeperHiveClientHelper {
   }
 
   static void configureConnParams(JdbcConnectionParams connParams)
-      throws ZooKeeperHiveClientException {
+      throws ZooKeeperSparkClientException {
     String zooKeeperEnsemble = connParams.getZooKeeperEnsemble();
     String zooKeeperNamespace =
         connParams.getSessionVars().get(JdbcConnectionParams.ZOOKEEPER_NAMESPACE);
@@ -66,7 +66,7 @@ class ZooKeeperHiveClientHelper {
       // Remove the znodes we've already tried from this list
       serverHosts.removeAll(connParams.getRejectedHostZnodePaths());
       if (serverHosts.isEmpty()) {
-        throw new ZooKeeperHiveClientException(
+        throw new ZooKeeperSparkClientException(
             "Tried all existing SparkServer2 uris from ZooKeeper.");
       }
       // Now pick a server node randomly
@@ -85,7 +85,7 @@ class ZooKeeperHiveClientHelper {
       if ((dataStr != null) && (!matcher.find())) {
         String[] split = dataStr.split(":");
         if (split.length != 2) {
-          throw new ZooKeeperHiveClientException("Unable to read SparkServer2 uri from ZooKeeper: "
+          throw new ZooKeeperSparkClientException("Unable to read SparkServer2 uri from ZooKeeper: "
               + dataStr);
         }
         connParams.setHost(split[0]);
@@ -94,7 +94,7 @@ class ZooKeeperHiveClientHelper {
         applyConfs(dataStr, connParams);
       }
     } catch (Exception e) {
-      throw new ZooKeeperHiveClientException(
+      throw new ZooKeeperSparkClientException(
           "Unable to read SparkServer2 configs from ZooKeeper", e);
     } finally {
       // Close the client connection with ZooKeeper
