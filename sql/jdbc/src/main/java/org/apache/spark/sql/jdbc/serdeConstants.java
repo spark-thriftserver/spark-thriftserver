@@ -21,7 +21,6 @@ package org.apache.spark.sql.jdbc;
 import java.util.HashSet;
 import java.util.Set;
 
-@SuppressWarnings({"cast", "rawtypes", "serial", "unchecked"})
 public class serdeConstants {
 
   public static final String SERIALIZATION_LIB = "serialization.lib";
@@ -103,6 +102,7 @@ public class serdeConstants {
   public static final String COLUMN_NAME_DELIMITER = "column.name.delimiter";
 
   public static final Set<String> PrimitiveTypes = new HashSet<String>();
+
   static {
     PrimitiveTypes.add("void");
     PrimitiveTypes.add("boolean");
