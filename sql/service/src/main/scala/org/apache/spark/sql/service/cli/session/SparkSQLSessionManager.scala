@@ -17,11 +17,8 @@
 
 package org.apache.spark.sql.service.cli.session
 
-import scala.collection.JavaConverters._
-
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SQLContext
-import org.apache.spark.sql.hive.HiveUtils
 import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.service.ReflectionUtils._
 import org.apache.spark.sql.service.SparkThriftServer2
@@ -69,7 +66,6 @@ private[service] class SparkSQLSessionManager(
       logWarning("No single session")
       sqlContext.newSession()
     }
-    ctx.setConf(HiveUtils.FAKE_HIVE_VERSION.key, HiveUtils.builtinHiveVersion)
     setConfMap(ctx, session.getVariables)
     setConfMap(ctx, session.getOverriddenConf)
     if (sessionConf != null && sessionConf.containsKey("use:database")) {

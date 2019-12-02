@@ -28,12 +28,16 @@ import org.apache.spark.sql.internal.SQLConf.buildConf
 
 object ServiceConf {
 
+  val THRIFTSERVER_ASYNC = buildConf("spark.sql.thriftServer.async")
+    .doc("When set to true, Spark Thrift server executes SQL queries in an asynchronous way.")
+    .booleanConf
+    .createWithDefault(true)
+
   val THRIFTSERVER_TRANSPORT_MODE = buildConf("spark.sql.thriftserver.transport.mode")
     .internal()
     .doc("Transport mode of SparkServer2: 1. binary  2. http")
     .stringConf
     .createWithDefault("binary")
-
 
   val THRIFTSERVER_THRIFT_BIND_HOST = buildConf("spark.sql.thriftserver.thrift.bind.host")
     .internal()

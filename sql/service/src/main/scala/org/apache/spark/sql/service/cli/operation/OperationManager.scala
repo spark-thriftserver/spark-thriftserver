@@ -28,7 +28,6 @@ import org.apache.log4j.Logger
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SQLContext
-import org.apache.spark.sql.hive.HiveUtils
 import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.service.AbstractService
 import org.apache.spark.sql.service.cli._
@@ -81,7 +80,7 @@ class OperationManager
       require(sqlContext != null, s"Session handle: ${parentSession.getSessionHandle} " +
         s"has not been initialized or had already closed.")
       val conf = sqlContext.sessionState.conf
-      val runInBackground = async && conf.getConf(HiveUtils.HIVE_THRIFT_SERVER_ASYNC)
+      val runInBackground = async && conf.getConf(ServiceConf.THRIFTSERVER_ASYNC)
       val operation = new SparkExecuteStatementOperation(parentSession, statement, confOverlay,
         runInBackground)(sqlContext, sessionToActivePool)
       handleToOperation.put(operation.getHandle, operation)
