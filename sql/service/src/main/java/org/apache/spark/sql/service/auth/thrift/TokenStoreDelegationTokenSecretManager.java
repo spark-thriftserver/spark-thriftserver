@@ -23,7 +23,7 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.delegation.AbstractDelegationTokenSecretManager;
 import org.apache.hadoop.security.token.delegation.DelegationKey;
-import org.apache.hadoop.security.token.delegation.HiveDelegationTokenSupport;
+import org.apache.hadoop.security.token.delegation.SparkDelegationTokenSupport;
 import org.apache.hadoop.util.Daemon;
 import org.apache.hadoop.util.StringUtils;
 import org.slf4j.Logger;
@@ -253,7 +253,7 @@ public class TokenStoreDelegationTokenSecretManager extends DelegationTokenSecre
   protected void rollMasterKeyExt() throws IOException {
     Map<Integer, DelegationKey> keys = reloadKeys();
     int currentKeyId = super.currentId;
-    HiveDelegationTokenSupport.rollMasterKey(org.apache.spark.sql.service.auth.thrift.TokenStoreDelegationTokenSecretManager.this);
+    SparkDelegationTokenSupport.rollMasterKey(org.apache.spark.sql.service.auth.thrift.TokenStoreDelegationTokenSecretManager.this);
     List<DelegationKey> keysAfterRoll = Arrays.asList(getAllKeys());
     for (DelegationKey key : keysAfterRoll) {
       keys.remove(key.getKeyId());
