@@ -541,7 +541,7 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
     )
   }
 
-  test("Checks Hive version via SET -v") {
+  ignore("Checks Hive version via SET -v") {
     withJdbcStatement() { statement =>
       val resultSet = statement.executeQuery("SET -v")
 
@@ -558,7 +558,7 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
     }
   }
 
-  test("Checks Hive version via SET") {
+  ignore("Checks Hive version via SET") {
     withJdbcStatement() { statement =>
       val resultSet = statement.executeQuery("SET")
 
