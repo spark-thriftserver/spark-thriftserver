@@ -59,8 +59,8 @@ class SparkMetadataOperationSuite extends SparkThriftJdbcTest {
 
     withJdbcStatement("table1", "table2", "view1") { statement =>
       Seq(
-        "CREATE TABLE table1(key INT, val STRING)",
-        "CREATE TABLE table2(key INT, val STRING)",
+        "CREATE TABLE table1(key INT, val STRING) USING parquet",
+        "CREATE TABLE table2(key INT, val STRING) USING parquet",
         "CREATE VIEW view1 AS SELECT * FROM table2",
         "CREATE OR REPLACE GLOBAL TEMPORARY VIEW view_global_temp_1 AS SELECT 1 AS col1",
         "CREATE OR REPLACE TEMPORARY VIEW view_temp_1 AS SELECT 1 as col1"
@@ -114,8 +114,9 @@ class SparkMetadataOperationSuite extends SparkThriftJdbcTest {
 
     withJdbcStatement("table1", "table2", "view1") { statement =>
       Seq(
-        "CREATE TABLE table1(key INT comment 'Int column', val STRING comment 'String column')",
-        "CREATE TABLE table2(key INT, val DECIMAL comment 'Decimal column')",
+        "CREATE TABLE table1(key INT comment 'Int column', val STRING comment 'String column') " +
+          "USING parquet",
+        "CREATE TABLE table2(key INT, val DECIMAL comment 'Decimal column') USING parquet",
         "CREATE VIEW view1 AS SELECT key FROM table1",
         "CREATE OR REPLACE GLOBAL TEMPORARY VIEW view_global_temp_1 AS SELECT 2 AS col2",
         "CREATE OR REPLACE TEMPORARY VIEW view_temp_1 AS SELECT 2 as col2"
