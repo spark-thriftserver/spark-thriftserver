@@ -635,7 +635,7 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
     }
   }
 
-  test("SPARK-23547 Cleanup the .pipeout file when the Hive Session closed") {
+  ignore("SPARK-23547 Cleanup the .pipeout file when the Hive Session closed") {
     def pipeoutFileList(sessionID: UUID): Array[File] = {
       lScratchDir.listFiles(new FilenameFilter {
         override def accept(dir: File, name: String): Boolean = {
