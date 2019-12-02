@@ -31,10 +31,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.spark.sql.service.cli.RowSet;
 import org.apache.spark.sql.service.cli.RowSetFactory;
 import org.apache.spark.sql.service.cli.TableSchema;
+import org.apache.spark.sql.service.cli.type.SparkDecimal;
 import org.apache.spark.sql.service.rpc.thrift.TCLIService;
 import org.apache.spark.sql.service.rpc.thrift.TCLIServiceConstants;
 import org.apache.spark.sql.service.rpc.thrift.TCloseOperationReq;
@@ -232,9 +232,9 @@ public class SparkQueryResultSet extends SparkBaseResultSet {
         case DECIMAL_TYPE:
           TTypeQualifierValue prec = tq.getQualifiers().get(TCLIServiceConstants.PRECISION);
           TTypeQualifierValue scale = tq.getQualifiers().get(TCLIServiceConstants.SCALE);
-          ret = new JdbcColumnAttributes(prec == null ? HiveDecimal.USER_DEFAULT_PRECISION :
+          ret = new JdbcColumnAttributes(prec == null ? SparkDecimal.USER_DEFAULT_PRECISION :
               prec.getI32Value(),
-              scale == null ? HiveDecimal.USER_DEFAULT_SCALE : scale.getI32Value());
+              scale == null ? SparkDecimal.USER_DEFAULT_SCALE : scale.getI32Value());
           break;
         default:
           break;

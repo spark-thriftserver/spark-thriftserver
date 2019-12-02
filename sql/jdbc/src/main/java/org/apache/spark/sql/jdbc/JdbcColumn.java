@@ -24,7 +24,6 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
 
-import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.spark.sql.service.cli.Type;
 
 /**

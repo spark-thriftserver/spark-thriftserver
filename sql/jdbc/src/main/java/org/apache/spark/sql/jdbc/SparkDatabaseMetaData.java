@@ -28,7 +28,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.jar.Attributes;
 
-import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.spark.sql.service.cli.GetInfoType;
 import org.apache.spark.sql.service.rpc.thrift.TCLIService;
 import org.apache.spark.sql.service.rpc.thrift.TGetCatalogsReq;

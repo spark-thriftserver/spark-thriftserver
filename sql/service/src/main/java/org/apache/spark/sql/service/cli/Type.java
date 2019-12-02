@@ -21,6 +21,7 @@ package org.apache.spark.sql.service.cli;
 import java.sql.DatabaseMetaData;
 import java.util.Locale;
 
+import org.apache.spark.sql.service.cli.type.SparkDecimal;
 import org.apache.spark.sql.service.rpc.thrift.TTypeId;
 
 /**
@@ -89,7 +90,6 @@ public enum Type {
   private final boolean isCollection;
   private Integer scala = 0;
   private Integer precision = 0;
-  private Integer MAX_PRECISION = 38;
 
   Type(String name, int javaSQLType, TTypeId tType, boolean isQualified,
        boolean isComplex, boolean isCollection) {
@@ -181,7 +181,7 @@ public enum Type {
       case DOUBLE_TYPE:
         return 15;
       case DECIMAL_TYPE:
-        return MAX_PRECISION;
+        return SparkDecimal.MAX_PRECISION;
       default:
         return null;
     }
