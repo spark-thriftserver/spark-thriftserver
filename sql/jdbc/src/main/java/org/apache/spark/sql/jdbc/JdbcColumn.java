@@ -156,10 +156,6 @@ public class JdbcColumn {
     // TODO: this would be better handled in an enum
     if ("string".equalsIgnoreCase(type)) {
       return serdeConstants.STRING_TYPE_NAME;
-    } else if ("varchar".equalsIgnoreCase(type)) {
-      return serdeConstants.VARCHAR_TYPE_NAME;
-    } else if ("char".equalsIgnoreCase(type)) {
-      return serdeConstants.CHAR_TYPE_NAME;
     } else if ("float".equalsIgnoreCase(type)) {
       return serdeConstants.FLOAT_TYPE_NAME;
     } else if ("double".equalsIgnoreCase(type)) {
@@ -178,10 +174,6 @@ public class JdbcColumn {
       return serdeConstants.TIMESTAMP_TYPE_NAME;
     } else if ("date".equalsIgnoreCase(type)) {
       return serdeConstants.DATE_TYPE_NAME;
-    } else if ("interval_year_month".equalsIgnoreCase(type)) {
-      return serdeConstants.INTERVAL_YEAR_MONTH_TYPE_NAME;
-    } else if ("interval_day_time".equalsIgnoreCase(type)) {
-      return serdeConstants.INTERVAL_DAY_TIME_TYPE_NAME;
     } else if ("decimal".equalsIgnoreCase(type)) {
       return serdeConstants.DECIMAL_TYPE_NAME;
     } else if ("binary".equalsIgnoreCase(type)) {
