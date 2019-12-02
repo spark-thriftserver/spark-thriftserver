@@ -35,7 +35,7 @@ object ServiceConf {
     .createWithDefault("binary")
 
 
-  val THRIFTSERVER_BIND_HOST = buildConf("spark.sql.thriftserver.bind.host")
+  val THRIFTSERVER_THRIFT_BIND_HOST = buildConf("spark.sql.thriftserver.thrift.bind.host")
     .internal()
     .doc("Bind host on which to run the SparkServer2 Thrift service.")
     .stringConf

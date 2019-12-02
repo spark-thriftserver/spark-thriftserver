@@ -30,7 +30,6 @@ import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.AbstractService;
 import org.apache.spark.sql.service.ServiceException;
 import org.apache.spark.sql.service.ServiceUtils;
-import org.apache.spark.sql.service.SparkSQLEnv;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.auth.TSetIpAddressProcessor;
 import org.apache.spark.sql.service.cli.*;
@@ -135,9 +134,9 @@ public abstract class ThriftCLIService extends AbstractService
     this.sqlConf = sqlConf;
     // Initialize common server configs needed in both binary & http modes
     String portString;
-    sparkHost = System.getenv("HIVE_SERVER2_THRIFT_BIND_HOST");
+    sparkHost = System.getenv("SPARK_THRIFTSERVER_THRIFT_BIND_HOST");
     if (sparkHost == null) {
-      sparkHost = sqlConf.getConf(ServiceConf.THRIFTSERVER_BIND_HOST());
+      sparkHost = sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_BIND_HOST());
     }
     try {
       if (sparkHost != null && !sparkHost.isEmpty()) {
@@ -148,8 +147,8 @@ public abstract class ThriftCLIService extends AbstractService
     } catch (UnknownHostException e) {
       throw new ServiceException(e);
     }
-    // HTTP mode
     if (SparkServer2.isHTTPTransportMode(sqlConf)) {
+      // HTTP mode
       workerKeepAliveTime = (long) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_WORKER_KEEPALIVE_TIME());
       portString = System.getenv("SPARK_THRIFTSERVER_THRIFT_HTTP_PORT");
       if (portString != null) {
@@ -157,15 +156,14 @@ public abstract class ThriftCLIService extends AbstractService
       } else {
         portNum = (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_HTTP_PORT());
       }
-    }
-    // Binary mode
-    else {
+    } else {
+      // Binary mode
       workerKeepAliveTime =(long) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_WORKER_KEEPALIVE_TIME());
       portString = System.getenv("SPARK_THRIFTSERVER_THRIFT_PORT");
       if (portString != null) {
         portNum = Integer.valueOf(portString);
       } else {
-        portNum = (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_HTTP_PORT());
+        portNum = (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_PORT());
       }
     }
     minWorkerThreads = (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_MIN_WORKER_THREADS());

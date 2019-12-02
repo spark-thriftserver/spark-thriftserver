@@ -36,11 +36,12 @@ import org.apache.hadoop.hive.conf.HiveConf.ConfVars
 import org.apache.thrift.protocol.TBinaryProtocol
 import org.apache.thrift.transport.TSocket
 import org.scalatest.BeforeAndAfterAll
-
 import org.apache.spark.{SparkException, SparkFunSuite}
+
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.hive.HiveUtils
 import org.apache.spark.sql.hive.test.HiveTestJars
+import org.apache.spark.sql.internal.StaticSQLConf
 import org.apache.spark.sql.internal.StaticSQLConf.HIVE_THRIFT_SERVER_SINGLESESSION
 import org.apache.spark.sql.service.SparkThriftServer2
 import org.apache.spark.sql.service.auth.PlainSaslHelper
@@ -1035,12 +1036,11 @@ abstract class SparkThriftServer2Test extends SparkFunSuite with BeforeAndAfterA
 
     s"""$startScript
        |  --master local
-       |  --hiveconf ${ConfVars.METASTORECONNECTURLKEY}=$metastoreJdbcUri
-       |  --hiveconf ${ConfVars.METASTOREWAREHOUSE}=$warehousePath
-       |  --conf ${ServiceConf.THRIFTSERVER_BIND_HOST.key}=localhost
+       |  --driver-java-options=-Dderby.system.home=$metastoreJdbcUri
+       |  --conf ${StaticSQLConf.WAREHOUSE_PATH}=$warehousePath
+       |  --conf ${ServiceConf.THRIFTSERVER_THRIFT_BIND_HOST.key}=localhost
        |  --conf ${ServiceConf.THRIFTSERVER_TRANSPORT_MODE.key}=$mode
        |  --conf ${ServiceConf.THRIFTSERVER_LOGGING_OPERATION_LOG_LOCATION.key}=$operationLogPath
-       |  --hiveconf ${ConfVars.LOCALSCRATCHDIR}=$lScratchDir
        |  --conf $portConf=$port
        |  --driver-class-path $driverClassPath
        |  --driver-java-options -Dlog4j.debug

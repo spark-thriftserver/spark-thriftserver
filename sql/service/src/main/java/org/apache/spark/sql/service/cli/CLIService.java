@@ -391,7 +391,7 @@ public class CLIService extends CompositeService implements ICLIService {
     /**
      * If this is a background operation run asynchronously,
      * we block for a configured duration, before we return
-     * (duration: HIVE_SERVER2_LONG_POLLING_TIMEOUT).
+     * (duration: SPARK_THRIFTSERVER_LONG_POLLING_TIMEOUT).
      * However, if the background operation is complete, we return immediately.
      */
     if (operation.shouldRunAsync()) {

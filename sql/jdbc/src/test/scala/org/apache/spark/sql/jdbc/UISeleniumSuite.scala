@@ -27,6 +27,7 @@ import org.scalatest.concurrent.Eventually._
 import org.scalatest.time.SpanSugar._
 import org.scalatestplus.selenium.WebBrowser
 
+import org.apache.spark.sql.internal.StaticSQLConf
 import org.apache.spark.sql.service.SparkThriftServer2
 import org.apache.spark.sql.service.internal.ServiceConf
 import org.apache.spark.ui.SparkUICssErrorHandler
@@ -66,10 +67,9 @@ class UISeleniumSuite
 
     s"""$startScript
         |  --master local
-        |  --hiveconf hive.root.logger=INFO,console
-        |  --hiveconf ${ConfVars.METASTORECONNECTURLKEY}=$metastoreJdbcUri
-        |  --hiveconf ${ConfVars.METASTOREWAREHOUSE}=$warehousePath
-        |  --conf ${ServiceConf.THRIFTSERVER_BIND_HOST.key}=localhost
+        |  --driver-java-options=-Dderby.system.home=$metastoreJdbcUri
+        |  --conf ${StaticSQLConf.WAREHOUSE_PATH.key}=$warehousePath
+        |  --conf ${ServiceConf.THRIFTSERVER_THRIFT_BIND_HOST.key}=localhost
         |  --conf ${ServiceConf.THRIFTSERVER_TRANSPORT_MODE.key}=$mode
         |  --conf $portConf=$port
         |  --driver-class-path ${sys.props("java.class.path")}

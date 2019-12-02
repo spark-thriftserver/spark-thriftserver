@@ -91,7 +91,7 @@ public class SparkServer2 extends CompositeService {
   }
 
   public static boolean isHTTPTransportMode(SQLConf sqlConf) {
-    String transportMode = System.getenv("HIVE_SERVER2_TRANSPORT_MODE");
+    String transportMode = System.getenv("SPARK_THRIFTSERVER_TRANSPORT_MODE");
     if (transportMode == null) {
       transportMode = sqlConf.getConf(ServiceConf.THRIFTSERVER_TRANSPORT_MODE());
     }
