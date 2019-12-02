@@ -32,12 +32,11 @@ import scala.io.Source
 import scala.util.{Random, Try}
 
 import com.google.common.io.Files
-import org.apache.hadoop.hive.conf.HiveConf.ConfVars
 import org.apache.thrift.protocol.TBinaryProtocol
 import org.apache.thrift.transport.TSocket
 import org.scalatest.BeforeAndAfterAll
-import org.apache.spark.{SparkException, SparkFunSuite}
 
+import org.apache.spark.{SparkException, SparkFunSuite}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.hive.HiveUtils
 import org.apache.spark.sql.hive.test.HiveTestJars

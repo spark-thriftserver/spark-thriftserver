@@ -19,7 +19,6 @@ package org.apache.spark.sql.jdbc
 
 import scala.util.Random
 
-import org.apache.hadoop.hive.conf.HiveConf.ConfVars
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.htmlunit.HtmlUnitDriver
 import org.scalatest.{BeforeAndAfterAll, Matchers}
