@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.jar.Attributes;
 
+import org.apache.spark.sql.catalyst.catalog.CatalogTableType;
 import org.apache.spark.sql.service.cli.GetInfoType;
 import org.apache.spark.sql.service.rpc.thrift.TCLIService;
 import org.apache.spark.sql.service.rpc.thrift.TGetCatalogsReq;
@@ -723,14 +724,12 @@ public class SparkDatabaseMetaData implements DatabaseMetaData {
   public static String toJdbcTableType(String hivetabletype) {
     if (hivetabletype==null) {
       return null;
-    } else if (hivetabletype.equals(TableType.MANAGED_TABLE.toString())) {
+    } else if (hivetabletype.equals(CatalogTableType.MANAGED().name())) {
       return "TABLE";
-    } else if (hivetabletype.equals(TableType.VIRTUAL_VIEW.toString())) {
+    } else if (hivetabletype.equals(CatalogTableType.VIEW().name())) {
       return "VIEW";
-    } else if (hivetabletype.equals(TableType.EXTERNAL_TABLE.toString())) {
+    } else if (hivetabletype.equals(CatalogTableType.EXTERNAL().name())) {
       return "EXTERNAL TABLE";
-    // } else if (hivetabletype.equals(TableType.MATERIALIZED_VIEW.toString())) {
-    //   return "MATERIALIZED VIEW";
     } else {
       return hivetabletype;
     }
