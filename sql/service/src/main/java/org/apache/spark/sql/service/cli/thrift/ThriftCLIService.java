@@ -134,7 +134,7 @@ public abstract class ThriftCLIService extends AbstractService
     this.sqlConf = sqlConf;
     // Initialize common server configs needed in both binary & http modes
     String portString;
-    sparkHost = System.getenv("SPARK_THRIFTSERVER_THRIFT_BIND_HOST");
+    sparkHost = System.getenv("THRIFTSERVER_THRIFT_BIND_HOST");
     if (sparkHost == null) {
       sparkHost = sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_BIND_HOST());
     }
@@ -150,7 +150,7 @@ public abstract class ThriftCLIService extends AbstractService
     if (SparkServer2.isHTTPTransportMode(sqlConf)) {
       // HTTP mode
       workerKeepAliveTime = (long) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_WORKER_KEEPALIVE_TIME());
-      portString = System.getenv("SPARK_THRIFTSERVER_THRIFT_HTTP_PORT");
+      portString = System.getenv("THRIFTSERVER_THRIFT_HTTP_PORT");
       if (portString != null) {
         portNum = Integer.valueOf(portString);
       } else {
@@ -159,7 +159,7 @@ public abstract class ThriftCLIService extends AbstractService
     } else {
       // Binary mode
       workerKeepAliveTime =(long) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_WORKER_KEEPALIVE_TIME());
-      portString = System.getenv("SPARK_THRIFTSERVER_THRIFT_PORT");
+      portString = System.getenv("THRIFTSERVER_THRIFT_PORT");
       if (portString != null) {
         portNum = Integer.valueOf(portString);
       } else {
