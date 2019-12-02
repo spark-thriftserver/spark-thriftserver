@@ -81,8 +81,8 @@ public class ThriftBinaryCLIService extends ThriftCLIService {
 
       // Server args
       int maxMessageSize = (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_MAX_MESSAGE_SIZE());
-      int requestTimeout = (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_LOGIN_TIMEOUT());
-      int beBackoffSlotLength = (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_LOGIN_BEBACKOFF_SLOT_LENGTH());
+      int requestTimeout = new Long((long) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_LOGIN_TIMEOUT())).intValue();
+      int beBackoffSlotLength = new Long(((long) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_LOGIN_BEBACKOFF_SLOT_LENGTH()))).intValue();
       TThreadPoolServer.Args sargs = new TThreadPoolServer.Args(serverSocket)
           .processorFactory(processorFactory).transportFactory(transportFactory)
           .protocolFactory(new TBinaryProtocol.Factory())

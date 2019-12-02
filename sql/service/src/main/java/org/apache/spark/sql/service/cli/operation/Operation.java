@@ -76,7 +76,7 @@ public abstract class Operation {
     this.runAsync = runInBackground;
     this.opHandle = new OperationHandle(opType, parentSession.getProtocolVersion());
     lastAccessTime = System.currentTimeMillis();
-    operationTimeout = (long ) parentSession.getSQLConf().getConf(ServiceConf.THRIFTSERVER_IDLE_OPERATION_TIMEOUT());
+    operationTimeout = (long) parentSession.getSQLConf().getConf(ServiceConf.THRIFTSERVER_IDLE_OPERATION_TIMEOUT());
   }
 
   public Future<?> getBackgroundHandle() {

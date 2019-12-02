@@ -117,7 +117,7 @@ public class ThriftHttpCLIService extends ThriftCLIService {
       connector.setPort(portNum);
       // Linux:yes, Windows:no
       connector.setReuseAddress(!Shell.WINDOWS);
-      int maxIdleTime = (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_MAX_IDLE_TIME());
+      int maxIdleTime = new Long(((long) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_MAX_IDLE_TIME()))).intValue();
       connector.setIdleTimeout(maxIdleTime);
 
       httpServer.addConnector(connector);

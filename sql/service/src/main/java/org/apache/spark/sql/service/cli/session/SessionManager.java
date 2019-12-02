@@ -89,7 +89,7 @@ public class SessionManager extends CompositeService {
   private void createBackgroundOperationPool() {
     int poolSize = (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_THREADS());
     LOG.info("SparkServer2: Background operation thread pool size: " + poolSize);
-    int poolQueueSize = (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_WAIT_QUEUE_SIZE());
+    int poolQueueSize = new Long(((long)  sqlConf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_WAIT_QUEUE_SIZE()))).intValue();
     LOG.info("SparkServer2: Background operation thread wait queue size: " + poolQueueSize);
     long keepAliveTime = (long) sqlConf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_KEEPALIVE_TIME());
     LOG.info(

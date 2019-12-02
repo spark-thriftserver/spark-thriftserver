@@ -99,7 +99,7 @@ public class ThriftHttpServlet extends TServlet {
       String secret = Long.toString(RAN.nextLong());
       LOG.debug("Using the random number as the secret for cookie generation " + secret);
       this.signer = new CookieSigner(secret.getBytes());
-      this.cookieMaxAge = (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_MAX_AGE());
+      this.cookieMaxAge = new Long(((long) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_MAX_AGE()))).intValue();
       this.cookieDomain = sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_DOMAIN());
       this.cookiePath = sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_PATH());
       this.isCookieSecure = (boolean) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_IS_SECURE());

@@ -160,7 +160,7 @@ public abstract class ThriftCLIService extends AbstractService
     }
     // Binary mode
     else {
-      workerKeepAliveTime =(long) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_WORKER_KEEPALIVE_TIME());
+      workerKeepAliveTime =(long) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_WORKER_KEEPALIVE_TIME());
       portString = System.getenv("SPARK_THRIFTSERVER_THRIFT_PORT");
       if (portString != null) {
         portNum = Integer.valueOf(portString);
