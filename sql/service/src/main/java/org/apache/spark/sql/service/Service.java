@@ -18,7 +18,7 @@
 
 package org.apache.spark.sql.service;
 
-import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.spark.sql.internal.SQLConf;
 
 /**
  * Service.
@@ -52,7 +52,7 @@ public interface Service {
    * @param conf
    *          the configuration of the service
    */
-  void init(HiveConf conf);
+  void init(SQLConf conf);
 
 
   /**
@@ -102,7 +102,7 @@ public interface Service {
    * @return the current configuration, unless a specific implementation chooses
    *         otherwise.
    */
-  HiveConf getHiveConf();
+  SQLConf getSqlConf();
 
   /**
    * Get the current service state

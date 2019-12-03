@@ -18,7 +18,7 @@
 
 package org.apache.spark.sql.service;
 
-import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.spark.sql.internal.SQLConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +61,7 @@ public final class ServiceOperations {
    * @throws IllegalStateException if the service is in the wrong state
    */
 
-  public static void init(Service service, HiveConf configuration) {
+  public static void init(Service service, SQLConf configuration) {
     Service.STATE state = service.getServiceState();
     ensureCurrentState(state, Service.STATE.NOTINITED);
     service.init(configuration);
@@ -95,7 +95,7 @@ public final class ServiceOperations {
    * @throws RuntimeException on a state change failure
    * @throws IllegalStateException if the service is in the wrong state
    */
-  public static void deploy(Service service, HiveConf configuration) {
+  public static void deploy(Service service, SQLConf configuration) {
     init(service, configuration);
     start(service);
   }

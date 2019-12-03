@@ -18,19 +18,12 @@
 
 package org.apache.spark.sql.service.cli.thrift;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
-import org.apache.hadoop.hive.shims.ShimLoader;
+import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.auth.SparkAuthUtils;
+import org.apache.spark.sql.service.auth.shims.ShimLoader;
 import org.apache.spark.sql.service.cli.CLIService;
+import org.apache.spark.sql.service.internal.ServiceConf;
 import org.apache.spark.sql.service.server.ThreadFactoryWithGarbageCleanup;
 import org.apache.thrift.TProcessorFactory;
 import org.apache.thrift.protocol.TBinaryProtocol;
@@ -38,11 +31,18 @@ import org.apache.thrift.server.TThreadPoolServer;
 import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TTransportFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 
 public class ThriftBinaryCLIService extends ThriftCLIService {
 
-  public ThriftBinaryCLIService(CLIService cliService) {
-    super(cliService, ThriftBinaryCLIService.class.getSimpleName());
+  public ThriftBinaryCLIService(CLIService cliService, SQLContext sqlContext) {
+    super(cliService, sqlContext, ThriftBinaryCLIService.class.getSimpleName());
   }
 
   @Override
@@ -55,35 +55,41 @@ public class ThriftBinaryCLIService extends ThriftCLIService {
           new ThreadFactoryWithGarbageCleanup(threadPoolName));
 
       // Thrift configs
-      sparkAuthFactory = new SparkAuthFactory(hiveConf);
+      sparkAuthFactory = new SparkAuthFactory(sqlContext);
       TTransportFactory transportFactory = sparkAuthFactory.getAuthTransFactory();
       TProcessorFactory processorFactory = sparkAuthFactory.getAuthProcFactory(this);
       TServerSocket serverSocket = null;
       List<String> sslVersionBlacklist = new ArrayList<String>();
-      for (String sslVersion : hiveConf.getVar(ConfVars.HIVE_SSL_PROTOCOL_BLACKLIST).split(",")) {
+      for (String sslVersion : sqlConf.getConf(ServiceConf.THRIFTSERVER_SSL_PROTOCOL_BLACKLIST())
+          .split(",")) {
         sslVersionBlacklist.add(sslVersion);
       }
-      if (!hiveConf.getBoolVar(ConfVars.HIVE_SERVER2_USE_SSL)) {
-        serverSocket = SparkAuthUtils.getServerSocket(hiveHost, portNum);
+      if (!((boolean) sqlConf.getConf(ServiceConf.THRIFTSERVER_USE_SSL()))) {
+        serverSocket = SparkAuthUtils.getServerSocket(sparkHost, portNum);
       } else {
-        String keyStorePath = hiveConf.getVar(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH).trim();
+        String keyStorePath = sqlConf.getConf(ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PATH()).trim();
         if (keyStorePath.isEmpty()) {
-          throw new IllegalArgumentException(ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PATH.varname
+          throw new IllegalArgumentException(ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PATH().key()
               + " Not configured for SSL connection");
         }
-        String keyStorePassword = ShimLoader.getHadoopShims().getPassword(hiveConf,
-            HiveConf.ConfVars.HIVE_SERVER2_SSL_KEYSTORE_PASSWORD.varname);
-        serverSocket = SparkAuthUtils.getServerSSLSocket(hiveHost, portNum, keyStorePath,
+        org.apache.hadoop.conf.Configuration hadoopConf =
+            sqlContext.sparkContext().hadoopConfiguration();
+        String keyStorePassword = ShimLoader.getHadoopShims().getPassword(hadoopConf,
+            ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PASSWORD().key()
+                .substring("spark.hadoop.".length()));
+        serverSocket = SparkAuthUtils.getServerSSLSocket(sparkHost, portNum, keyStorePath,
             keyStorePassword, sslVersionBlacklist);
       }
 
       // Server args
       int maxMessageSize =
-          hiveConf.getIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_MAX_MESSAGE_SIZE);
-      int requestTimeout = (int) hiveConf.getTimeVar(
-          HiveConf.ConfVars.HIVE_SERVER2_THRIFT_LOGIN_TIMEOUT, TimeUnit.SECONDS);
-      int beBackoffSlotLength = (int) hiveConf.getTimeVar(
-          HiveConf.ConfVars.HIVE_SERVER2_THRIFT_LOGIN_BEBACKOFF_SLOT_LENGTH, TimeUnit.MILLISECONDS);
+          (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_MAX_MESSAGE_SIZE());
+      int requestTimeout =
+          new Long((long) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_LOGIN_TIMEOUT()))
+              .intValue();
+      int beBackoffSlotLength =
+          new Long(((long) sqlConf.getConf(
+              ServiceConf.THRIFTSERVER_THRIFT_LOGIN_BEBACKOFF_SLOT_LENGTH()))).intValue();
       TThreadPoolServer.Args sargs = new TThreadPoolServer.Args(serverSocket)
           .processorFactory(processorFactory).transportFactory(transportFactory)
           .protocolFactory(new TBinaryProtocol.Factory())

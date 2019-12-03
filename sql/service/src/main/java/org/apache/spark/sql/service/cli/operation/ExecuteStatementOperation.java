@@ -19,7 +19,6 @@ package org.apache.spark.sql.service.cli.operation;
 
 import java.util.Map;
 
-import org.apache.hadoop.hive.ql.session.OperationLog;
 import org.apache.spark.sql.service.cli.OperationType;
 import org.apache.spark.sql.service.cli.session.ServiceSession;
 

@@ -17,13 +17,12 @@
 
 package org.apache.spark.sql.service
 
-import java.io.PrintStream
-import java.nio.charset.StandardCharsets.UTF_8
+import java.util.Locale
 
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{SparkSession, SQLContext}
-import org.apache.spark.sql.hive.{HiveExternalCatalog, HiveUtils}
+import org.apache.spark.sql.internal.StaticSQLConf.CATALOG_IMPLEMENTATION
 import org.apache.spark.util.Utils
 
 /** A singleton object for the master program. The slaves should not access this. */
@@ -40,13 +39,23 @@ private[service] object SparkSQLEnv extends Logging {
       // the default appName [SparkSQLCLIDriver] in cli or beeline.
       val maybeAppName = sparkConf
         .getOption("spark.app.name")
-        .filterNot(_ == classOf[SparkSQLCLIDriver].getName)
         .filterNot(_ == classOf[SparkThriftServer2].getName)
 
       sparkConf
         .setAppName(maybeAppName.getOrElse(s"SparkSQL::${Utils.localHostName()}"))
 
-      val sparkSession = SparkSession.builder.config(sparkConf).enableHiveSupport().getOrCreate()
+      val builder = SparkSession.builder().config(sparkConf)
+      val sparkSession = if (sparkConf.get(CATALOG_IMPLEMENTATION.key, "hive")
+        .toLowerCase(Locale.ROOT) == "hive") {
+        if (SparkSession.hiveClassesArePresent) {
+          builder.enableHiveSupport().getOrCreate()
+        } else {
+          builder.config(CATALOG_IMPLEMENTATION.key, "in-memory")
+          builder.getOrCreate()
+        }
+      } else {
+        builder.getOrCreate()
+      }
       sparkContext = sparkSession.sparkContext
       sqlContext = sparkSession.sqlContext
 
@@ -54,14 +63,12 @@ private[service] object SparkSQLEnv extends Logging {
       // instead of having it happen during the initialization of the Hive client (which may use a
       // different class loader).
       sparkSession.sessionState
-
-      val metadataHive = sparkSession
-        .sharedState.externalCatalog.unwrapped.asInstanceOf[HiveExternalCatalog].client
-      metadataHive.setOut(new PrintStream(System.out, true, UTF_8.name()))
-      metadataHive.setInfo(new PrintStream(System.err, true, UTF_8.name()))
-      metadataHive.setError(new PrintStream(System.err, true, UTF_8.name()))
-      sparkSession.conf.set(HiveUtils.FAKE_HIVE_VERSION.key, HiveUtils.builtinHiveVersion)
     }
+  }
+
+  def setSQLContext(sqlContext: SQLContext): Unit = {
+    this.sqlContext = sqlContext
+    this.sparkContext = sqlContext.sparkContext
   }
 
   /** Cleans up and shuts down the Spark SQL environments. */

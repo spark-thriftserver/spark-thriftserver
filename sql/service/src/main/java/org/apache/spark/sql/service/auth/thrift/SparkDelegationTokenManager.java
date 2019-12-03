@@ -17,55 +17,54 @@
  */
 
 
-package org.apache.spark.sql.service.auth;
+package org.apache.spark.sql.service.auth.thrift;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.authorize.ProxyUsers;
+import org.apache.hadoop.security.token.Token;
+import org.apache.hadoop.util.ReflectionUtils;
+import org.apache.spark.sql.service.auth.thrift.HadoopThriftAuthBridge.Server.ServerMode;
+import org.apache.spark.sql.service.utils.Utils;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.shims.Utils;
-import org.apache.hadoop.hive.thrift.*;
-import org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge.Server.ServerMode;
-import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.security.authorize.ProxyUsers;
-import org.apache.hadoop.security.token.Token;
-import org.apache.hadoop.util.ReflectionUtils;
-
 public class SparkDelegationTokenManager {
 
   public static final String  DELEGATION_TOKEN_GC_INTERVAL =
-          "hive.cluster.delegation.token.gc-interval";
+          "spark.cluster.delegation.token.gc-interval";
   private static long DELEGATION_TOKEN_GC_INTERVAL_DEFAULT = 3600000; // 1 hour
   // Delegation token related keys
   public static final String  DELEGATION_KEY_UPDATE_INTERVAL_KEY =
-          "hive.cluster.delegation.key.update-interval";
+          "spark.cluster.delegation.key.update-interval";
   public static final long    DELEGATION_KEY_UPDATE_INTERVAL_DEFAULT =
           24*60*60*1000; // 1 day
   public static final String  DELEGATION_TOKEN_RENEW_INTERVAL_KEY =
-          "hive.cluster.delegation.token.renew-interval";
+          "spark.cluster.delegation.token.renew-interval";
   public static final long    DELEGATION_TOKEN_RENEW_INTERVAL_DEFAULT =
           24*60*60*1000;  // 1 day
   public static final String  DELEGATION_TOKEN_MAX_LIFETIME_KEY =
-          "hive.cluster.delegation.token.max-lifetime";
+          "spark.cluster.delegation.token.max-lifetime";
   public static final long    DELEGATION_TOKEN_MAX_LIFETIME_DEFAULT =
           7*24*60*60*1000; // 7 days
   public static final String DELEGATION_TOKEN_STORE_CLS =
-          "hive.cluster.delegation.token.store.class";
+          "spark.cluster.delegation.token.store.class";
   public static final String DELEGATION_TOKEN_STORE_ZK_CONNECT_STR =
-          "hive.cluster.delegation.token.store.zookeeper.connectString";
+          "spark.cluster.delegation.token.store.zookeeper.connectString";
   // Alternate connect string specification configuration
   public static final String DELEGATION_TOKEN_STORE_ZK_CONNECT_STR_ALTERNATE =
-          "hive.zookeeper.quorum";
+          "spark.zookeeper.quorum";
 
   public static final String DELEGATION_TOKEN_STORE_ZK_CONNECT_TIMEOUTMILLIS =
-          "hive.cluster.delegation.token.store.zookeeper.connectTimeoutMillis";
+          "spark.cluster.delegation.token.store.zookeeper.connectTimeoutMillis";
   public static final String DELEGATION_TOKEN_STORE_ZK_ZNODE =
-          "hive.cluster.delegation.token.store.zookeeper.znode";
+          "spark.cluster.delegation.token.store.zookeeper.znode";
   public static final String DELEGATION_TOKEN_STORE_ZK_ACL =
-          "hive.cluster.delegation.token.store.zookeeper.acl";
+          "spark.cluster.delegation.token.store.zookeeper.acl";
   public static final String DELEGATION_TOKEN_STORE_ZK_ZNODE_DEFAULT =
           "/hivedelegation";
 
@@ -78,7 +77,7 @@ public class SparkDelegationTokenManager {
     return secretManager;
   }
 
-  public void startDelegationTokenSecretManager(Configuration conf, Object hms, ServerMode smode)
+  public void startDelegationTokenSecretManager(Configuration conf, ServerMode smode)
           throws IOException {
     long secretKeyInterval =
             conf.getLong(DELEGATION_KEY_UPDATE_INTERVAL_KEY,
@@ -95,7 +94,7 @@ public class SparkDelegationTokenManager {
 
     DelegationTokenStore dts = getTokenStore(conf);
     dts.setConf(conf);
-    dts.init(hms, smode);
+    dts.init(null, smode);
     secretManager =
             new TokenStoreDelegationTokenSecretManager(secretKeyInterval, tokenMaxLifetime,
                     tokenRenewInterval, tokenGcInterval, dts);

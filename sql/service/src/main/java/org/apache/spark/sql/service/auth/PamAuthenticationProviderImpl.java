@@ -20,15 +20,16 @@ package org.apache.spark.sql.service.auth;
 import javax.security.sasl.AuthenticationException;
 
 import net.sf.jpam.Pam;
-import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.spark.sql.internal.SQLConf;
+import org.apache.spark.sql.service.internal.ServiceConf;
 
 public class PamAuthenticationProviderImpl implements PasswdAuthenticationProvider {
 
   private final String pamServiceNames;
 
   PamAuthenticationProviderImpl() {
-    HiveConf conf = new HiveConf();
-    pamServiceNames = conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_PAM_SERVICES);
+    SQLConf conf = SQLConf.get();
+    pamServiceNames = conf.getConf(ServiceConf.THRIFTSERVER_PAM_SERVICES());
   }
 
   @Override

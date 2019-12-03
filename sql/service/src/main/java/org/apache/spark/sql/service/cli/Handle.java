@@ -19,9 +19,6 @@ package org.apache.spark.sql.service.cli;
 
 import org.apache.spark.sql.service.rpc.thrift.THandleIdentifier;
 
-
-
-
 public abstract class Handle {
 
   private final HandleIdentifier handleId;

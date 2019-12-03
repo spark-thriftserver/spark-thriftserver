@@ -23,7 +23,6 @@ import java.util.UUID;
 import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
 import org.apache.spark.sql.service.rpc.thrift.TSessionHandle;
 
-
 /**
  * SessionHandle.
  *

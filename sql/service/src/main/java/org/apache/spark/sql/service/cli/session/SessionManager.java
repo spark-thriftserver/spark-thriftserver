@@ -30,11 +30,12 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
+import org.apache.spark.sql.SQLContext;
+import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.CompositeService;
 import org.apache.spark.sql.service.cli.ServiceSQLException;
 import org.apache.spark.sql.service.cli.SessionHandle;
+import org.apache.spark.sql.service.internal.ServiceConf;
 import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
 import org.apache.spark.sql.service.server.SparkServer2;
 import org.apache.spark.sql.service.server.ThreadFactoryWithGarbageCleanup;
@@ -50,7 +51,8 @@ public class SessionManager extends CompositeService {
 
   private static final Logger LOG = LoggerFactory.getLogger(SessionManager.class);
   public static final String HIVERCFILE = ".hiverc";
-  private HiveConf hiveConf;
+  private SQLConf sqlConf;
+  private SQLContext sqlContext;
   private final Map<SessionHandle, ServiceSession> handleToSession =
       new ConcurrentHashMap<SessionHandle, ServiceSession>();
   private final OperationManager operationManager = new OperationManager();
@@ -66,30 +68,32 @@ public class SessionManager extends CompositeService {
   // The SparkServer2 instance running this service
   private final SparkServer2 sparkServer2;
 
-  public SessionManager(SparkServer2 sparkServer2) {
+  public SessionManager(SparkServer2 sparkServer2, SQLContext sqlContext) {
     super(SessionManager.class.getSimpleName());
     this.sparkServer2 = sparkServer2;
+    this.sqlContext = sqlContext;
   }
 
   @Override
-  public synchronized void init(HiveConf hiveConf) {
-    this.hiveConf = hiveConf;
+  public synchronized void init(SQLConf sqlConf) {
+    this.sqlConf = sqlConf;
     //Create operation log root directory, if operation logging is enabled
-    if (hiveConf.getBoolVar(ConfVars.HIVE_SERVER2_LOGGING_OPERATION_ENABLED)) {
+    if (((boolean) sqlConf.getConf(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_ENABLE()))) {
       initOperationLogRootDir();
     }
     createBackgroundOperationPool();
     addService(operationManager);
-    super.init(hiveConf);
+    super.init(sqlConf);
   }
 
   private void createBackgroundOperationPool() {
-    int poolSize = hiveConf.getIntVar(ConfVars.HIVE_SERVER2_ASYNC_EXEC_THREADS);
+    int poolSize = (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_THREADS());
     LOG.info("SparkServer2: Background operation thread pool size: " + poolSize);
-    int poolQueueSize = hiveConf.getIntVar(ConfVars.HIVE_SERVER2_ASYNC_EXEC_WAIT_QUEUE_SIZE);
+    int poolQueueSize =
+        (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_WAIT_QUEUE_SIZE());
     LOG.info("SparkServer2: Background operation thread wait queue size: " + poolQueueSize);
-    long keepAliveTime = HiveConf.getTimeVar(
-        hiveConf, ConfVars.HIVE_SERVER2_ASYNC_EXEC_KEEPALIVE_TIME, TimeUnit.SECONDS);
+    long keepAliveTime =
+       (long) sqlConf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_KEEPALIVE_TIME());
     LOG.info(
         "SparkServer2: Background operation thread keepalive time: " + keepAliveTime + " seconds");
 
@@ -102,17 +106,15 @@ public class SessionManager extends CompositeService {
         new ThreadFactoryWithGarbageCleanup(threadPoolName));
     backgroundOperationPool.allowCoreThreadTimeOut(true);
 
-    checkInterval = HiveConf.getTimeVar(
-        hiveConf, ConfVars.HIVE_SERVER2_SESSION_CHECK_INTERVAL, TimeUnit.MILLISECONDS);
-    sessionTimeout = HiveConf.getTimeVar(
-        hiveConf, ConfVars.HIVE_SERVER2_IDLE_SESSION_TIMEOUT, TimeUnit.MILLISECONDS);
-    checkOperation = HiveConf.getBoolVar(hiveConf,
-        ConfVars.HIVE_SERVER2_IDLE_SESSION_CHECK_OPERATION);
+    checkInterval = (long) sqlConf.getConf(ServiceConf.THRIFTSERVER_SESSION_CHECK_INTERVAL());
+    sessionTimeout = (long) sqlConf.getConf(ServiceConf.THRIFTSERVER_IDLE_SESSION_TIMEOUT());
+    checkOperation =
+        (boolean) sqlConf.getConf(ServiceConf.THRIFTSERVER_IDLE_SESSION_CHECK_OPERATION());
   }
 
   private void initOperationLogRootDir() {
     operationLogRootDir = new File(
-        hiveConf.getVar(ConfVars.HIVE_SERVER2_LOGGING_OPERATION_LOG_LOCATION));
+        sqlConf.getConf(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_LOG_LOCATION()));
     isOperationLogEnabled = true;
 
     if (operationLogRootDir.exists() && !operationLogRootDir.isDirectory()) {
@@ -190,12 +192,11 @@ public class SessionManager extends CompositeService {
     shutdown = true;
     if (backgroundOperationPool != null) {
       backgroundOperationPool.shutdown();
-      long timeout = hiveConf.getTimeVar(
-          ConfVars.HIVE_SERVER2_ASYNC_EXEC_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS);
+      long timeout = (long) sqlConf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_SHUTDOWN_TIMEOUT());
       try {
         backgroundOperationPool.awaitTermination(timeout, TimeUnit.SECONDS);
       } catch (InterruptedException e) {
-        LOG.warn("HIVE_SERVER2_ASYNC_EXEC_SHUTDOWN_TIMEOUT = " + timeout +
+        LOG.warn("THRIFTSERVER_ASYNC_EXEC_SHUTDOWN_TIMEOUT = " + timeout +
             " seconds has been exceeded. RUNNING background operations will be shut down", e);
       }
       backgroundOperationPool = null;
@@ -246,11 +247,11 @@ public class SessionManager extends CompositeService {
     // Within the proxy object, we wrap the method call in a UserGroupInformation#doAs
     if (withImpersonation) {
       ServiceSessionImplwithUGI sessionWithUGI = new ServiceSessionImplwithUGI(protocol, username,
-          password, hiveConf, ipAddress, delegationToken);
+          password, sqlContext, ipAddress, delegationToken);
       session = ServiceSessionProxy.getProxy(sessionWithUGI, sessionWithUGI.getSessionUgi());
       sessionWithUGI.setProxySession(session);
     } else {
-      session = new ServiceSessionImpl(protocol, username, password, hiveConf, ipAddress);
+      session = new ServiceSessionImpl(protocol, username, password, sqlContext, ipAddress);
     }
     session.setSessionManager(this);
     session.setOperationManager(operationManager);

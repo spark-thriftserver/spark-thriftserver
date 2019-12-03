@@ -18,13 +18,13 @@
 
 package org.apache.spark.sql.service.cli.session;
 
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.ql.session.SessionState;
+import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.cli.SessionHandle;
 import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
 import org.apache.spark.sql.service.cli.operation.OperationManager;
 
 import java.io.File;
+import java.util.Map;
 
 /**
  * Methods that don't need to be executed under a doAs
@@ -74,9 +74,11 @@ public interface ServiceSessionBase {
 
   String getPassword();
 
-  HiveConf getHiveConf();
+  SQLConf getSQLConf();
 
-  SessionState getSessionState();
+  Map<String, String> getVariables();
+
+  Map<String, String> getOverriddenConf();
 
   String getUserName();
 

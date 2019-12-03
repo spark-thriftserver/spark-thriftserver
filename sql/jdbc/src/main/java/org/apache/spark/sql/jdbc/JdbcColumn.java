@@ -24,9 +24,6 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
 
-import org.apache.hadoop.hive.common.type.HiveIntervalDayTime;
-import org.apache.hadoop.hive.common.type.HiveIntervalYearMonth;
-import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.spark.sql.service.cli.Type;
 
 /**
@@ -98,16 +95,8 @@ public class JdbcColumn {
       case Types.BINARY:
         return byte[].class.getName();
       case Types.OTHER:
-      case Types.JAVA_OBJECT: {
-        switch (hiveType) {
-          case INTERVAL_YEAR_MONTH_TYPE:
-            return HiveIntervalYearMonth.class.getName();
-          case INTERVAL_DAY_TIME_TYPE:
-            return HiveIntervalDayTime.class.getName();
-          default:
-            return String.class.getName();
-        }
-      }
+      case Types.JAVA_OBJECT:
+        return String.class.getName();
       case Types.ARRAY:
       case Types.STRUCT:
         return String.class.getName();
@@ -119,10 +108,6 @@ public class JdbcColumn {
   static Type typeStringToHiveType(String type) throws SQLException {
     if ("string".equalsIgnoreCase(type)) {
       return Type.STRING_TYPE;
-    } else if ("varchar".equalsIgnoreCase(type)) {
-      return Type.VARCHAR_TYPE;
-    } else if ("char".equalsIgnoreCase(type)) {
-      return Type.CHAR_TYPE;
     } else if ("float".equalsIgnoreCase(type)) {
       return Type.FLOAT_TYPE;
     } else if ("double".equalsIgnoreCase(type)) {
@@ -141,10 +126,6 @@ public class JdbcColumn {
       return Type.DATE_TYPE;
     } else if ("timestamp".equalsIgnoreCase(type)) {
       return Type.TIMESTAMP_TYPE;
-    } else if ("interval_year_month".equalsIgnoreCase(type)) {
-      return Type.INTERVAL_YEAR_MONTH_TYPE;
-    } else if ("interval_day_time".equalsIgnoreCase(type)) {
-      return Type.INTERVAL_DAY_TIME_TYPE;
     } else if ("decimal".equalsIgnoreCase(type)) {
       return Type.DECIMAL_TYPE;
     } else if ("binary".equalsIgnoreCase(type)) {
@@ -170,51 +151,7 @@ public class JdbcColumn {
   }
 
   static String getColumnTypeName(String type) throws SQLException {
-    // we need to convert the Hive type to the SQL type name
-    // TODO: this would be better handled in an enum
-    if ("string".equalsIgnoreCase(type)) {
-      return serdeConstants.STRING_TYPE_NAME;
-    } else if ("varchar".equalsIgnoreCase(type)) {
-      return serdeConstants.VARCHAR_TYPE_NAME;
-    } else if ("char".equalsIgnoreCase(type)) {
-      return serdeConstants.CHAR_TYPE_NAME;
-    } else if ("float".equalsIgnoreCase(type)) {
-      return serdeConstants.FLOAT_TYPE_NAME;
-    } else if ("double".equalsIgnoreCase(type)) {
-      return serdeConstants.DOUBLE_TYPE_NAME;
-    } else if ("boolean".equalsIgnoreCase(type)) {
-      return serdeConstants.BOOLEAN_TYPE_NAME;
-    } else if ("tinyint".equalsIgnoreCase(type)) {
-      return serdeConstants.TINYINT_TYPE_NAME;
-    } else if ("smallint".equalsIgnoreCase(type)) {
-      return serdeConstants.SMALLINT_TYPE_NAME;
-    } else if ("int".equalsIgnoreCase(type)) {
-      return serdeConstants.INT_TYPE_NAME;
-    } else if ("bigint".equalsIgnoreCase(type)) {
-      return serdeConstants.BIGINT_TYPE_NAME;
-    } else if ("timestamp".equalsIgnoreCase(type)) {
-      return serdeConstants.TIMESTAMP_TYPE_NAME;
-    } else if ("date".equalsIgnoreCase(type)) {
-      return serdeConstants.DATE_TYPE_NAME;
-    } else if ("interval_year_month".equalsIgnoreCase(type)) {
-      return serdeConstants.INTERVAL_YEAR_MONTH_TYPE_NAME;
-    } else if ("interval_day_time".equalsIgnoreCase(type)) {
-      return serdeConstants.INTERVAL_DAY_TIME_TYPE_NAME;
-    } else if ("decimal".equalsIgnoreCase(type)) {
-      return serdeConstants.DECIMAL_TYPE_NAME;
-    } else if ("binary".equalsIgnoreCase(type)) {
-      return serdeConstants.BINARY_TYPE_NAME;
-    } else if ("void".equalsIgnoreCase(type) || "null".equalsIgnoreCase(type)) {
-      return serdeConstants.VOID_TYPE_NAME;
-    } else if (type.equalsIgnoreCase("map")) {
-      return serdeConstants.MAP_TYPE_NAME;
-    } else if (type.equalsIgnoreCase("array")) {
-      return serdeConstants.LIST_TYPE_NAME;
-    } else if (type.equalsIgnoreCase("struct")) {
-      return serdeConstants.STRUCT_TYPE_NAME;
-    }
-
-    throw new SQLException("Unrecognized column type: " + type);
+    return Type.getType(type).getName();
   }
 
   static int columnDisplaySize(Type hiveType, JdbcColumnAttributes columnAttributes)
@@ -296,18 +233,8 @@ public class JdbcColumn {
     case Types.DECIMAL:
       return columnAttributes.precision;
     case Types.OTHER:
-    case Types.JAVA_OBJECT: {
-      switch (hiveType) {
-        case INTERVAL_YEAR_MONTH_TYPE:
-          // -yyyyyyy-mm  : should be more than enough
-          return 11;
-        case INTERVAL_DAY_TIME_TYPE:
-          // -ddddddddd hh:mm:ss.nnnnnnnnn
-          return 29;
-        default:
-          return Integer.MAX_VALUE;
-      }
-    }
+    case Types.JAVA_OBJECT:
+      return Integer.MAX_VALUE;
     case Types.ARRAY:
     case Types.STRUCT:
       return Integer.MAX_VALUE;

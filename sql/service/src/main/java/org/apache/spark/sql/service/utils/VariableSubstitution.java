@@ -18,9 +18,8 @@
 
 package org.apache.spark.sql.service.utils;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.conf.SystemVariables;
+import org.apache.spark.sql.internal.SQLConf;
+import org.apache.spark.sql.service.internal.ServiceConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,11 +44,11 @@ public class VariableSubstitution extends SystemVariables {
    * @return
    */
   @Override
-  protected String getSubstitute(Configuration conf, String var) {
+  protected String getSubstitute(SQLConf conf, String var) {
     String val = super.getSubstitute(conf, var);
     if (val == null && hiveVariableSource != null) {
-      if (var.startsWith(HIVEVAR_PREFIX)) {
-        val = hiveVariableSource.get(var.substring(HIVEVAR_PREFIX.length()));
+      if (var.startsWith(SPARKVAR_PREFIX)) {
+        val = hiveVariableSource.get(var.substring(SPARKVAR_PREFIX.length()));
       } else {
         val = hiveVariableSource.get(var);
       }
@@ -57,16 +56,16 @@ public class VariableSubstitution extends SystemVariables {
     return val;
   }
 
-  public String substitute(HiveConf conf, String expr) {
+  public String substitute(SQLConf conf, String expr) {
     if (expr == null) {
       return expr;
     }
-    if (HiveConf.getBoolVar(conf, HiveConf.ConfVars.HIVEVARIABLESUBSTITUTE)) {
+    if ((boolean) conf.getConf(ServiceConf.THRIFTSERVER_VARIABLE_SUBSTITUTE())) {
       l4j.debug("Substitution is on: " + expr);
     } else {
       return expr;
     }
-    int depth = HiveConf.getIntVar(conf, HiveConf.ConfVars.HIVEVARIABLESUBSTITUTEDEPTH);
+    int depth = (int) conf.getConf(ServiceConf.THRIFTSERVER_VARIABLE_SUBSTITUTE_DEPTH());
     return substitute(conf, expr, depth);
   }
 }

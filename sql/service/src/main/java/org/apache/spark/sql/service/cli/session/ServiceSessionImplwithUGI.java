@@ -21,11 +21,8 @@ package org.apache.spark.sql.service.cli.session;
 import java.io.IOException;
 
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.ql.metadata.Hive;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.shims.Utils;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.cli.ServiceSQLException;
 import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
@@ -38,28 +35,17 @@ import org.slf4j.LoggerFactory;
  * ServiceSession with connecting user's UGI and delegation token if required
  */
 public class ServiceSessionImplwithUGI extends ServiceSessionImpl {
-  public static final String HS2TOKEN = "SparkServer2ImpersonationToken";
 
   private UserGroupInformation sessionUgi = null;
   private String delegationTokenStr = null;
-  private Hive sessionHive = null;
   private ServiceSession proxySession = null;
   static final Logger LOG = LoggerFactory.getLogger(ServiceSessionImplwithUGI.class);
 
   public ServiceSessionImplwithUGI(TProtocolVersion protocol, String username, String password,
-                                   HiveConf hiveConf, String ipAddress, String delegationToken)
+                                   SQLContext sqlContext, String ipAddress, String delegationToken)
       throws ServiceSQLException {
-    super(protocol, username, password, hiveConf, ipAddress);
+    super(protocol, username, password, sqlContext, ipAddress);
     setSessionUGI(username);
-    setDelegationToken(delegationToken);
-
-    // create a new metastore connection for this particular user session
-    Hive.set(null);
-    try {
-      sessionHive = Hive.get(getHiveConf());
-    } catch (HiveException e) {
-      throw new ServiceSQLException("Failed to setup metastore connection", e);
-    }
   }
 
   // setup appropriate UGI for the session
@@ -90,10 +76,6 @@ public class ServiceSessionImplwithUGI extends ServiceSessionImpl {
   @Override
   protected synchronized void acquire(boolean userAccess) {
     super.acquire(userAccess);
-    // if we have a metastore connection with impersonation, then set it first
-    if (sessionHive != null) {
-      Hive.set(sessionHive);
-    }
   }
 
   /**
@@ -104,7 +86,6 @@ public class ServiceSessionImplwithUGI extends ServiceSessionImpl {
   public void close() throws ServiceSQLException {
     try {
       acquire(true);
-      cancelDelegationToken();
     } finally {
       try {
         super.close();
@@ -116,38 +97,6 @@ public class ServiceSessionImplwithUGI extends ServiceSessionImpl {
               + sessionUgi, ioe);
         }
       }
-    }
-  }
-
-  /**
-   * Enable delegation token for the session
-   * save the token string and set the token.signature in hive conf. The metastore client uses
-   * this token.signature to determine where to use kerberos or delegation token
-   * @throws HiveException
-   * @throws IOException
-   */
-  private void setDelegationToken(String delegationTokenStr) throws ServiceSQLException {
-    this.delegationTokenStr = delegationTokenStr;
-    if (delegationTokenStr != null) {
-      getHiveConf().set("hive.metastore.token.signature", HS2TOKEN);
-      try {
-        Utils.setTokenStr(sessionUgi, delegationTokenStr, HS2TOKEN);
-      } catch (IOException e) {
-        throw new ServiceSQLException("Couldn't setup delegation token in the ugi", e);
-      }
-    }
-  }
-
-  // If the session has a delegation token obtained from the metastore, then cancel it
-  private void cancelDelegationToken() throws ServiceSQLException {
-    if (delegationTokenStr != null) {
-      try {
-        Hive.get(getHiveConf()).cancelDelegationToken(delegationTokenStr);
-      } catch (HiveException e) {
-        throw new ServiceSQLException("Couldn't cancel delegation token", e);
-      }
-      // close the metastore connection created with this delegation token
-      Hive.closeCurrent();
     }
   }
 

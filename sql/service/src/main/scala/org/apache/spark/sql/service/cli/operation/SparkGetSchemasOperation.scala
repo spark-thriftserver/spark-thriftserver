@@ -21,7 +21,6 @@ import java.util.UUID
 import java.util.regex.Pattern
 
 import org.apache.commons.lang3.exception.ExceptionUtils
-import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveOperationType
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SQLContext
@@ -70,10 +69,6 @@ private[service] class SparkGetSchemasOperation(
     // Always use the latest class loader provided by executionHive's state.
     val executionHiveClassLoader = sqlContext.sharedState.jarClassLoader
     Thread.currentThread().setContextClassLoader(executionHiveClassLoader)
-
-    if (isAuthV2Enabled) {
-      authorizeMetaGets(HiveOperationType.GET_TABLES, null, cmdStr)
-    }
 
     SparkThriftServer2.listener.onStatementStart(
       statementId,

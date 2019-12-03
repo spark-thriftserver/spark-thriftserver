@@ -135,7 +135,7 @@ public class SparkConnection implements java.sql.Connection {
     setupLoginTimeout();
     try {
       connParams = Utils.parseURL(uri, info);
-    } catch (ZooKeeperHiveClientException e) {
+    } catch (ZooKeeperSparkClientException e) {
       throw new SQLException(e);
     }
     jdbcUriString = connParams.getJdbcUriString();
@@ -622,8 +622,8 @@ public class SparkConnection implements java.sql.Connection {
         jdbcConnConf.get(JdbcConnectionParams.AUTH_TYPE))) {
       // check delegation token in job conf if any
       try {
-        tokenStr = org.apache.hadoop.hive.shims.Utils
-            .getTokenStrForm(SparkAuthFactory.HS2_CLIENT_TOKEN);
+        tokenStr = org.apache.spark.sql.service.utils.Utils
+            .getTokenStrForm(SparkAuthFactory.SS2_CLIENT_TOKEN);
       } catch (IOException e) {
         throw new SQLException("Error reading token ", e);
       }
@@ -637,23 +637,23 @@ public class SparkConnection implements java.sql.Connection {
     Map<String, String> openConf = new HashMap<String, String>();
     // for remote JDBC client, try to set the conf var using 'set foo=bar'
     for (Entry<String, String> hiveConf : connParams.getHiveConfs().entrySet()) {
-      openConf.put("set:hiveconf:" + hiveConf.getKey(), hiveConf.getValue());
+      openConf.put("set:sparkconf:" + hiveConf.getKey(), hiveConf.getValue());
     }
-    // For remote JDBC client, try to set the hive var using 'set hivevar:key=value'
+    // For remote JDBC client, try to set the hive var using 'set sparkvar:key=value'
     for (Entry<String, String> hiveVar : connParams.getHiveVars().entrySet()) {
-      openConf.put("set:hivevar:" + hiveVar.getKey(), hiveVar.getValue());
+      openConf.put("set:sparkvar:" + hiveVar.getKey(), hiveVar.getValue());
     }
     // switch the database
     openConf.put("use:database", connParams.getDbName());
     // set the fetchSize
-    // openConf.put("set:hiveconf:hive.server2.thrift.resultset.default.fetch.size",
+    // openConf.put("set:sparkconf:spark.sql.thriftserver.thrift.resultset.default.fetch.size",
     //  Integer.toString(fetchSize));
 
     // set the session configuration
     Map<String, String> sessVars = connParams.getSessionVars();
-    if (sessVars.containsKey(SparkAuthFactory.HS2_PROXY_USER)) {
-      openConf.put(SparkAuthFactory.HS2_PROXY_USER,
-          sessVars.get(SparkAuthFactory.HS2_PROXY_USER));
+    if (sessVars.containsKey(SparkAuthFactory.SS2_PROXY_USER)) {
+      openConf.put(SparkAuthFactory.SS2_PROXY_USER,
+          sessVars.get(SparkAuthFactory.SS2_PROXY_USER));
     }
     openReq.setConfiguration(openConf);
 
@@ -676,7 +676,8 @@ public class SparkConnection implements java.sql.Connection {
 
       // Update fetchSize if modified by server
       // String serverFetchSize =
-      //   openResp.getConfiguration().get("hive.server2.thrift.resultset.default.fetch.size");
+      //   openResp.getConfiguration()
+      //       .get("spark.sql.thriftserver.thrift.resultset.default.fetch.size");
       // if (serverFetchSize != null) {
       //   fetchSize = Integer.parseInt(serverFetchSize);
       // }

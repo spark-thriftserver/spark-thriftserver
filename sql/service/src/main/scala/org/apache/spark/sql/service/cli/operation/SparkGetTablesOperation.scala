@@ -23,12 +23,10 @@ import java.util.regex.Pattern
 import scala.collection.JavaConverters._
 
 import org.apache.commons.lang3.exception.ExceptionUtils
-import org.apache.hadoop.hive.ql.security.authorization.plugin.{HiveOperationType, HivePrivilegeObjectUtils}
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.catalyst.catalog.CatalogTableType._
-import org.apache.spark.sql.hive.HiveUtils
 import org.apache.spark.sql.service.SparkThriftServer2
 import org.apache.spark.sql.service.cli._
 import org.apache.spark.sql.service.cli.session.ServiceSession
@@ -56,41 +54,27 @@ private[service] class SparkGetTablesOperation(
 
   private var statementId: String = _
 
-  if (HiveUtils.isHive23) {
-    RESULT_SET_SCHEMA = new TableSchema()
-      .addStringColumn("TABLE_CAT",
-        "Catalog name. NULL if not applicable.")
-      .addStringColumn("TABLE_SCHEM",
-        "Schema name.")
-      .addStringColumn("TABLE_NAME",
-        "Table name.")
-      .addStringColumn("TABLE_TYPE",
-        "The table type, e.g. \"TABLE\", \"VIEW\", etc.")
-      .addStringColumn("REMARKS",
-        "Comments about the table.")
-      .addStringColumn("TYPE_CAT",
-        "The types catalog.")
-      .addStringColumn("TYPE_SCHEM",
-        "The types schema.")
-      .addStringColumn("TYPE_NAME",
-        "Type name.")
-      .addStringColumn("SELF_REFERENCING_COL_NAME",
-        "Name of the designated \"identifier\" column of a typed table.")
-      .addStringColumn("REF_GENERATION",
-        "Specifies how values in SELF_REFERENCING_COL_NAME are created.")
-  } else {
-    RESULT_SET_SCHEMA = new TableSchema()
-      .addStringColumn("TABLE_CAT",
-        "Catalog name. NULL if not applicable.")
-      .addStringColumn("TABLE_SCHEM",
-        "Schema name.")
-      .addStringColumn("TABLE_NAME",
-        "Table name.")
-      .addStringColumn("TABLE_TYPE",
-        "The table type, e.g. \"TABLE\", \"VIEW\", etc.")
-      .addStringColumn("REMARKS",
-        "Comments about the table.")
-  }
+  RESULT_SET_SCHEMA = new TableSchema()
+    .addStringColumn("TABLE_CAT",
+      "Catalog name. NULL if not applicable.")
+    .addStringColumn("TABLE_SCHEM",
+      "Schema name.")
+    .addStringColumn("TABLE_NAME",
+      "Table name.")
+    .addStringColumn("TABLE_TYPE",
+      "The table type, e.g. \"TABLE\", \"VIEW\", etc.")
+    .addStringColumn("REMARKS",
+      "Comments about the table.")
+    .addStringColumn("TYPE_CAT",
+      "The types catalog.")
+    .addStringColumn("TYPE_SCHEM",
+      "The types schema.")
+    .addStringColumn("TYPE_NAME",
+      "Type name.")
+    .addStringColumn("SELF_REFERENCING_COL_NAME",
+      "Name of the designated \"identifier\" column of a typed table.")
+    .addStringColumn("REF_GENERATION",
+      "Specifies how values in SELF_REFERENCING_COL_NAME are created.")
 
   private val rowSet: RowSet = RowSetFactory.create(RESULT_SET_SCHEMA, getProtocolVersion, false)
 
@@ -115,12 +99,6 @@ private[service] class SparkGetTablesOperation(
     val schemaPattern = convertSchemaPattern(schemaName)
     val tablePattern = convertIdentifierPattern(tableName, true)
     val matchingDbs = catalog.listDatabases(schemaPattern)
-
-    if (isAuthV2Enabled) {
-      val privObjs =
-        HivePrivilegeObjectUtils.getHivePrivDbObjects(seqAsJavaListConverter(matchingDbs).asJava)
-      authorizeMetaGets(HiveOperationType.GET_TABLES, privObjs, cmdStr)
-    }
 
     SparkThriftServer2.listener.onStatementStart(
       statementId,
@@ -185,12 +163,7 @@ private[service] class SparkGetTablesOperation(
       tableName,
       tableType,
       comment.getOrElse(""))
-    // Since HIVE-7575(Hive 2.0.0), adds 5 additional columns to the ResultSet of GetTables.
-    if (HiveUtils.isHive23) {
-      rowSet.addRow(rowData ++ Array(null, null, null, null, null))
-    } else {
-      rowSet.addRow(rowData)
-    }
+    rowSet.addRow(rowData ++ Array(null, null, null, null, null))
   }
 
   override def getResultSetSchema: TableSchema = {

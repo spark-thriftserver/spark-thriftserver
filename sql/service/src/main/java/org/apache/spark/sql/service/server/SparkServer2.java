@@ -20,11 +20,14 @@ package org.apache.spark.sql.service.server;
 
 import java.util.Properties;
 
+import org.apache.spark.sql.SQLContext;
+import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.CompositeService;
 import org.apache.spark.sql.service.cli.CLIService;
 import org.apache.spark.sql.service.cli.thrift.ThriftBinaryCLIService;
 import org.apache.spark.sql.service.cli.thrift.ThriftCLIService;
 import org.apache.spark.sql.service.cli.thrift.ThriftHttpCLIService;
+import org.apache.spark.sql.service.internal.ServiceConf;
 import scala.runtime.AbstractFunction0;
 import scala.runtime.BoxedUnit;
 
@@ -34,9 +37,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.hadoop.hive.common.LogUtils;
-import org.apache.hadoop.hive.common.LogUtils.LogInitializationException;
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,23 +51,24 @@ public class SparkServer2 extends CompositeService {
 
   private CLIService cliService;
   private ThriftCLIService thriftCLIService;
+  private SQLContext sqlContext;
 
-  public SparkServer2() {
+  public SparkServer2(SQLContext sqlContext) {
     super(SparkServer2.class.getSimpleName());
-    HiveConf.setLoadHiveServer2Config(true);
+    this.sqlContext = sqlContext;
   }
 
   @Override
-  public synchronized void init(HiveConf hiveConf) {
-    cliService = new CLIService(this);
+  public synchronized void init(SQLConf sqlConf) {
+    cliService = new CLIService(this, sqlContext);
     addService(cliService);
-    if (isHTTPTransportMode(hiveConf)) {
-      thriftCLIService = new ThriftHttpCLIService(cliService);
+    if (isHTTPTransportMode(sqlConf)) {
+      thriftCLIService = new ThriftHttpCLIService(cliService, sqlContext);
     } else {
-      thriftCLIService = new ThriftBinaryCLIService(cliService);
+      thriftCLIService = new ThriftBinaryCLIService(cliService, sqlContext);
     }
     addService(thriftCLIService);
-    super.init(hiveConf);
+    super.init(sqlConf);
 
     // Add a shutdown hook for catching SIGTERM & SIGINT
     // this must be higher than the Hadoop Filesystem priority of 10,
@@ -89,10 +90,10 @@ public class SparkServer2 extends CompositeService {
         });
   }
 
-  public static boolean isHTTPTransportMode(HiveConf hiveConf) {
-    String transportMode = System.getenv("HIVE_SERVER2_TRANSPORT_MODE");
+  public static boolean isHTTPTransportMode(SQLConf sqlConf) {
+    String transportMode = System.getenv("THRIFTSERVER_TRANSPORT_MODE");
     if (transportMode == null) {
-      transportMode = hiveConf.getVar(HiveConf.ConfVars.HIVE_SERVER2_TRANSPORT_MODE);
+      transportMode = sqlConf.getConf(ServiceConf.THRIFTSERVER_TRANSPORT_MODE());
     }
     if (transportMode != null && (transportMode.equalsIgnoreCase("http"))) {
       return true;
@@ -111,60 +112,17 @@ public class SparkServer2 extends CompositeService {
     super.stop();
   }
 
-  private static void startSparkServer2() throws Throwable {
-    long attempts = 0, maxAttempts = 1;
-    while (true) {
-      LOG.info("Starting SparkServer2");
-      HiveConf hiveConf = new HiveConf();
-      maxAttempts = hiveConf.getLongVar(HiveConf.ConfVars.HIVE_SERVER2_MAX_START_ATTEMPTS);
-      SparkServer2 server = null;
-      try {
-        server = new SparkServer2();
-        server.init(hiveConf);
-        server.start();
-        break;
-      } catch (Throwable throwable) {
-        if (server != null) {
-          try {
-            server.stop();
-          } catch (Throwable t) {
-            LOG.info("Exception caught when calling stop of SparkServer2 before retrying start", t);
-          } finally {
-            server = null;
-          }
-        }
-        if (++attempts >= maxAttempts) {
-          throw new Error("Max start attempts " + maxAttempts + " exhausted", throwable);
-        } else {
-          LOG.warn("Error starting SparkServer2 on attempt " + attempts
-              + ", will retry in 60 seconds", throwable);
-          try {
-            Thread.sleep(60L * 1000L);
-          } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-          }
-        }
-      }
-    }
-  }
-
   public static void main(String[] args) {
-    HiveConf.setLoadHiveServer2Config(true);
     try {
       ServerOptionsProcessor oproc = new ServerOptionsProcessor("sparkserver2");
       ServerOptionsProcessorResponse oprocResponse = oproc.parse(args);
-
-      // NOTE: It is critical to do this here so that log4j is reinitialized
-      // before any of the other core hive classes are loaded
-      String initLog4jMessage = LogUtils.initHiveLog4j();
-      LOG.debug(initLog4jMessage);
 
       // Log debug message from "oproc" after log4j initialize properly
       LOG.debug(oproc.getDebugMessage().toString());
 
       // Call the executor which will execute the appropriate command based on the parsed options
       oprocResponse.getServerOptionsExecutor().execute();
-    } catch (LogInitializationException e) {
+    } catch (Exception e) {
       LOG.error("Error initializing log: " + e.getMessage(), e);
       System.exit(-1);
     }
@@ -172,7 +130,7 @@ public class SparkServer2 extends CompositeService {
 
   /**
    * ServerOptionsProcessor.
-   * Process arguments given to SparkServer2 (-hiveconf property=value)
+   * Process arguments given to SparkServer2 (-sparkconf property=value)
    * Set properties in System properties
    * Create an appropriate response object,
    * which has executor to execute the appropriate command based on the parsed options.
@@ -186,12 +144,12 @@ public class SparkServer2 extends CompositeService {
     @SuppressWarnings("static-access")
     public ServerOptionsProcessor(String serverName) {
       this.serverName = serverName;
-      // -hiveconf x=y
+      // -sparkconf x=y
       options.addOption(OptionBuilder
           .withValueSeparator()
           .hasArgs(2)
           .withArgName("property=value")
-          .withLongOpt("hiveconf")
+          .withLongOpt("sparkconf")
           .withDescription("Use value for given property")
           .create());
       options.addOption(new Option("H", "help", false, "Print help information"));
@@ -200,9 +158,9 @@ public class SparkServer2 extends CompositeService {
     public ServerOptionsProcessorResponse parse(String[] argv) {
       try {
         commandLine = new GnuParser().parse(options, argv);
-        // Process --hiveconf
-        // Get hiveconf param values and set the System property values
-        Properties confProps = commandLine.getOptionProperties("hiveconf");
+        // Process --sparkconf
+        // Get sparkconf param values and set the System property values
+        Properties confProps = commandLine.getOptionProperties("sparkconf");
         for (String propKey : confProps.stringPropertyNames()) {
           // save logging message for log4j output latter after log4j initialize properly
           debugMessage.append("Setting " + propKey + "=" + confProps.getProperty(propKey) + ";\n");
@@ -277,7 +235,7 @@ public class SparkServer2 extends CompositeService {
     @Override
     public void execute() {
       try {
-        startSparkServer2();
+        LOG.error("Don't support starting SparkServer2 here");
       } catch (Throwable t) {
         LOG.error("Error starting SparkServer2", t);
         System.exit(-1);

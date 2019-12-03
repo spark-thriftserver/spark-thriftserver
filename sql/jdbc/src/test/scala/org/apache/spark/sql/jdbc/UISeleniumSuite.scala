@@ -19,7 +19,6 @@ package org.apache.spark.sql.jdbc
 
 import scala.util.Random
 
-import org.apache.hadoop.hive.conf.HiveConf.ConfVars
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.htmlunit.HtmlUnitDriver
 import org.scalatest.{BeforeAndAfterAll, Matchers}
@@ -27,7 +26,9 @@ import org.scalatest.concurrent.Eventually._
 import org.scalatest.time.SpanSugar._
 import org.scalatestplus.selenium.WebBrowser
 
+import org.apache.spark.sql.internal.StaticSQLConf
 import org.apache.spark.sql.service.SparkThriftServer2
+import org.apache.spark.sql.service.internal.ServiceConf
 import org.apache.spark.ui.SparkUICssErrorHandler
 
 class UISeleniumSuite
@@ -58,19 +59,18 @@ class UISeleniumSuite
 
   override protected def serverStartCommand(port: Int) = {
     val portConf = if (mode == ServerMode.binary) {
-      ConfVars.HIVE_SERVER2_THRIFT_PORT
+      ServiceConf.THRIFTSERVER_THRIFT_PORT.key
     } else {
-      ConfVars.HIVE_SERVER2_THRIFT_HTTP_PORT
+      ServiceConf.THRIFTSERVER_HTTP_PORT.key
     }
 
     s"""$startScript
         |  --master local
-        |  --hiveconf hive.root.logger=INFO,console
-        |  --hiveconf ${ConfVars.METASTORECONNECTURLKEY}=$metastoreJdbcUri
-        |  --hiveconf ${ConfVars.METASTOREWAREHOUSE}=$warehousePath
-        |  --hiveconf ${ConfVars.HIVE_SERVER2_THRIFT_BIND_HOST}=localhost
-        |  --hiveconf ${ConfVars.HIVE_SERVER2_TRANSPORT_MODE}=$mode
-        |  --hiveconf $portConf=$port
+        |  --driver-java-options=-Dderby.system.home=$metastoreJdbcUri
+        |  --conf ${StaticSQLConf.WAREHOUSE_PATH.key}=$warehousePath
+        |  --conf ${ServiceConf.THRIFTSERVER_THRIFT_BIND_HOST.key}=localhost
+        |  --conf ${ServiceConf.THRIFTSERVER_TRANSPORT_MODE.key}=$mode
+        |  --conf $portConf=$port
         |  --driver-class-path ${sys.props("java.class.path")}
         |  --conf spark.ui.enabled=true
         |  --conf spark.ui.port=$uiPort

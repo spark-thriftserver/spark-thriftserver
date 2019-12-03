@@ -20,7 +20,6 @@ package org.apache.spark.sql.service.cli.operation
 import java.util.UUID
 
 import org.apache.commons.lang3.exception.ExceptionUtils
-import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveOperationType
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SQLContext
@@ -69,9 +68,6 @@ private[service] class SparkGetCatalogsOperation(
       parentSession.getUsername)
 
     try {
-      if (isAuthV2Enabled) {
-        authorizeMetaGets(HiveOperationType.GET_CATALOGS, null)
-      }
       setState(OperationState.FINISHED)
     } catch {
       case e: Throwable =>

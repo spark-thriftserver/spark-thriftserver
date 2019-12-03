@@ -21,10 +21,9 @@ import java.sql.{DriverManager, Statement}
 
 import scala.util.{Random, Try}
 
-import org.apache.hadoop.hive.conf.HiveConf.ConfVars
-
 import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.service.SparkThriftServer2
+import org.apache.spark.sql.service.internal.ServiceConf
 import org.apache.spark.sql.test.SharedSparkSession
 
 class ThriftServerWithSparkContextSuite extends QueryTest with SharedSparkSession {
@@ -68,14 +67,14 @@ class ThriftServerWithSparkContextSuite extends QueryTest with SharedSparkSessio
   private def startThriftServer(port: Int, attempt: Int): Unit = {
     logInfo(s"Trying to start SparkThriftServer2: port=$port, attempt=$attempt")
     val sqlContext = spark.newSession().sqlContext
-    sqlContext.setConf(ConfVars.HIVE_SERVER2_THRIFT_PORT.varname, port.toString)
+    sqlContext.setConf(ServiceConf.THRIFTSERVER_THRIFT_PORT, port)
     sparkServer2 = SparkThriftServer2.startWithContext(sqlContext)
   }
 
   private def withJdbcStatement(fs: (Statement => Unit)*): Unit = {
     val user = System.getProperty("user.name")
 
-    val serverPort = sparkServer2.getHiveConf.get(ConfVars.HIVE_SERVER2_THRIFT_PORT.varname)
+    val serverPort = sparkServer2.getSqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_PORT)
     val connections =
       fs.map { _ => DriverManager.getConnection(s"jdbc:spark://localhost:$serverPort", user, "") }
     val statements = connections.map(_.createStatement())

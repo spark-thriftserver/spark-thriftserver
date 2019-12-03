@@ -20,9 +20,6 @@ package org.apache.spark.sql.service.cli;
 import java.util.List;
 import java.util.Map;
 
-
-
-
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 
 public interface ICLIService {

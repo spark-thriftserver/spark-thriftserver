@@ -21,7 +21,7 @@ package org.apache.spark.sql.service;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.spark.sql.internal.SQLConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +50,7 @@ public abstract class AbstractService implements Service {
   /**
    * The configuration. Will be null until the service is initialized.
    */
-  private HiveConf hiveConf;
+  private SQLConf sqlConf;
 
   /**
    * List of state change listeners; it is final to ensure
@@ -82,9 +82,9 @@ public abstract class AbstractService implements Service {
    *           this action
    */
   @Override
-  public synchronized void init(HiveConf hiveConf) {
+  public synchronized void init(SQLConf sqlConf) {
     ensureCurrentState(STATE.NOTINITED);
-    this.hiveConf = hiveConf;
+    this.sqlConf = sqlConf;
     changeState(STATE.INITED);
     LOG.info("Service:" + getName() + " is inited.");
   }
@@ -141,8 +141,8 @@ public abstract class AbstractService implements Service {
   }
 
   @Override
-  public synchronized HiveConf getHiveConf() {
-    return hiveConf;
+  public synchronized SQLConf getSqlConf() {
+    return sqlConf;
   }
 
   @Override

@@ -45,9 +45,6 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.hadoop.hive.common.type.HiveIntervalDayTime;
-import org.apache.hadoop.hive.common.type.HiveIntervalYearMonth;
-
 import org.apache.spark.sql.service.cli.Type;
 import org.apache.spark.sql.service.cli.TableSchema;
 
@@ -447,10 +444,6 @@ public abstract class SparkBaseResultSet implements ResultSet {
         return new BigDecimal((String)value);
       case DATE_TYPE:
         return Date.valueOf((String) value);
-      case INTERVAL_YEAR_MONTH_TYPE:
-        return HiveIntervalYearMonth.valueOf((String) value);
-      case INTERVAL_DAY_TIME_TYPE:
-        return HiveIntervalDayTime.valueOf((String) value);
       case ARRAY_TYPE:
       case MAP_TYPE:
       case STRUCT_TYPE:

@@ -17,10 +17,13 @@
  */
 package org.apache.spark.sql.service.auth;
 
-import javax.security.sasl.AuthenticationException;
-
-import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ReflectionUtils;
+import org.apache.spark.sql.internal.SQLConf;
+import org.apache.spark.sql.service.SparkSQLEnv;
+import org.apache.spark.sql.service.internal.ServiceConf;
+
+import javax.security.sasl.AuthenticationException;
 
 /**
  * This authentication provider implements the {@code CUSTOM} authentication. It allows a {@link
@@ -34,10 +37,12 @@ public class CustomAuthenticationProviderImpl implements PasswdAuthenticationPro
 
   @SuppressWarnings("unchecked")
   CustomAuthenticationProviderImpl() {
-    HiveConf conf = new HiveConf();
+    Configuration conf = SparkSQLEnv.sqlContext().sparkContext().hadoopConfiguration();
+    conf.set(ServiceConf.THRIFTSERVER_CUSTOM_AUTHENTICATION_CLASS().key(),
+            SQLConf.get().getConf(ServiceConf.THRIFTSERVER_CUSTOM_AUTHENTICATION_CLASS()));
     Class<? extends PasswdAuthenticationProvider> customHandlerClass =
       (Class<? extends PasswdAuthenticationProvider>) conf.getClass(
-        HiveConf.ConfVars.HIVE_SERVER2_CUSTOM_AUTHENTICATION_CLASS.varname,
+        ServiceConf.THRIFTSERVER_CUSTOM_AUTHENTICATION_CLASS().key(),
         PasswdAuthenticationProvider.class);
     customProvider = ReflectionUtils.newInstance(customHandlerClass, conf);
   }

@@ -20,15 +20,10 @@ package org.apache.spark.sql.service.cli.operation
 import java.util.UUID
 import java.util.regex.Pattern
 
-import scala.collection.JavaConverters.seqAsJavaListConverter
-
 import org.apache.commons.lang3.exception.ExceptionUtils
-import org.apache.hadoop.hive.ql.security.authorization.plugin.{HiveOperationType, HivePrivilegeObject}
-import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject.HivePrivilegeObjectType
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SQLContext
-import org.apache.spark.sql.catalyst.TableIdentifier
 import org.apache.spark.sql.catalyst.catalog.SessionCatalog
 import org.apache.spark.sql.service.SparkThriftServer2
 import org.apache.spark.sql.service.cli._
@@ -170,11 +165,6 @@ private[service] class SparkGetColumnsOperation(
       (dbName, catalog.listTables(dbName, tablePattern, includeLocalTempViews = false))
     }.toMap
 
-    if (isAuthV2Enabled) {
-      val privObjs = seqAsJavaListConverter(getPrivObjs(db2Tabs)).asJava
-      authorizeMetaGets(HiveOperationType.GET_COLUMNS, privObjs, cmdStr)
-    }
-
     try {
       // Tables and views
       db2Tabs.foreach {
@@ -257,14 +247,6 @@ private[service] class SparkGetColumnsOperation(
         rowSet.addRow(rowData)
       }
     }
-  }
-
-  private def getPrivObjs(db2Tabs: Map[String, Seq[TableIdentifier]]): Seq[HivePrivilegeObject] = {
-    db2Tabs.foldLeft(Seq.empty[HivePrivilegeObject])({
-      case (i, (dbName, tables)) => i ++ tables.map { tableId =>
-        new HivePrivilegeObject(HivePrivilegeObjectType.TABLE_OR_VIEW, dbName, tableId.table)
-      }
-    })
   }
 
   override def getResultSetSchema: TableSchema = {

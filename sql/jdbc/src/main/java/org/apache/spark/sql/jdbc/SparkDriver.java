@@ -239,7 +239,7 @@ public class SparkDriver implements Driver {
     JdbcConnectionParams params = null;
     try {
       params = Utils.parseURL(url, defaults);
-    } catch (ZooKeeperHiveClientException e) {
+    } catch (ZooKeeperSparkClientException e) {
       throw new SQLException(e);
     }
     String host = params.getHost();

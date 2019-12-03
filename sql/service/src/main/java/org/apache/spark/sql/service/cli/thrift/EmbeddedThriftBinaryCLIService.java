@@ -18,7 +18,7 @@
 
 package org.apache.spark.sql.service.cli.thrift;
 
-import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.cli.CLIService;
 import org.apache.spark.sql.service.cli.ICLIService;
 
@@ -30,21 +30,20 @@ import org.apache.spark.sql.service.cli.ICLIService;
 public class EmbeddedThriftBinaryCLIService extends ThriftBinaryCLIService {
 
   public EmbeddedThriftBinaryCLIService() {
-    super(new CLIService(null));
+    super(new CLIService(null, null), null);
     isEmbedded = true;
-    HiveConf.setLoadHiveServer2Config(true);
   }
 
   @Override
-  public synchronized void init(HiveConf hiveConf) {
+  public synchronized void init(SQLConf conf) {
     // Null HiveConf is passed in jdbc driver side code since driver side is supposed to be
     // independent of hiveConf object. Create new HiveConf object here in this case.
-    if (hiveConf == null) {
-        hiveConf = new HiveConf();
+    if (conf == null) {
+        sqlConf = SQLConf.get();
     }
-    cliService.init(hiveConf);
+    cliService.init(sqlConf);
     cliService.start();
-    super.init(hiveConf);
+    super.init(sqlConf);
   }
 
   public ICLIService getService() {

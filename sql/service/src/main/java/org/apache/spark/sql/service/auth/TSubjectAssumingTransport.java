@@ -24,7 +24,7 @@ import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import javax.security.auth.Subject;
 
-import org.apache.hadoop.hive.thrift.TFilterTransport;
+import org.apache.spark.sql.service.auth.thrift.TFilterTransport;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 

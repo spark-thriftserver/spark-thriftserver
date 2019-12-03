@@ -18,30 +18,23 @@
 
 package org.apache.spark.sql.service.auth;
 
-import java.security.AccessControlContext;
-import java.security.AccessController;
-import java.security.PrivilegedExceptionAction;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.StringTokenizer;
-
-import javax.security.auth.Subject;
-
 import org.apache.commons.codec.binary.Base64;
-import org.apache.hadoop.hive.shims.ShimLoader;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
+import org.apache.spark.sql.service.auth.shims.ShimLoader;
 import org.ietf.jgss.GSSContext;
 import org.ietf.jgss.GSSManager;
 import org.ietf.jgss.GSSName;
 import org.ietf.jgss.Oid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.security.auth.Subject;
+import java.security.AccessControlContext;
+import java.security.AccessController;
+import java.security.PrivilegedExceptionAction;
+import java.util.*;
 
 /**
  * Utility functions for HTTP mode authentication.
@@ -117,7 +110,7 @@ public final class HttpAuthUtils {
 
   /**
    * Splits the cookie token into attributes pairs.
-   * @param str input token.
+   * @param tokenStr input token.
    * @return a map with the attribute pairs of the token if the input is valid.
    * Else, returns null.
    */

@@ -18,7 +18,7 @@
 
 package org.apache.spark.sql.service;
 
-import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.spark.sql.internal.SQLConf;
 
 /**
  * This is a service that can be configured to break on any of the lifecycle
@@ -76,7 +76,7 @@ public class BreakableService extends AbstractService {
   }
 
   @Override
-  public void init(HiveConf conf) {
+  public void init(SQLConf conf) {
     inc(STATE.INITED);
     maybeFail(failOnInit, "init");
     super.init(conf);

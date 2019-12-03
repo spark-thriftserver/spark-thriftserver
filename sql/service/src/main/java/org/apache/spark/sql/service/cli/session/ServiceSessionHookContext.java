@@ -18,7 +18,8 @@
 
 package org.apache.spark.sql.service.cli.session;
 
-import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.spark.sql.internal.SQLConf;
+
 /**
  * ServiceSessionHookContext.
  * Interface passed to the SparkServer2 session hook execution. This enables
@@ -30,7 +31,7 @@ public interface ServiceSessionHookContext {
    * Retrieve session conf
    * @return
    */
-  HiveConf getSessionConf();
+  SQLConf getSessionConf();
 
   /**
    * The get the username starting the session

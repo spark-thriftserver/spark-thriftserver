@@ -17,15 +17,13 @@
  */
 
 package org.apache.spark.sql.service.cli.operation;
+
 import java.io.CharArrayWriter;
 import java.util.Enumeration;
 import java.util.regex.Pattern;
 
-import org.apache.hadoop.hive.ql.exec.Task;
-import org.apache.hadoop.hive.ql.log.PerfLogger;
-import org.apache.hadoop.hive.ql.session.OperationLog;
-import org.apache.hadoop.hive.ql.session.OperationLog.LoggingLevel;
 import org.apache.spark.sql.service.cli.CLIServiceUtils;
+import org.apache.spark.sql.service.cli.operation.OperationLog.LoggingLevel;
 import org.apache.log4j.Appender;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Layout;
@@ -69,14 +67,13 @@ public class LogDivertAppender extends WriterAppender {
      */
     private static final Pattern executionIncludeNamePattern = Pattern.compile(Joiner.on("|")
       .join(new String[] {"org.apache.hadoop.mapreduce.JobSubmitter",
-      "org.apache.hadoop.mapreduce.Job", "SessionState", Task.class.getName(),
-      "org.apache.hadoop.hive.ql.exec.spark.status.SparkJobMonitor"}));
+      "org.apache.hadoop.mapreduce.Job", "SessionState"}));
 
     /* Patterns that are included in performance logging level.
      * In performance mode, show execution and performance logger messages.
      */
     private static final Pattern performanceIncludeNamePattern = Pattern.compile(
-      executionIncludeNamePattern.pattern() + "|" + PerfLogger.class.getName());
+      executionIncludeNamePattern.pattern());
 
     private void setCurrentNamePattern(OperationLog.LoggingLevel mode) {
       if (mode == OperationLog.LoggingLevel.VERBOSE) {
