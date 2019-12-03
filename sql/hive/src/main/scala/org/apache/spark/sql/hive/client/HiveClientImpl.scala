@@ -21,6 +21,7 @@ import java.io.{File, PrintStream}
 import java.lang.{Iterable => JIterable}
 import java.nio.charset.StandardCharsets.UTF_8
 import java.util.{Locale, Map => JMap}
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit._
 
 import scala.collection.JavaConverters._
@@ -117,6 +118,46 @@ private[hive] class HiveClientImpl(
     case hive.v3_1 => new Shim_v3_1()
   }
 
+  val ssessionStateMap = new ConcurrentHashMap[String, SessionState]()
+  val sessionHiveMap = new ConcurrentHashMap[String, Hive]()
+
+  private def getOrCreateSessionState(user: String): SessionState = synchronized(ssessionStateMap) {
+    if (ssessionStateMap.containsKey(user)) {
+      ssessionStateMap.get(user)
+    } else {
+      val original = Thread.currentThread().getContextClassLoader
+      // Switch to the initClassLoader.
+      Thread.currentThread().setContextClassLoader(initClassLoader)
+      try {
+        SessionState.setCurrentSessionState(null)
+        Hive.set(null)
+        val state = newState()
+        state
+      } finally {
+        Thread.currentThread().setContextClassLoader(original)
+      }
+    }
+  }
+
+  private def getOrCreateSessionHive(user: String): Hive = {
+    if (sessionHiveMap.containsKey(user)) {
+      sessionHiveMap.get(user)
+    } else {
+      val original = Thread.currentThread().getContextClassLoader
+      // Switch to the initClassLoader.
+      Thread.currentThread().setContextClassLoader(initClassLoader)
+      try {
+        SessionState.setCurrentSessionState(null)
+        Hive.set(null)
+        val hive = Hive.get(conf)
+        sessionHiveMap.put(user, hive)
+        hive
+      } finally {
+        Thread.currentThread().setContextClassLoader(original)
+      }
+    }
+  }
+
   // Create an internal session state for this HiveClientImpl.
   val state: SessionState = {
     val original = Thread.currentThread().getContextClassLoader
@@ -189,9 +230,9 @@ private[hive] class HiveClientImpl(
     }
     // Disable CBO because we removed the Calcite dependency.
     hiveConf.setBoolean("hive.cbo.enable", false)
-    val state = new SessionState(hiveConf)
-    if (clientLoader.cachedHive != null) {
-      Hive.set(clientLoader.cachedHive.asInstanceOf[Hive])
+    val state = new SessionState(hiveConf, userName)
+    if (client != null) {
+      Hive.set(client)
     }
     // Hive 2.3 will set UDFClassLoader to hiveConf when initializing SessionState
     // since HIVE-11878, and ADDJarCommand will add jars to clientLoader.classLoader.
@@ -203,14 +244,15 @@ private[hive] class HiveClientImpl(
     SessionState.start(state)
     state.out = new PrintStream(outputBuffer, true, UTF_8.name())
     state.err = new PrintStream(outputBuffer, true, UTF_8.name())
+    ssessionStateMap.put(userName, state)
     state
   }
 
   /** Returns the configuration for the current session. */
   def conf: HiveConf = if (!HiveUtils.isHive23) {
-    state.getConf
+    getOrCreateSessionState(userName).getConf
   } else {
-    val hiveConf = state.getConf
+    val hiveConf = getOrCreateSessionState(userName).getConf
     // Hive changed the default of datanucleus.schema.autoCreateAll from true to false
     // and hive.metastore.schema.verification from false to true since Hive 2.0.
     // For details, see the JIRA HIVE-6113, HIVE-12463 and HIVE-1841.
@@ -231,7 +273,7 @@ private[hive] class HiveClientImpl(
     hiveConf
   }
 
-  override val userName = UserGroupInformation.getCurrentUser.getShortUserName
+  override def userName(): String = UserGroupInformation.getCurrentUser.getShortUserName
 
   override def getConf(key: String, defaultValue: String): String = {
     conf.get(key, defaultValue)
@@ -259,7 +301,7 @@ private[hive] class HiveClientImpl(
           logWarning(
             "HiveClient got thrift exception, destroying client and retrying " +
               s"(${retryLimit - numTries} tries remaining)", e)
-          clientLoader.cachedHive = null
+          sessionHiveMap.remove(userName()) = null
           Thread.sleep(retryDelayMillis)
       }
     } while (numTries <= retryLimit && System.nanoTime < deadline)
@@ -282,13 +324,7 @@ private[hive] class HiveClientImpl(
   }
 
   private def client: Hive = {
-    if (clientLoader.cachedHive != null) {
-      clientLoader.cachedHive.asInstanceOf[Hive]
-    } else {
-      val c = Hive.get(conf)
-      clientLoader.cachedHive = c
-      c
-    }
+    getOrCreateSessionHive(userName())
   }
 
   private def msClient: IMetaStoreClient = {
@@ -296,20 +332,20 @@ private[hive] class HiveClientImpl(
   }
 
   /** Return the associated Hive [[SessionState]] of this [[HiveClientImpl]] */
-  override def getState: SessionState = withHiveState(state)
+  override def getState: SessionState = withHiveState(getOrCreateSessionState(userName))
 
   /**
    * Runs `f` with ThreadLocal session state and classloaders configured for this version of hive.
    */
   def withHiveState[A](f: => A): A = retryLocked {
     val original = Thread.currentThread().getContextClassLoader
-    val originalConfLoader = state.getConf.getClassLoader
+    val originalConfLoader = getOrCreateSessionState(userName).getConf.getClassLoader
     // The classloader in clientLoader could be changed after addJar, always use the latest
     // classloader. We explicitly set the context class loader since "conf.setClassLoader" does
     // not do that, and the Hive client libraries may need to load classes defined by the client's
     // class loader.
     Thread.currentThread().setContextClassLoader(clientLoader.classLoader)
-    state.getConf.setClassLoader(clientLoader.classLoader)
+    getOrCreateSessionState(userName).getConf.setClassLoader(clientLoader.classLoader)
     // Set the thread local metastore client to the client associated with this HiveClientImpl.
     Hive.set(client)
     // Replace conf in the thread local Hive with current conf
@@ -317,9 +353,9 @@ private[hive] class HiveClientImpl(
     // setCurrentSessionState will use the classLoader associated
     // with the HiveConf in `state` to override the context class loader of the current
     // thread.
-    shim.setCurrentSessionState(state)
+    shim.setCurrentSessionState(getOrCreateSessionState(userName))
     val ret = try f finally {
-      state.getConf.setClassLoader(originalConfLoader)
+      getOrCreateSessionState(userName).getConf.setClassLoader(originalConfLoader)
       Thread.currentThread().setContextClassLoader(original)
       HiveCatalogMetrics.incrementHiveClientCalls(1)
     }
@@ -327,21 +363,21 @@ private[hive] class HiveClientImpl(
   }
 
   def setOut(stream: PrintStream): Unit = withHiveState {
-    state.out = stream
+    getOrCreateSessionState(userName).out = stream
   }
 
   def setInfo(stream: PrintStream): Unit = withHiveState {
-    state.info = stream
+    getOrCreateSessionState(userName).info = stream
   }
 
   def setError(stream: PrintStream): Unit = withHiveState {
-    state.err = stream
+    getOrCreateSessionState(userName).err = stream
   }
 
   private def setCurrentDatabaseRaw(db: String): Unit = {
-    if (state.getCurrentDatabase != db) {
+    if (getOrCreateSessionState(userName).getCurrentDatabase != db) {
       if (databaseExists(db)) {
-        state.setCurrentDatabase(db)
+        getOrCreateSessionState(userName).setCurrentDatabase(db)
       } else {
         throw new NoSuchDatabaseException(db)
       }
@@ -688,13 +724,13 @@ private[hive] class HiveClientImpl(
     // to the one that contains the table of interest. Otherwise you will end up with the
     // most helpful error message ever: "Unable to alter partition. alter is not possible."
     // See HIVE-2742 for more detail.
-    val original = state.getCurrentDatabase
+    val original = getOrCreateSessionState(userName).getCurrentDatabase
     try {
       setCurrentDatabaseRaw(db)
       val hiveTable = toHiveTable(getTable(db, table), Some(userName))
       shim.alterPartitions(client, table, newParts.map { toHivePartition(_, hiveTable) }.asJava)
     } finally {
-      state.setCurrentDatabase(original)
+      getOrCreateSessionState(userName).setCurrentDatabase(original)
     }
   }
 
@@ -814,9 +850,9 @@ private[hive] class HiveClientImpl(
           results
 
         case _ =>
-          if (state.out != null) {
+          if (getOrCreateSessionState(userName).out != null) {
             // scalastyle:off println
-            state.out.println(tokens(0) + " " + cmd_1)
+            getOrCreateSessionState(userName).out.println(tokens(0) + " " + cmd_1)
             // scalastyle:on println
           }
           Seq(proc.run(cmd_1).getResponseCode.toString)
