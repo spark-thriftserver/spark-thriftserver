@@ -129,7 +129,7 @@ private[hive] class HiveClientImpl(
    * @param user client user name need to proxy
    * @return
    */
-  private def getOrCreateSessionState(user: String): SessionState = synchronized(sessionStateMap) {
+  private def getOrCreateSessionState(user: String): SessionState = sessionStateMap.synchronized {
     if (sessionStateMap.containsKey(user)) {
       sessionStateMap.get(user)
     } else {
@@ -140,6 +140,7 @@ private[hive] class HiveClientImpl(
         SessionState.setCurrentSessionState(null)
         Hive.set(null)
         val state = newState(user)
+        sessionStateMap.put(user, state)
         state
       } finally {
         Thread.currentThread().setContextClassLoader(original)
@@ -326,7 +327,6 @@ private[hive] class HiveClientImpl(
     SessionState.start(state)
     state.out = new PrintStream(outputBuffer, true, UTF_8.name())
     state.err = new PrintStream(outputBuffer, true, UTF_8.name())
-    sessionStateMap.put(userName, state)
     state
   }
 
@@ -383,7 +383,7 @@ private[hive] class HiveClientImpl(
           logWarning(
             "HiveClient got thrift exception, destroying client and retrying " +
               s"(${retryLimit - numTries} tries remaining)", e)
-          sessionHiveMap.remove(userName()) = null
+          sessionHiveMap.remove(userName)
           Thread.sleep(retryDelayMillis)
       }
     } while (numTries <= retryLimit && System.nanoTime < deadline)
