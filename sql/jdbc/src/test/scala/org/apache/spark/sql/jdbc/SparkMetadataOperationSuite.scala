@@ -19,7 +19,7 @@ package org.apache.spark.sql.jdbc
 
 import java.sql.{DatabaseMetaData, ResultSet}
 
-import org.apache.spark.sql.service.ThriftserverShimUtils
+import org.apache.spark.sql.service.cli.Type
 
 class SparkMetadataOperationSuite extends SparkThriftJdbcTest {
 
@@ -247,7 +247,7 @@ class SparkMetadataOperationSuite extends SparkThriftJdbcTest {
 
     withJdbcStatement() { statement =>
       val metaData = statement.getConnection.getMetaData
-      checkResult(metaData.getTypeInfo, ThriftserverShimUtils.supportedType().map(_.getName))
+      checkResult(metaData.getTypeInfo, Type.values().map(_.getName))
     }
   }
 }

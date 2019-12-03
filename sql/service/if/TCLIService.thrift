@@ -38,34 +38,7 @@ namespace cpp apache.spark.sql.service.rpc.thrift
 // List of protocol versions. A new token should be
 // added to the end of this list every time a change is made.
 enum TProtocolVersion {
-  HIVE_CLI_SERVICE_PROTOCOL_V1,
-
-  // V2 adds support for asynchronous execution
-  HIVE_CLI_SERVICE_PROTOCOL_V2
-
-  // V3 add varchar type, primitive type qualifiers
-  HIVE_CLI_SERVICE_PROTOCOL_V3
-
-  // V4 add decimal precision/scale, char type
-  HIVE_CLI_SERVICE_PROTOCOL_V4
-
-  // V5 adds error details when GetOperationStatus returns in error state
-  HIVE_CLI_SERVICE_PROTOCOL_V5
-
-  // V6 uses binary type for binary payload (was string) and uses columnar result set
-  HIVE_CLI_SERVICE_PROTOCOL_V6
-
-  // V7 adds support for delegation token based connection
-  HIVE_CLI_SERVICE_PROTOCOL_V7
-
-  // V8 adds support for interval types
-  HIVE_CLI_SERVICE_PROTOCOL_V8
-
-  // V9 adds support for serializing ResultSets in SerDe
-  HIVE_CLI_SERVICE_PROTOCOL_V9
-
-  // V10 adds support for in place updates via GetOperationStatus
-  HIVE_CLI_SERVICE_PROTOCOL_V10
+  SPARK_SQL_SERVICE_PROTOCOL_V1,
 }
 
 enum TTypeId {
@@ -559,7 +532,7 @@ struct TOperationHandle {
 // which operations may be executed.
 struct TOpenSessionReq {
   // The version of the SparkServer2 protocol that the client is using.
-  1: required TProtocolVersion client_protocol = TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V10
+  1: required TProtocolVersion client_protocol = TProtocolVersion.SPARK_SQL_SERVICE_PROTOCOL_V1
 
   // Username and password for authentication.
   // Depending on the authentication scheme being used,
@@ -578,7 +551,7 @@ struct TOpenSessionResp {
   1: required TStatus status
 
   // The protocol version that the server is using.
-  2: required TProtocolVersion serverProtocolVersion = TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V10
+  2: required TProtocolVersion serverProtocolVersion = TProtocolVersion.SPARK_SQL_SERVICE_PROTOCOL_V1
 
   // Session Handle
   3: optional TSessionHandle sessionHandle

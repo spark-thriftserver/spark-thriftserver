@@ -23,7 +23,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SQLContext
-import org.apache.spark.sql.service.{SparkThriftServer2, ThriftserverShimUtils}
+import org.apache.spark.sql.service.SparkThriftServer2
 import org.apache.spark.sql.service.cli._
 import org.apache.spark.sql.service.cli.session.ServiceSession
 import org.apache.spark.util.{Utils => SparkUtils}
@@ -104,7 +104,7 @@ private[service] class SparkGetTypeInfoOperation(
       parentSession.getUsername)
 
     try {
-      ThriftserverShimUtils.supportedType().foreach(typeInfo => {
+      Type.values.foreach { typeInfo =>
         val rowData = Array[AnyRef](
           typeInfo.getName, // TYPE_NAME
           typeInfo.toJavaSQLType.asInstanceOf[AnyRef], // DATA_TYPE
@@ -126,7 +126,7 @@ private[service] class SparkGetTypeInfoOperation(
           typeInfo.getNumPrecRadix // NUM_PREC_RADIX
         )
         rowSet.addRow(rowData)
-      })
+      }
       setState(OperationState.FINISHED)
     } catch {
       case e: Throwable =>

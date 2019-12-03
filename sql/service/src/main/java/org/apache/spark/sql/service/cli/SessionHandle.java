@@ -37,7 +37,7 @@ public class SessionHandle extends Handle {
 
   // dummy handle for ThriftCLIService
   public SessionHandle(TSessionHandle tSessionHandle) {
-    this(tSessionHandle, TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V1);
+    this(tSessionHandle, TProtocolVersion.SPARK_SQL_SERVICE_PROTOCOL_V1);
   }
 
   public SessionHandle(TSessionHandle tSessionHandle, TProtocolVersion protocol) {

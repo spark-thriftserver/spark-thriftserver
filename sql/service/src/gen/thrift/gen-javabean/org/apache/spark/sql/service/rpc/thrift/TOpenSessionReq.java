@@ -144,7 +144,7 @@ public class TOpenSessionReq implements org.apache.thrift.TBase<TOpenSessionReq,
   }
 
   public TOpenSessionReq() {
-    this.client_protocol = org.apache.spark.sql.service.rpc.thrift.TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V10;
+    this.client_protocol = org.apache.spark.sql.service.rpc.thrift.TProtocolVersion.SPARK_SQL_SERVICE_PROTOCOL_V1;
 
   }
 
@@ -180,7 +180,7 @@ public class TOpenSessionReq implements org.apache.thrift.TBase<TOpenSessionReq,
 
   @Override
   public void clear() {
-    this.client_protocol = org.apache.spark.sql.service.rpc.thrift.TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V10;
+    this.client_protocol = org.apache.spark.sql.service.rpc.thrift.TProtocolVersion.SPARK_SQL_SERVICE_PROTOCOL_V1;
 
     this.username = null;
     this.password = null;

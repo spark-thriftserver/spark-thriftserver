@@ -34,7 +34,7 @@ public class OperationHandle extends Handle {
 
   // dummy handle for ThriftCLIService
   public OperationHandle(TOperationHandle tOperationHandle) {
-    this(tOperationHandle, TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V1);
+    this(tOperationHandle, TProtocolVersion.SPARK_SQL_SERVICE_PROTOCOL_V1);
   }
 
   public OperationHandle(TOperationHandle tOperationHandle, TProtocolVersion protocol) {
