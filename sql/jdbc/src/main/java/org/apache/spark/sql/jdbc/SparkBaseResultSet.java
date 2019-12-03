@@ -45,6 +45,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.spark.sql.catalyst.util.IntervalUtils;
 import org.apache.spark.sql.service.cli.Type;
 import org.apache.spark.sql.service.cli.TableSchema;
 
@@ -444,6 +445,8 @@ public abstract class SparkBaseResultSet implements ResultSet {
         return new BigDecimal((String)value);
       case DATE_TYPE:
         return Date.valueOf((String) value);
+      case INTERVAL_TYPE:
+        return IntervalUtils.fromString((String) value);
       case ARRAY_TYPE:
       case MAP_TYPE:
       case STRUCT_TYPE:

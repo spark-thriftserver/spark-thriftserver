@@ -38,7 +38,7 @@ public class TypeDescriptor {
   private static ConcurrentHashMap<String, Type> cachedPrimitiveTypeInfo = new ConcurrentHashMap();
 
   static {
-    cachedPrimitiveTypeInfo.put("void", Type.NULL_TYPE);
+    cachedPrimitiveTypeInfo.put("null", Type.NULL_TYPE);
     cachedPrimitiveTypeInfo.put("boolean", Type.BOOLEAN_TYPE);
     cachedPrimitiveTypeInfo.put("int", Type.INT_TYPE);
     cachedPrimitiveTypeInfo.put("bigint", Type.BIGINT_TYPE);

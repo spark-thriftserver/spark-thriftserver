@@ -106,7 +106,7 @@ private[service] class SparkExecuteStatementOperation(
       case BinaryType =>
         to += from.getAs[Array[Byte]](ordinal)
       case CalendarIntervalType =>
-        to += HiveResult.toHiveString((from.getAs[CalendarInterval](ordinal), CalendarIntervalType))
+        to += from.getAs[CalendarInterval](ordinal)
       case _: ArrayType | _: StructType | _: MapType | _: UserDefinedType[_] =>
         val hiveString = HiveResult.toHiveString((from.get(ordinal), dataTypes(ordinal)))
         to += hiveString
@@ -376,12 +376,7 @@ private[service] class SparkExecuteStatementOperation(
 object SparkExecuteStatementOperation {
   def getTableSchema(structType: StructType): TableSchema = {
     val schema = structType.map { field =>
-      val attrTypeString = field.dataType match {
-        case NullType => "void"
-        case CalendarIntervalType => StringType.catalogString
-        case other => other.catalogString
-      }
-      new FieldSchema(field.name, attrTypeString, field.getComment.getOrElse(""))
+      new FieldSchema(field.name, field.dataType.catalogString, field.getComment.getOrElse(""))
     }
     new TableSchema(schema.asJava)
   }
