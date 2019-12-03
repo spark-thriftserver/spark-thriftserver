@@ -22,21 +22,13 @@ import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
 import org.apache.spark.sql.service.rpc.thrift.TRowSet;
 import org.apache.thrift.TException;
 
-import static org.apache.spark.sql.service.rpc.thrift.TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V6;
-
 public class RowSetFactory {
 
   public static RowSet create(TableSchema schema, TProtocolVersion version, boolean isBlobBased) {
-    if (version.getValue() >= HIVE_CLI_SERVICE_PROTOCOL_V6.getValue()) {
-      return new ColumnBasedSet(schema, isBlobBased);
-    }
-    return new RowBasedSet(schema);
+    return new ColumnBasedSet(schema, isBlobBased);
   }
 
   public static RowSet create(TRowSet results, TProtocolVersion version) throws TException {
-    if (version.getValue() >= HIVE_CLI_SERVICE_PROTOCOL_V6.getValue()) {
-      return new ColumnBasedSet(results);
-    }
-    return new RowBasedSet(results);
+    return new ColumnBasedSet(results);
   }
 }
