@@ -22,14 +22,14 @@ import java.sql.DatabaseMetaData;
 import java.util.Locale;
 
 import org.apache.spark.sql.service.rpc.thrift.TTypeId;
-import org.apache.spark.sql.types.DecimalType;
+import org.apache.spark.sql.types.*;
 
 /**
  * Type.
  *
  */
 public enum Type {
-  NULL_TYPE("VOID",
+  NULL_TYPE(NullType$.MODULE$.sql(),
           java.sql.Types.NULL,
           TTypeId.NULL_TYPE),
   BOOLEAN_TYPE("BOOLEAN",
@@ -62,7 +62,10 @@ public enum Type {
   TIMESTAMP_TYPE("TIMESTAMP",
           java.sql.Types.TIMESTAMP,
           TTypeId.TIMESTAMP_TYPE),
-  BINARY_TYPE("BINARY",
+  INTERVAL_TYPE(CalendarIntervalType$.MODULE$.sql(),
+          java.sql.Types.OTHER,
+          TTypeId.INTERVAL_TYPE),
+  BINARY_TYPE(BinaryType$.MODULE$.sql(),
           java.sql.Types.BINARY,
           TTypeId.BINARY_TYPE),
   DECIMAL_TYPE("DECIMAL",

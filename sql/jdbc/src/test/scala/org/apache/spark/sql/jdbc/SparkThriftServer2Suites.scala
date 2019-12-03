@@ -51,6 +51,7 @@ import org.apache.spark.sql.service.cli.thrift.ThriftCLIServiceClient
 import org.apache.spark.sql.service.internal.ServiceConf
 import org.apache.spark.sql.service.rpc.thrift.TCLIService.Client
 import org.apache.spark.sql.test.ProcessTestUtils.ProcessOutputCapturer
+import org.apache.spark.unsafe.types.CalendarInterval
 import org.apache.spark.util.{Utils => SparkUtils}
 import org.apache.spark.util.ThreadUtils
 
@@ -679,6 +680,7 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
     withJdbcStatement() { statement =>
       val rs = statement.executeQuery("SELECT interval 3 months 1 hours")
       assert(rs.next())
+      assert(rs.getObject(1).isInstanceOf[CalendarInterval])
       assert(rs.getString(1) === "interval 3 months 1 hours")
     }
     // Invalid interval value

@@ -89,8 +89,7 @@ enum TTypeId {
   DATE_TYPE,
   VARCHAR_TYPE,
   CHAR_TYPE,
-  INTERVAL_YEAR_MONTH_TYPE,
-  INTERVAL_DAY_TIME_TYPE
+  INTERVAL_TYPE
 }
 
 const set<TTypeId> PRIMITIVE_TYPES = [
@@ -109,8 +108,7 @@ const set<TTypeId> PRIMITIVE_TYPES = [
   TTypeId.DATE_TYPE,
   TTypeId.VARCHAR_TYPE,
   TTypeId.CHAR_TYPE,
-  TTypeId.INTERVAL_YEAR_MONTH_TYPE,
-  TTypeId.INTERVAL_DAY_TIME_TYPE
+  TTypeId.INTERVAL_TYPE
 ]
 
 const set<TTypeId> COMPLEX_TYPES = [
@@ -146,8 +144,7 @@ const map<TTypeId,string> TYPE_NAMES = {
   TTypeId.DATE_TYPE: "DATE"
   TTypeId.VARCHAR_TYPE: "VARCHAR"
   TTypeId.CHAR_TYPE: "CHAR"
-  TTypeId.INTERVAL_YEAR_MONTH_TYPE: "INTERVAL_YEAR_MONTH"
-  TTypeId.INTERVAL_DAY_TIME_TYPE: "INTERVAL_DAY_TIME"
+  TTypeId.INTERVAL_TYPE: "INTERVAL"
 }
 
 // Thrift does not support recursively defined types or forward declarations,
@@ -338,7 +335,7 @@ union TColumnValue {
   4: TI32Value    i32Val       // INT
   5: TI64Value    i64Val       // BIGINT, TIMESTAMP
   6: TDoubleValue doubleVal    // FLOAT, DOUBLE
-  7: TStringValue stringVal    // STRING, LIST, MAP, STRUCT, UNIONTYPE, BINARY, DECIMAL, NULL, INTERVAL_YEAR_MONTH, INTERVAL_DAY_TIME
+  7: TStringValue stringVal    // STRING, LIST, MAP, STRUCT, UNIONTYPE, BINARY, DECIMAL, NULL
 }
 
 // Represents a row in a rowset.
