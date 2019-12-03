@@ -25,6 +25,7 @@ import java.sql.Timestamp;
 import java.sql.Types;
 
 import org.apache.spark.sql.service.cli.Type;
+import org.apache.spark.sql.types.CalendarIntervalType$;
 
 /**
  * Column metadata.
@@ -96,7 +97,12 @@ public class JdbcColumn {
         return byte[].class.getName();
       case Types.OTHER:
       case Types.JAVA_OBJECT:
-        return String.class.getName();
+        switch (hiveType) {
+          case INTERVAL_TYPE:
+            return CalendarIntervalType$.MODULE$.sql();
+          default:
+            return String.class.getName();
+        }
       case Types.ARRAY:
       case Types.STRUCT:
         return String.class.getName();

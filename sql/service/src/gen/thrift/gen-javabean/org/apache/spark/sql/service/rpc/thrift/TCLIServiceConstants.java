@@ -52,8 +52,7 @@ public class TCLIServiceConstants {
     PRIMITIVE_TYPES.add(org.apache.spark.sql.service.rpc.thrift.TTypeId.DATE_TYPE);
     PRIMITIVE_TYPES.add(org.apache.spark.sql.service.rpc.thrift.TTypeId.VARCHAR_TYPE);
     PRIMITIVE_TYPES.add(org.apache.spark.sql.service.rpc.thrift.TTypeId.CHAR_TYPE);
-    PRIMITIVE_TYPES.add(org.apache.spark.sql.service.rpc.thrift.TTypeId.INTERVAL_YEAR_MONTH_TYPE);
-    PRIMITIVE_TYPES.add(org.apache.spark.sql.service.rpc.thrift.TTypeId.INTERVAL_DAY_TIME_TYPE);
+    PRIMITIVE_TYPES.add(org.apache.spark.sql.service.rpc.thrift.TTypeId.INTERVAL_TYPE);
   }
 
   public static final Set<TTypeId> COMPLEX_TYPES = new HashSet<TTypeId>();
@@ -92,8 +91,7 @@ public class TCLIServiceConstants {
     TYPE_NAMES.put(org.apache.spark.sql.service.rpc.thrift.TTypeId.DATE_TYPE, "DATE");
     TYPE_NAMES.put(org.apache.spark.sql.service.rpc.thrift.TTypeId.VARCHAR_TYPE, "VARCHAR");
     TYPE_NAMES.put(org.apache.spark.sql.service.rpc.thrift.TTypeId.CHAR_TYPE, "CHAR");
-    TYPE_NAMES.put(org.apache.spark.sql.service.rpc.thrift.TTypeId.INTERVAL_YEAR_MONTH_TYPE, "INTERVAL_YEAR_MONTH");
-    TYPE_NAMES.put(org.apache.spark.sql.service.rpc.thrift.TTypeId.INTERVAL_DAY_TIME_TYPE, "INTERVAL_DAY_TIME");
+    TYPE_NAMES.put(org.apache.spark.sql.service.rpc.thrift.TTypeId.INTERVAL_TYPE, "INTERVAL");
   }
 
   public static final String CHARACTER_MAXIMUM_LENGTH = "characterMaximumLength";
