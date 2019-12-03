@@ -193,7 +193,7 @@ public class SessionManager extends CompositeService {
       try {
         backgroundOperationPool.awaitTermination(timeout, TimeUnit.SECONDS);
       } catch (InterruptedException e) {
-        LOG.warn("SPARK_THRIFTSERVER_ASYNC_EXEC_SHUTDOWN_TIMEOUT = " + timeout +
+        LOG.warn("THRIFTSERVER_ASYNC_EXEC_SHUTDOWN_TIMEOUT = " + timeout +
             " seconds has been exceeded. RUNNING background operations will be shut down", e);
       }
       backgroundOperationPool = null;
