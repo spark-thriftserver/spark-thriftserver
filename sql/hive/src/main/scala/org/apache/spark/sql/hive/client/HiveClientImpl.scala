@@ -20,6 +20,7 @@ package org.apache.spark.sql.hive.client
 import java.io.{File, PrintStream}
 import java.lang.{Iterable => JIterable}
 import java.nio.charset.StandardCharsets.UTF_8
+import java.security.PrivilegedExceptionAction
 import java.util.{Locale, Map => JMap}
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit._
@@ -44,8 +45,8 @@ import org.apache.hadoop.hive.serde.serdeConstants
 import org.apache.hadoop.hive.serde2.MetadataTypedColumnsetSerDe
 import org.apache.hadoop.hive.serde2.`lazy`.LazySimpleSerDe
 import org.apache.hadoop.security.UserGroupInformation
-
 import org.apache.spark.{SparkConf, SparkException}
+
 import org.apache.spark.internal.Logging
 import org.apache.spark.metrics.source.HiveCatalogMetrics
 import org.apache.spark.sql.AnalysisException
@@ -118,12 +119,19 @@ private[hive] class HiveClientImpl(
     case hive.v3_1 => new Shim_v3_1()
   }
 
-  val ssessionStateMap = new ConcurrentHashMap[String, SessionState]()
+  val sessionStateMap = new ConcurrentHashMap[String, SessionState]()
   val sessionHiveMap = new ConcurrentHashMap[String, Hive]()
 
-  private def getOrCreateSessionState(user: String): SessionState = synchronized(ssessionStateMap) {
-    if (ssessionStateMap.containsKey(user)) {
-      ssessionStateMap.get(user)
+  /**
+   * Get or create a hive client for client user. If there have a existed hive client,
+   * return old client, else create a new one with proxy.
+   *
+   * @param user client user name need to proxy
+   * @return
+   */
+  private def getOrCreateSessionState(user: String): SessionState = synchronized(sessionStateMap) {
+    if (sessionStateMap.containsKey(user)) {
+      sessionStateMap.get(user)
     } else {
       val original = Thread.currentThread().getContextClassLoader
       // Switch to the initClassLoader.
@@ -139,7 +147,14 @@ private[hive] class HiveClientImpl(
     }
   }
 
-  private def getOrCreateSessionHive(user: String): Hive = {
+  /**
+   * Get or create a hive client for client user. If there have a existed hive client,
+   * return old client, else create a new one with proxy.
+   *
+   * @param user client user name need to proxy
+   * @return
+   */
+  private def getOrCreateSessionHive(user: String): Hive = sessionHiveMap.synchronized {
     if (sessionHiveMap.containsKey(user)) {
       sessionHiveMap.get(user)
     } else {
@@ -149,13 +164,79 @@ private[hive] class HiveClientImpl(
       try {
         SessionState.setCurrentSessionState(null)
         Hive.set(null)
-        val hive = Hive.get(conf)
+        val currentConf = conf
+        currentConf.set("hive.metastore.token.signature", IMPERSONATION_TOKEN_SIGNATURE)
+        val delegationTokenStr = getDelegationToken(user)
+        val ugi = UserGroupInformation.createProxyUser(user, UserGroupInformation.getLoginUser)
+        org.apache.hadoop.hive.shims.Utils.setTokenStr(ugi, delegationTokenStr,
+          IMPERSONATION_TOKEN_SIGNATURE)
+        val hive = ugi.doAs(new PrivilegedExceptionAction[Hive]() {
+          override def run(): Hive = {
+            Hive.get(currentConf)
+          }
+        })
         sessionHiveMap.put(user, hive)
         hive
       } finally {
         Thread.currentThread().setContextClassLoader(original)
       }
     }
+  }
+
+  /**
+   * Cached Hive Client initialized by login user
+   * This method only called under login UGI
+   * @return
+   */
+  private def cachedClient: Hive = {
+    if (clientLoader.cachedHive != null) {
+      clientLoader.cachedHive.asInstanceOf[Hive]
+    } else {
+      // here create hive client under login UGI and won't proxy user
+      val confWithoutImpersonation = state.getConf
+      confWithoutImpersonation.set("hive.metastore.token.signature", "")
+      val c = Hive.get(confWithoutImpersonation)
+      clientLoader.cachedHive = c
+      c
+    }
+  }
+
+  /**
+   * Get user's Delegation token for create new Hive Client with impersonation user
+   * Here we do this with [retryLocked] to avoid initial Hive client broken connection
+   * and retry connect
+   *
+   * @param user user need to get DelegationToken
+   * @return
+   */
+  private def getDelegationToken(user: String): String = clientLoader.synchronized {
+    // doAs under login user to make sure when hive client broken, it will reconnect
+    UserGroupInformation.getLoginUser.doAs[String](new PrivilegedExceptionAction[String] {
+      override def run(): String = {
+        // Hive sometimes retries internally, so set a deadline to avoid compounding delays.
+        val deadline = System.nanoTime + (retryLimit * retryDelayMillis * 1e6).toLong
+        var numTries = 0
+        var caughtException: Exception = null
+        do {
+          numTries += 1
+          try {
+            return cachedClient.getDelegationToken(user, user)
+          } catch {
+            case e: Exception if causedByThrift(e) =>
+              caughtException = e
+              logWarning(
+                "HiveClient got thrift exception, destroying client and retrying " +
+                  s"(${retryLimit - numTries} tries remaining)", e)
+              clientLoader.cachedHive = null
+              Thread.sleep(retryDelayMillis)
+          }
+        } while (numTries <= retryLimit && System.nanoTime < deadline)
+        if (System.nanoTime > deadline) {
+          logWarning("Deadline exceeded")
+        }
+        throw caughtException
+      }
+    })
   }
 
   // Create an internal session state for this HiveClientImpl.
@@ -231,6 +312,7 @@ private[hive] class HiveClientImpl(
     // Disable CBO because we removed the Calcite dependency.
     hiveConf.setBoolean("hive.cbo.enable", false)
     val state = new SessionState(hiveConf, userName)
+
     if (client != null) {
       Hive.set(client)
     }
@@ -244,7 +326,7 @@ private[hive] class HiveClientImpl(
     SessionState.start(state)
     state.out = new PrintStream(outputBuffer, true, UTF_8.name())
     state.err = new PrintStream(outputBuffer, true, UTF_8.name())
-    ssessionStateMap.put(userName, state)
+    sessionStateMap.put(userName, state)
     state
   }
 
@@ -1002,6 +1084,8 @@ private[hive] class HiveClientImpl(
 }
 
 private[hive] object HiveClientImpl {
+  final val IMPERSONATION_TOKEN_SIGNATURE = "SparkImpersonationToken"
+
   /** Converts the native StructField to Hive's FieldSchema. */
   def toHiveColumn(c: StructField): FieldSchema = {
     val typeString = if (c.metadata.contains(HIVE_TYPE_STRING)) {
