@@ -335,7 +335,7 @@ union TColumnValue {
   4: TI32Value    i32Val       // INT
   5: TI64Value    i64Val       // BIGINT, TIMESTAMP
   6: TDoubleValue doubleVal    // FLOAT, DOUBLE
-  7: TStringValue stringVal    // STRING, LIST, MAP, STRUCT, UNIONTYPE, BINARY, DECIMAL, NULL, INTERVAL_YEAR_MONTH, INTERVAL_DAY_TIME
+  7: TStringValue stringVal    // STRING, LIST, MAP, STRUCT, UNIONTYPE, BINARY, DECIMAL, NULL
 }
 
 // Represents a row in a rowset.
