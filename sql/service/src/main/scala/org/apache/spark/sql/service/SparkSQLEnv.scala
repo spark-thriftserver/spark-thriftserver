@@ -17,9 +17,12 @@
 
 package org.apache.spark.sql.service
 
+import java.util.Locale
+
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{SparkSession, SQLContext}
+import org.apache.spark.sql.internal.StaticSQLConf.CATALOG_IMPLEMENTATION
 import org.apache.spark.util.Utils
 
 /** A singleton object for the master program. The slaves should not access this. */
@@ -41,11 +44,18 @@ private[service] object SparkSQLEnv extends Logging {
       sparkConf
         .setAppName(maybeAppName.getOrElse(s"SparkSQL::${Utils.localHostName()}"))
 
-      val sparkSession = SparkSession
-        .builder
-        .config(sparkConf)
-//        .enableHiveSupport()
-        .getOrCreate()
+      val builder = SparkSession.builder().config(sparkConf)
+      val sparkSession = if (sparkConf.get(CATALOG_IMPLEMENTATION.key, "hive")
+        .toLowerCase(Locale.ROOT) == "hive") {
+        if (SparkSession.hiveClassesArePresent) {
+          builder.enableHiveSupport().getOrCreate()
+        } else {
+          builder.config(CATALOG_IMPLEMENTATION.key, "in-memory")
+          builder.getOrCreate()
+        }
+      } else {
+        builder.getOrCreate()
+      }
       sparkContext = sparkSession.sparkContext
       sqlContext = sparkSession.sqlContext
 
