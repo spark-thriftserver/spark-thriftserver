@@ -36,6 +36,7 @@ import org.apache.spark.util.{ThreadUtils, Utils}
 
 class ExecutorProxyPlugin(sparkConf: SparkConf, hadoopConf: Configuration) extends Logging {
 
+  private val currentUGI = UserGroupInformation.getCurrentUser
   private val userTokenMap = new ConcurrentHashMap[String, UserGroupInformation]()
 
   private val deprecatedProviderEnabledConfigs = List(
@@ -158,13 +159,11 @@ class ExecutorProxyPlugin(sparkConf: SparkConf, hadoopConf: Configuration) exten
     } catch {
       case _: InterruptedException =>
         // Ignore, may happen if shutting down.
-        null
       case e: Exception =>
         val delay = TimeUnit.SECONDS.toMillis(sparkConf.get(CREDENTIALS_RENEWAL_RETRY_WAIT))
         logWarning(s"Failed to update tokens, will try again in ${UIUtils.formatDuration(delay)}!" +
           " If this happens too often tasks will fail.", e)
         scheduleRenewal(ugi, delay)
-        null
     }
   }
 
@@ -217,7 +216,7 @@ class ExecutorProxyPlugin(sparkConf: SparkConf, hadoopConf: Configuration) exten
     if (userTokenMap.containsKey(user)) {
       userTokenMap.get(user)
     } else {
-      val ugi = UserGroupInformation.createProxyUser(user, UserGroupInformation.getCurrentUser)
+      val ugi = UserGroupInformation.createProxyUser(user, currentUGI)
       updateTokensTask(ugi)
       userTokenMap.put(user, ugi)
       ugi
