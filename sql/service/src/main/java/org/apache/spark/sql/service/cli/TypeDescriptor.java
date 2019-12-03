@@ -21,10 +21,10 @@ package org.apache.spark.sql.service.cli;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.spark.sql.service.cli.type.SparkDecimal;
 import org.apache.spark.sql.service.rpc.thrift.TPrimitiveTypeEntry;
 import org.apache.spark.sql.service.rpc.thrift.TTypeDesc;
 import org.apache.spark.sql.service.rpc.thrift.TTypeEntry;
+import org.apache.spark.sql.types.DecimalType;
 
 /**
  * TypeDescriptor.
@@ -80,8 +80,8 @@ public class TypeDescriptor {
     Type type = cachedPrimitiveTypeInfo.getOrDefault(typeName, Type.STRING_TYPE);
     if (typeName.equalsIgnoreCase("decimal")) {
       // Todo add parser for decimal(m,n), but seem spark won't get this.
-      type.setSpecifiedPrecision(SparkDecimal.MAX_PRECISION);
-      type.setSpecifiedScala(SparkDecimal.MAX_SCALE);
+      type.setSpecifiedPrecision(DecimalType.MAX_PRECISION());
+      type.setSpecifiedScala(DecimalType.MAX_SCALE());
     }
     return type;
   }

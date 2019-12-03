@@ -23,6 +23,8 @@ import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.util.Locale;
+
 
 import org.apache.spark.sql.service.cli.Type;
 
@@ -151,43 +153,7 @@ public class JdbcColumn {
   }
 
   static String getColumnTypeName(String type) throws SQLException {
-    // we need to convert the Hive type to the SQL type name
-    // TODO: this would be better handled in an enum
-    if ("string".equalsIgnoreCase(type)) {
-      return serdeConstants.STRING_TYPE_NAME;
-    } else if ("float".equalsIgnoreCase(type)) {
-      return serdeConstants.FLOAT_TYPE_NAME;
-    } else if ("double".equalsIgnoreCase(type)) {
-      return serdeConstants.DOUBLE_TYPE_NAME;
-    } else if ("boolean".equalsIgnoreCase(type)) {
-      return serdeConstants.BOOLEAN_TYPE_NAME;
-    } else if ("tinyint".equalsIgnoreCase(type)) {
-      return serdeConstants.TINYINT_TYPE_NAME;
-    } else if ("smallint".equalsIgnoreCase(type)) {
-      return serdeConstants.SMALLINT_TYPE_NAME;
-    } else if ("int".equalsIgnoreCase(type)) {
-      return serdeConstants.INT_TYPE_NAME;
-    } else if ("bigint".equalsIgnoreCase(type)) {
-      return serdeConstants.BIGINT_TYPE_NAME;
-    } else if ("timestamp".equalsIgnoreCase(type)) {
-      return serdeConstants.TIMESTAMP_TYPE_NAME;
-    } else if ("date".equalsIgnoreCase(type)) {
-      return serdeConstants.DATE_TYPE_NAME;
-    } else if ("decimal".equalsIgnoreCase(type)) {
-      return serdeConstants.DECIMAL_TYPE_NAME;
-    } else if ("binary".equalsIgnoreCase(type)) {
-      return serdeConstants.BINARY_TYPE_NAME;
-    } else if ("void".equalsIgnoreCase(type) || "null".equalsIgnoreCase(type)) {
-      return serdeConstants.VOID_TYPE_NAME;
-    } else if (type.equalsIgnoreCase("map")) {
-      return serdeConstants.MAP_TYPE_NAME;
-    } else if (type.equalsIgnoreCase("array")) {
-      return serdeConstants.LIST_TYPE_NAME;
-    } else if (type.equalsIgnoreCase("struct")) {
-      return serdeConstants.STRUCT_TYPE_NAME;
-    }
-
-    throw new SQLException("Unrecognized column type: " + type);
+    return Type.getType(type).getName();
   }
 
   static int columnDisplaySize(Type hiveType, JdbcColumnAttributes columnAttributes)

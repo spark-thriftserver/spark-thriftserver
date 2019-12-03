@@ -21,8 +21,8 @@ package org.apache.spark.sql.service.cli;
 import java.sql.DatabaseMetaData;
 import java.util.Locale;
 
-import org.apache.spark.sql.service.cli.type.SparkDecimal;
 import org.apache.spark.sql.service.rpc.thrift.TTypeId;
+import org.apache.spark.sql.types.DecimalType;
 
 /**
  * Type.
@@ -181,7 +181,7 @@ public enum Type {
       case DOUBLE_TYPE:
         return 15;
       case DECIMAL_TYPE:
-        return SparkDecimal.MAX_PRECISION;
+        return DecimalType.MAX_PRECISION();
       default:
         return null;
     }

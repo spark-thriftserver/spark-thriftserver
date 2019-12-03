@@ -38,7 +38,7 @@ import org.scalatest.BeforeAndAfterAll
 
 import org.apache.spark.{SparkException, SparkFunSuite}
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.hive.test.HiveTestJars
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.internal.StaticSQLConf
 import org.apache.spark.sql.internal.StaticSQLConf.HIVE_THRIFT_SERVER_SINGLESESSION
 import org.apache.spark.sql.service.SparkThriftServer2
@@ -283,7 +283,7 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
   }
 
   test("test multiple session") {
-    assume(!hiveClassesArePresent, "Test without Hive support.")
+    assume(SparkSession.hiveClassesArePresent, "Test without Hive support.")
     import org.apache.spark.sql.internal.SQLConf
     var defaultV1: String = null
     var defaultV2: String = null
@@ -490,13 +490,15 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
   }
 
   test("test add jar") {
-    assume(!hiveClassesArePresent, "Test without Hive support.")
+    assume(SparkSession.hiveClassesArePresent, "Test without Hive support.")
     withMultipleConnectionJdbcStatement("smallKV", "addJar")(
       {
         statement =>
-          val jarFile = HiveTestJars.getHiveHcatalogCoreJar().getCanonicalPath
+          // TODO: revisit it later
+          // val jarFile = org.apache.spark.sql.hive.test.HiveTestJars
+          //  .getHiveHcatalogCoreJar().getCanonicalPath
 
-          statement.executeQuery(s"ADD JAR $jarFile")
+          statement.executeQuery(s"ADD JAR jarFile")
       },
 
       {
@@ -571,7 +573,7 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
   }
 
   test("SPARK-11595 ADD JAR with input path having URL scheme") {
-    assume(!hiveClassesArePresent, "Test without Hive support.")
+    assume(SparkSession.hiveClassesArePresent, "Test without Hive support.")
     withJdbcStatement("test_udtf") { statement =>
       try {
         val jarPath = "../hive/src/test/resources/TestUDTF.jar"
@@ -782,6 +784,7 @@ class SingleSessionSuite extends SparkThriftJdbcTest {
     s"--conf ${HIVE_THRIFT_SERVER_SINGLESESSION.key}=true" :: Nil
 
   test("share the temporary functions across JDBC connections") {
+    assume(SparkSession.hiveClassesArePresent, "Test without Hive support.")
     withMultipleConnectionJdbcStatement()(
       { statement =>
         val jarPath = "../hive/src/test/resources/TestUDTF.jar"
@@ -1170,16 +1173,6 @@ abstract class SparkThriftServer2Test extends SparkFunSuite with BeforeAndAfterA
          |End SparkThriftServer2Suite failure output
          |=========================================
        """.stripMargin)
-  }
-
-
-  protected def hiveClassesArePresent: Boolean = {
-    try {
-      SparkUtils.classForName("org.apache.hadoop.hive.conf.HiveConf")
-      true
-    } catch {
-      case _: ClassNotFoundException | _: NoClassDefFoundError => false
-    }
   }
 
   override protected def beforeAll(): Unit = {

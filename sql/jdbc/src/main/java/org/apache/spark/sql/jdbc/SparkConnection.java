@@ -622,7 +622,7 @@ public class SparkConnection implements java.sql.Connection {
         jdbcConnConf.get(JdbcConnectionParams.AUTH_TYPE))) {
       // check delegation token in job conf if any
       try {
-        tokenStr = org.apache.hadoop.hive.shims.Utils
+        tokenStr = org.apache.spark.sql.service.utils.Utils
             .getTokenStrForm(SparkAuthFactory.SS2_CLIENT_TOKEN);
       } catch (IOException e) {
         throw new SQLException("Error reading token ", e);
