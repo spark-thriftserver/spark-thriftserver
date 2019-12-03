@@ -45,8 +45,8 @@ import org.apache.hadoop.hive.serde.serdeConstants
 import org.apache.hadoop.hive.serde2.MetadataTypedColumnsetSerDe
 import org.apache.hadoop.hive.serde2.`lazy`.LazySimpleSerDe
 import org.apache.hadoop.security.UserGroupInformation
-import org.apache.spark.{SparkConf, SparkException}
 
+import org.apache.spark.{SparkConf, SparkException}
 import org.apache.spark.internal.Logging
 import org.apache.spark.metrics.source.HiveCatalogMetrics
 import org.apache.spark.sql.AnalysisException
@@ -123,8 +123,8 @@ private[hive] class HiveClientImpl(
   val sessionHiveMap = new ConcurrentHashMap[String, Hive]()
 
   /**
-   * Get or create a hive client for client user. If there have a existed hive client,
-   * return old client, else create a new one with proxy.
+   * Get or create SessionState for client user. If there have a existed SessionState,
+   * return old SessionState, else create a new one with client user name.
    *
    * @param user client user name need to proxy
    * @return
@@ -139,7 +139,7 @@ private[hive] class HiveClientImpl(
       try {
         SessionState.setCurrentSessionState(null)
         Hive.set(null)
-        val state = newState()
+        val state = newState(user)
         state
       } finally {
         Thread.currentThread().setContextClassLoader(original)
@@ -246,7 +246,7 @@ private[hive] class HiveClientImpl(
       // Switch to the initClassLoader.
       Thread.currentThread().setContextClassLoader(initClassLoader)
       try {
-        newState()
+        newState(userName())
       } finally {
         Thread.currentThread().setContextClassLoader(original)
       }
@@ -270,7 +270,7 @@ private[hive] class HiveClientImpl(
         }
         ret
       } else {
-        newState()
+        newState(userName())
       }
     }
   }
@@ -280,7 +280,7 @@ private[hive] class HiveClientImpl(
     s"Warehouse location for Hive client " +
       s"(version ${version.fullVersion}) is ${conf.getVar(ConfVars.METASTOREWAREHOUSE)}")
 
-  private def newState(): SessionState = {
+  private def newState(user: String): SessionState = {
     val hiveConf = new HiveConf(classOf[SessionState])
     // HiveConf is a Hadoop Configuration, which has a field of classLoader and
     // the initial value will be the current thread's context class loader
@@ -311,7 +311,7 @@ private[hive] class HiveClientImpl(
     }
     // Disable CBO because we removed the Calcite dependency.
     hiveConf.setBoolean("hive.cbo.enable", false)
-    val state = new SessionState(hiveConf, userName)
+    val state = new SessionState(hiveConf, user)
 
     if (client != null) {
       Hive.set(client)
