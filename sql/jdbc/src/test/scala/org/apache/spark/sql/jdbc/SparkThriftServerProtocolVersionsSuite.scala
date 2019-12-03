@@ -309,8 +309,8 @@ class SparkThriftServerProtocolVersionsSuite extends SparkThriftJdbcTest {
 
       withJdbcStatement("table1", "table2") { statement =>
         Seq(
-          "CREATE TABLE table1(key INT, val STRING)",
-          "CREATE TABLE table2(key INT, val STRING)").foreach(statement.execute)
+          "CREATE TABLE table1(key INT, val STRING) USING parquet",
+          "CREATE TABLE table2(key INT, val STRING) USING parquet").foreach(statement.execute)
 
         testGetTablesWithProtocolVersion(version, "%", "%", null) { rs =>
           checkResult(Seq("table1", "table2"), rs)
