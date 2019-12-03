@@ -37,6 +37,7 @@ import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.service.SparkThriftServer2
 import org.apache.spark.sql.service.cli._
 import org.apache.spark.sql.service.cli.session.ServiceSession
+import org.apache.spark.sql.service.internal.ServiceConf
 import org.apache.spark.sql.service.utils.Utils
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.CalendarInterval
@@ -269,6 +270,13 @@ private[service] class SparkExecuteStatementOperation(
           setState(OperationState.RUNNING)
         }
       }
+      // Always set current username to local properties
+      if (parentSession.getSQLConf.getConf(ServiceConf.THRIFTSERVER_ENABLE_DOAS)) {
+        sqlContext.sparkContext.setLocalProperty(SparkContext.SPARK_JOB_PROXY_ENABLED, "true")
+        sqlContext.sparkContext.setLocalProperty(SparkContext.SPARK_JOB_PROXY_USER,
+          parentSession.getUserName)
+      }
+
       // Always use the latest class loader provided by executionHive's state.
       val executionHiveClassLoader = sqlContext.sharedState.jarClassLoader
       Thread.currentThread().setContextClassLoader(executionHiveClassLoader)
@@ -330,6 +338,10 @@ private[service] class SparkExecuteStatementOperation(
           setState(OperationState.FINISHED)
           SparkThriftServer2.listener.onStatementFinish(statementId)
         }
+      }
+      if (parentSession.getSQLConf.getConf(ServiceConf.THRIFTSERVER_ENABLE_DOAS)) {
+        sqlContext.sparkContext.setLocalProperty(SparkContext.SPARK_JOB_PROXY_ENABLED, null)
+        sqlContext.sparkContext.setLocalProperty(SparkContext.SPARK_JOB_PROXY_USER, null)
       }
       sqlContext.sparkContext.clearJobGroup()
     }

@@ -32,6 +32,7 @@ import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
+import org.apache.hadoop.security.UserGroupInformation
 
 import org.apache.spark._
 import org.apache.spark.deploy.SparkHadoopUtil
@@ -165,6 +166,9 @@ private[spark] class Executor(
       Nil
     }
   }
+
+  private val proxyPlugin: ExecutorProxyPlugin =
+    new ExecutorProxyPlugin(conf, SparkHadoopUtil.get.newConfiguration(conf))
 
   // Plugins need to load using a class loader that includes the executor's user classpath
   private val plugins: Option[PluginContainer] = Utils.withContextClassLoader(replClassLoader) {
@@ -304,6 +308,7 @@ private[spark] class Executor(
         }
       }
       plugins.foreach(_.shutdown())
+      proxyPlugin.stop()
     }
     if (!isLocal) {
       env.stop()
@@ -397,6 +402,21 @@ private[spark] class Executor(
     }
 
     override def run(): Unit = {
+      taskDescription.properties
+        .getProperty(SparkContext.SPARK_JOB_PROXY_ENABLED) match {
+        case "true" =>
+          val proxyUser = taskDescription.properties.getProperty(SparkContext.SPARK_JOB_PROXY_USER)
+          if (proxyUser == null) {
+            runWithProxy()
+          } else {
+            proxyPlugin.proxy(proxyUser)(() => runWithProxy())
+          }
+        case _ =>
+          runWithProxy()
+      }
+    }
+
+    def runWithProxy(): Unit = {
       threadId = Thread.currentThread.getId
       Thread.currentThread.setName(threadName)
       val threadMXBean = ManagementFactory.getThreadMXBean
