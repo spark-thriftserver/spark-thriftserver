@@ -149,7 +149,8 @@ public abstract class ThriftCLIService extends AbstractService
     }
     if (SparkServer2.isHTTPTransportMode(sqlConf)) {
       // HTTP mode
-      workerKeepAliveTime = (long) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_WORKER_KEEPALIVE_TIME());
+      workerKeepAliveTime =
+          (long) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_WORKER_KEEPALIVE_TIME());
       portString = System.getenv("THRIFTSERVER_THRIFT_HTTP_PORT");
       if (portString != null) {
         portNum = Integer.valueOf(portString);
@@ -158,7 +159,8 @@ public abstract class ThriftCLIService extends AbstractService
       }
     } else {
       // Binary mode
-      workerKeepAliveTime =(long) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_WORKER_KEEPALIVE_TIME());
+      workerKeepAliveTime =
+          (long) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_WORKER_KEEPALIVE_TIME());
       portString = System.getenv("THRIFTSERVER_THRIFT_PORT");
       if (portString != null) {
         portNum = Integer.valueOf(portString);
@@ -284,8 +286,10 @@ public abstract class ThriftCLIService extends AbstractService
 
   /**
    * Returns the effective username.
-   * 1. If spark.sql.thriftserver.allow.user.substitution = false: the username of the connecting user
-   * 2. If spark.sql.thriftserver.allow.user.substitution = true: the username of the end user,
+   * 1. If spark.sql.thriftserver.allow.user.substitution = false:
+   *          the username of the connecting user
+   * 2. If spark.sql.thriftserver.allow.user.substitution = true:
+   *          the username of the end user,
    * that the connecting user is trying to proxy for.
    * This includes a check whether the connecting user is allowed to proxy for the end user.
    * @param req
@@ -702,7 +706,8 @@ public abstract class ThriftCLIService extends AbstractService
     }
 
     // Verify proxy user privilege of the realUser for the proxyUser
-    SparkAuthFactory.verifyProxyAccess(realUser, proxyUser, ipAddress, sqlContext.sparkContext().hadoopConfiguration());
+    SparkAuthFactory.verifyProxyAccess(realUser, proxyUser, ipAddress,
+        sqlContext.sparkContext().hadoopConfiguration());
     LOG.debug("Verified proxy user: " + proxyUser);
     return proxyUser;
   }

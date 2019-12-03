@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -65,7 +65,7 @@ public abstract class HadoopThriftAuthBridge {
     UserGroupInformation ugi;
     try {
       ugi = UserGroupInformation.getLoginUser();
-    } catch(IOException e) {
+    } catch (IOException e) {
       throw new IllegalStateException("Unable to get current login user: " + e, e);
     }
     if (loginUserHasCurrentAuthMethod(ugi, authMethod)) {
@@ -88,7 +88,7 @@ public abstract class HadoopThriftAuthBridge {
   public String getServerPrincipal(String principalConfig, String host)
       throws IOException {
     String serverPrincipal = SecurityUtil.getServerPrincipal(principalConfig, host);
-    String names[] = SaslRpcServer.splitKerberosName(serverPrincipal);
+    String[] names = SaslRpcServer.splitKerberosName(serverPrincipal);
     if (names.length != 3) {
       throw new IOException(
           "Kerberos principal name does NOT have the expected hostname part: "
@@ -103,7 +103,7 @@ public abstract class HadoopThriftAuthBridge {
     UserGroupInformation ugi;
     try {
       ugi = UserGroupInformation.getCurrentUser();
-    } catch(IOException e) {
+    } catch (IOException e) {
       throw new IllegalStateException("Unable to get current user: " + e, e);
     }
     if (loginUserHasCurrentAuthMethod(ugi, authMethod)) {
@@ -129,7 +129,8 @@ public abstract class HadoopThriftAuthBridge {
     AuthenticationMethod authMethod;
     try {
       // based on SecurityUtil.getAuthenticationMethod()
-      authMethod = Enum.valueOf(AuthenticationMethod.class, sAuthMethod.toUpperCase(Locale.ENGLISH));
+      authMethod = Enum.valueOf(AuthenticationMethod.class,
+          sAuthMethod.toUpperCase(Locale.ENGLISH));
     } catch (IllegalArgumentException iae) {
       throw new IllegalArgumentException("Invalid attribute value for " +
           CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION + " of " + sAuthMethod, iae);
@@ -168,52 +169,54 @@ public abstract class HadoopThriftAuthBridge {
 
       TTransport saslTransport = null;
       switch (method) {
-      case DIGEST:
-        Token<DelegationTokenIdentifier> t= new Token<DelegationTokenIdentifier>();
-        t.decodeFromUrlString(tokenStrForm);
-        saslTransport = new TSaslClientTransport(
-            method.getMechanismName(),
-            null,
-            null, SaslRpcServer.SASL_DEFAULT_REALM,
-            saslProps, new SaslClientCallbackHandler(t),
-            underlyingTransport);
-        return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
+        case DIGEST:
+          Token<DelegationTokenIdentifier> t = new Token<DelegationTokenIdentifier>();
+          t.decodeFromUrlString(tokenStrForm);
+          saslTransport = new TSaslClientTransport(
+              method.getMechanismName(),
+              null,
+              null, SaslRpcServer.SASL_DEFAULT_REALM,
+              saslProps, new SaslClientCallbackHandler(t),
+              underlyingTransport);
+          return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
 
-      case KERBEROS:
-        String serverPrincipal = SecurityUtil.getServerPrincipal(principalConfig, host);
-        final String names[] = SaslRpcServer.splitKerberosName(serverPrincipal);
-        if (names.length != 3) {
-          throw new IOException(
-              "Kerberos principal name does NOT have the expected hostname part: "
-                  + serverPrincipal);
-        }
-        try {
-          return UserGroupInformation.getCurrentUser().doAs(
-              new PrivilegedExceptionAction<TUGIAssumingTransport>() {
-                @Override
-                public TUGIAssumingTransport run() throws IOException {
-                  TTransport saslTransport = new TSaslClientTransport(
-                    method.getMechanismName(),
-                    null,
-                    names[0], names[1],
-                    saslProps, null,
-                    underlyingTransport);
-                  return new TUGIAssumingTransport(saslTransport, UserGroupInformation.getCurrentUser());
-                }
-              });
-        } catch (InterruptedException | SaslException se) {
-          throw new IOException("Could not instantiate SASL transport", se);
-        }
+        case KERBEROS:
+          String serverPrincipal = SecurityUtil.getServerPrincipal(principalConfig, host);
+          final String[] names = SaslRpcServer.splitKerberosName(serverPrincipal);
+          if (names.length != 3) {
+            throw new IOException(
+                "Kerberos principal name does NOT have the expected hostname part: "
+                    + serverPrincipal);
+          }
+          try {
+            return UserGroupInformation.getCurrentUser().doAs(
+                new PrivilegedExceptionAction<TUGIAssumingTransport>() {
+                  @Override
+                  public TUGIAssumingTransport run() throws IOException {
+                    TTransport saslTransport = new TSaslClientTransport(
+                        method.getMechanismName(),
+                        null,
+                        names[0], names[1],
+                        saslProps, null,
+                        underlyingTransport);
+                    return new TUGIAssumingTransport(saslTransport,
+                        UserGroupInformation.getCurrentUser());
+                  }
+                });
+          } catch (InterruptedException | SaslException se) {
+            throw new IOException("Could not instantiate SASL transport", se);
+          }
 
-      default:
-        throw new IOException("Unsupported authentication method: " + method);
+        default:
+          throw new IOException("Unsupported authentication method: " + method);
       }
     }
+
     private static class SaslClientCallbackHandler implements CallbackHandler {
       private final String userName;
       private final char[] userPassword;
 
-      public SaslClientCallbackHandler(Token<? extends TokenIdentifier> token) {
+      SaslClientCallbackHandler(Token<? extends TokenIdentifier> token) {
         this.userName = encodeIdentifier(token.getIdentifier());
         this.userPassword = encodePassword(token.getPassword());
       }
@@ -273,7 +276,9 @@ public abstract class HadoopThriftAuthBridge {
   public static class Server {
     public enum ServerMode {
       HIVESERVER2, METASTORE
-    };
+    }
+
+    ;
 
     protected final UserGroupInformation realUgi;
     protected DelegationTokenSecretManager secretManager;
@@ -285,6 +290,7 @@ public abstract class HadoopThriftAuthBridge {
         throw new TTransportException(ioe);
       }
     }
+
     /**
      * Create a server with a kerberos keytab/principal.
      */
@@ -342,7 +348,7 @@ public abstract class HadoopThriftAuthBridge {
         Map<String, String> saslProps) throws TTransportException {
       // Parse out the kerberos principal, host, realm.
       String kerberosName = realUgi.getUserName();
-      final String names[] = SaslRpcServer.splitKerberosName(kerberosName);
+      final String[] names = SaslRpcServer.splitKerberosName(kerberosName);
       if (names.length != 3) {
         throw new TTransportException("Kerberos principal should have 3 parts: " + kerberosName);
       }
@@ -387,29 +393,29 @@ public abstract class HadoopThriftAuthBridge {
       return new TUGIAssumingProcessor(processor, secretManager, false);
     }
 
-    final static ThreadLocal<InetAddress> remoteAddress =
+    final ThreadLocal<InetAddress> remoteAddress =
         new ThreadLocal<InetAddress>() {
 
-      @Override
-      protected InetAddress initialValue() {
-        return null;
-      }
-    };
+          @Override
+          protected InetAddress initialValue() {
+            return null;
+          }
+        };
 
     public InetAddress getRemoteAddress() {
       return remoteAddress.get();
     }
 
-    final static ThreadLocal<AuthenticationMethod> authenticationMethod =
+    final ThreadLocal<AuthenticationMethod> authenticationMethod =
         new ThreadLocal<AuthenticationMethod>() {
 
-      @Override
-      protected AuthenticationMethod initialValue() {
-        return AuthenticationMethod.TOKEN;
-      }
-    };
+          @Override
+          protected AuthenticationMethod initialValue() {
+            return AuthenticationMethod.TOKEN;
+          }
+        };
 
-    private static ThreadLocal<String> remoteUser = new ThreadLocal<String> () {
+    private static ThreadLocal<String> remoteUser = new ThreadLocal<String>() {
 
       @Override
       protected String initialValue() {
@@ -422,18 +428,19 @@ public abstract class HadoopThriftAuthBridge {
       return remoteUser.get();
     }
 
-    private final static ThreadLocal<String> userAuthMechanism =
+    private final ThreadLocal<String> userAuthMechanism =
         new ThreadLocal<String>() {
 
-      @Override
-      protected String initialValue() {
-        return AuthMethod.KERBEROS.getMechanismName();
-      }
-    };
+          @Override
+          protected String initialValue() {
+            return AuthMethod.KERBEROS.getMechanismName();
+          }
+        };
 
     public String getUserAuthMechanism() {
       return userAuthMechanism.get();
     }
+
     /** CallbackHandler for SASL DIGEST-MD5 mechanism */
     // This code is pretty much completely based on Hadoop's
     // SaslRpcServer.SaslDigestCallbackHandler - the only reason we could not
@@ -443,7 +450,7 @@ public abstract class HadoopThriftAuthBridge {
     static class SaslDigestCallbackHandler implements CallbackHandler {
       private final DelegationTokenSecretManager secretManager;
 
-      public SaslDigestCallbackHandler(
+      SaslDigestCallbackHandler(
           DelegationTokenSecretManager secretManager) {
         this.secretManager = secretManager;
       }
@@ -455,11 +462,12 @@ public abstract class HadoopThriftAuthBridge {
       private char[] encodePassword(byte[] password) {
         return new String(Base64.encodeBase64(password)).toCharArray();
       }
+
       /** {@inheritDoc} */
 
       @Override
       public void handle(Callback[] callbacks) throws InvalidToken,
-      UnsupportedCallbackException {
+          UnsupportedCallbackException {
         NameCallback nc = null;
         PasswordCallback pc = null;
         AuthorizeCallback ac = null;
@@ -478,8 +486,8 @@ public abstract class HadoopThriftAuthBridge {
           }
         }
         if (pc != null) {
-          DelegationTokenIdentifier tokenIdentifier = SaslRpcServer.
-              getIdentifier(nc.getDefaultName(), secretManager);
+          DelegationTokenIdentifier tokenIdentifier =
+              SaslRpcServer.getIdentifier(nc.getDefaultName(), secretManager);
           char[] password = getPassword(tokenIdentifier);
 
           if (LOG.isDebugEnabled()) {
@@ -520,6 +528,7 @@ public abstract class HadoopThriftAuthBridge {
       final TProcessor wrapped;
       DelegationTokenSecretManager secretManager;
       boolean useProxy;
+
       TUGIAssumingProcessor(TProcessor wrapped, DelegationTokenSecretManager secretManager,
                             boolean useProxy) {
         this.wrapped = wrapped;
@@ -534,13 +543,13 @@ public abstract class HadoopThriftAuthBridge {
         if (!(trans instanceof TSaslServerTransport)) {
           throw new TException("Unexpected non-SASL transport " + trans.getClass());
         }
-        TSaslServerTransport saslTrans = (TSaslServerTransport)trans;
+        TSaslServerTransport saslTrans = (TSaslServerTransport) trans;
         SaslServer saslServer = saslTrans.getSaslServer();
         String authId = saslServer.getAuthorizationID();
         LOG.debug("AUTH ID ======>" + authId);
         String endUser = authId;
 
-        Socket socket = ((TSocket)(saslTrans.getUnderlyingTransport())).getSocket();
+        Socket socket = ((TSocket) (saslTrans.getUnderlyingTransport())).getSocket();
         remoteAddress.set(socket.getInetAddress());
 
         String mechanismName = saslServer.getMechanismName();
@@ -551,7 +560,7 @@ public abstract class HadoopThriftAuthBridge {
         }
 
         authenticationMethod.set(AuthenticationMethod.KERBEROS);
-        if(AuthMethod.TOKEN.getMechanismName().equalsIgnoreCase(mechanismName)) {
+        if (AuthMethod.TOKEN.getMechanismName().equalsIgnoreCase(mechanismName)) {
           try {
             TokenIdentifier tokenId = SaslRpcServer.getIdentifier(authId,
                 secretManager);
@@ -589,18 +598,18 @@ public abstract class HadoopThriftAuthBridge {
           }
         } catch (RuntimeException rte) {
           if (rte.getCause() instanceof TException) {
-            throw (TException)rte.getCause();
+            throw (TException) rte.getCause();
           }
           throw rte;
         } catch (InterruptedException ie) {
           throw new RuntimeException(ie); // unexpected!
         } catch (IOException ioe) {
           throw new RuntimeException(ioe); // unexpected!
-        }
-        finally {
+        } finally {
           if (clientUgi != null) {
-            try { FileSystem.closeAllForUGI(clientUgi); }
-            catch(IOException exception) {
+            try {
+              FileSystem.closeAllForUGI(clientUgi);
+            } catch (IOException exception) {
               LOG.error("Could not clean up file-system handles for UGI: " + clientUgi, exception);
             }
           }
@@ -619,7 +628,7 @@ public abstract class HadoopThriftAuthBridge {
       private final UserGroupInformation ugi;
       private final TTransportFactory wrapped;
 
-      public TUGIAssumingTransportFactory(TTransportFactory wrapped, UserGroupInformation ugi) {
+      TUGIAssumingTransportFactory(TTransportFactory wrapped, UserGroupInformation ugi) {
         assert wrapped != null;
         assert ugi != null;
         this.wrapped = wrapped;

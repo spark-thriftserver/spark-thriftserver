@@ -23,8 +23,6 @@ import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.util.Locale;
-
 
 import org.apache.spark.sql.service.cli.Type;
 

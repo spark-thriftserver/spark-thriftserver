@@ -150,7 +150,8 @@ class ZooKeeperSparkClientHelper {
           connParams.getSessionVars().put(JdbcConnectionParams.HTTP_PATH, matcher.group(2));
         }
         // Set SSL
-        if ((matcher.group(1) != null) && (matcher.group(1).equals("spark.sql.thriftserver.use.SSL"))
+        if ((matcher.group(1) != null) &&
+                (matcher.group(1).equals("spark.sql.thriftserver.use.SSL"))
             && !(connParams.getSessionVars().containsKey(JdbcConnectionParams.USE_SSL))) {
           connParams.getSessionVars().put(JdbcConnectionParams.USE_SSL, matcher.group(2));
         }
@@ -176,7 +177,8 @@ class ZooKeeperSparkClientHelper {
         }
         // KERBEROS
         // If delegation token is passed from the client side, do not set the principal
-        if (matcher.group(1).equalsIgnoreCase("spark.sql.thriftserver.authentication.kerberos.principal")
+        if (matcher.group(1)
+                .equalsIgnoreCase("spark.sql.thriftserver.authentication.kerberos.principal")
             && !(connParams.getSessionVars().containsKey(JdbcConnectionParams.AUTH_TYPE)
             && connParams.getSessionVars().get(JdbcConnectionParams.AUTH_TYPE)
                 .equalsIgnoreCase(JdbcConnectionParams.AUTH_TOKEN))

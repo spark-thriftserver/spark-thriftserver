@@ -23,7 +23,6 @@ import java.io.IOException;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.spark.sql.SQLContext;
-import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.cli.ServiceSQLException;
 import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;

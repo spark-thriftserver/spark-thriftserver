@@ -19,26 +19,17 @@
 package org.apache.spark.sql.service.utils;
 
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.security.authentication.util.KerberosUtil;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenIdentifier;
 import org.apache.hadoop.security.token.TokenSelector;
 import org.apache.spark.sql.service.auth.thrift.DelegationTokenIdentifier;
 import org.apache.spark.sql.service.auth.thrift.DelegationTokenSelector;
-import org.apache.zookeeper.client.ZooKeeperSaslClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.security.auth.login.AppConfigurationEntry;
-import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
 import javax.security.auth.login.LoginException;
-import javax.servlet.*;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.*;
 
 public class Utils {
 

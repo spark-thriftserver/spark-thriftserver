@@ -676,7 +676,8 @@ public class SparkConnection implements java.sql.Connection {
 
       // Update fetchSize if modified by server
       // String serverFetchSize =
-      //   openResp.getConfiguration().get("spark.sql.thriftserver.thrift.resultset.default.fetch.size");
+      //   openResp.getConfiguration()
+      //       .get("spark.sql.thriftserver.thrift.resultset.default.fetch.size");
       // if (serverFetchSize != null) {
       //   fetchSize = Integer.parseInt(serverFetchSize);
       // }

@@ -235,6 +235,7 @@ public class SparkServer2 extends CompositeService {
     @Override
     public void execute() {
       try {
+        LOG.error("Don't support starting SparkServer2 here");
       } catch (Throwable t) {
         LOG.error("Error starting SparkServer2", t);
         System.exit(-1);

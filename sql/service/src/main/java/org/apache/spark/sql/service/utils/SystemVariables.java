@@ -104,7 +104,8 @@ public class SystemVariables {
     }
 
     if (s > depth) {
-      throw new IllegalStateException("Variable substitution depth is deeper than " + depth + " for expression " + expr);
+      throw new IllegalStateException("Variable substitution depth is deeper than " +
+          depth + " for expression " + expr);
     } else {
       return eval;
     }

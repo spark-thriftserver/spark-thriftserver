@@ -20,6 +20,8 @@ package org.apache.spark.sql.service.auth.io;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.util.ReflectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,6 +35,8 @@ import java.util.List;
  * exception to the caller.
  */
 public class SparkIOExceptionHandlerChain {
+
+  static final Logger LOG = LoggerFactory.getLogger(SparkIOExceptionHandlerChain.class);
 
   public static final String SPARK_IO_EXCEPTION_HANDLE_CHAIN = "spark.io.exception.handlers";
 
@@ -53,6 +57,7 @@ public class SparkIOExceptionHandlerChain {
               SparkIOExceptionHandler handler = ReflectionUtils.newInstance(handlerCls, null);
               handlerChain.add(handler);
             } catch (Exception e) {
+              LOG.error("Load class [" + handlerStr + "] failed.", e);
             }
           }
         }

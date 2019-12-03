@@ -92,18 +92,24 @@ public class ThriftHttpServlet extends TServlet {
     this.serviceUGI = serviceUGI;
     this.httpUGI = httpUGI;
     this.sparkAuthFactory = sparkAuthFactory;
-    this.isCookieAuthEnabled = (boolean) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_AUTH_ENABLED());
+    this.isCookieAuthEnabled =
+        (boolean) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_AUTH_ENABLED());
     // Initialize the cookie based authentication related variables.
     if (isCookieAuthEnabled) {
       // Generate the signer with secret.
       String secret = Long.toString(RAN.nextLong());
       LOG.debug("Using the random number as the secret for cookie generation " + secret);
       this.signer = new CookieSigner(secret.getBytes());
-      this.cookieMaxAge = new Long(((long) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_MAX_AGE()))).intValue();
+      this.cookieMaxAge =
+          new Long(((long) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_MAX_AGE())))
+              .intValue();
       this.cookieDomain = sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_DOMAIN());
-      this.cookiePath = sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_PATH());
-      this.isCookieSecure = (boolean) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_IS_SECURE());
-      this.isHttpOnlyCookie = (boolean) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_IS_HTTPONLY());
+      this.cookiePath =
+          sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_PATH());
+      this.isCookieSecure =
+          (boolean) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_IS_SECURE());
+      this.isHttpOnlyCookie =
+           (boolean) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_IS_HTTPONLY());
     }
   }
 

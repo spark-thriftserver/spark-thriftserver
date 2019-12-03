@@ -89,9 +89,11 @@ public class SessionManager extends CompositeService {
   private void createBackgroundOperationPool() {
     int poolSize = (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_THREADS());
     LOG.info("SparkServer2: Background operation thread pool size: " + poolSize);
-    int poolQueueSize = (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_WAIT_QUEUE_SIZE());
+    int poolQueueSize =
+        (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_WAIT_QUEUE_SIZE());
     LOG.info("SparkServer2: Background operation thread wait queue size: " + poolQueueSize);
-    long keepAliveTime = (long) sqlConf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_KEEPALIVE_TIME());
+    long keepAliveTime =
+       (long) sqlConf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_KEEPALIVE_TIME());
     LOG.info(
         "SparkServer2: Background operation thread keepalive time: " + keepAliveTime + " seconds");
 
@@ -106,7 +108,8 @@ public class SessionManager extends CompositeService {
 
     checkInterval = (long) sqlConf.getConf(ServiceConf.THRIFTSERVER_SESSION_CHECK_INTERVAL());
     sessionTimeout = (long) sqlConf.getConf(ServiceConf.THRIFTSERVER_IDLE_SESSION_TIMEOUT());
-    checkOperation = (boolean) sqlConf.getConf(ServiceConf.THRIFTSERVER_IDLE_SESSION_CHECK_OPERATION());
+    checkOperation =
+        (boolean) sqlConf.getConf(ServiceConf.THRIFTSERVER_IDLE_SESSION_CHECK_OPERATION());
   }
 
   private void initOperationLogRootDir() {

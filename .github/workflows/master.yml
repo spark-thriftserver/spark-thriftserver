@@ -49,6 +49,8 @@ jobs:
         architecture: 'x64'
     - name: Scala
       run: ./dev/lint-scala
+    - name: Java
+      run: ./dev/lint-scala
     - name: Python
       run: |
         pip install flake8 sphinx numpy

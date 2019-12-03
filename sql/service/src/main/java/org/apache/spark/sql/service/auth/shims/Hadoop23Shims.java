@@ -37,11 +37,11 @@ public class Hadoop23Shims extends HadoopShimsSecure {
   }
 
   class ProxyFileSystem23 extends ProxyFileSystem {
-    public ProxyFileSystem23(FileSystem fs) {
+    ProxyFileSystem23(FileSystem fs) {
       super(fs);
     }
 
-    public ProxyFileSystem23(FileSystem fs, URI uri) {
+    ProxyFileSystem23(FileSystem fs, URI uri) {
       super(fs, uri);
     }
 
@@ -156,7 +156,7 @@ public class Hadoop23Shims extends HadoopShimsSecure {
 
     private final KerberosName kerberosName;
 
-    public KerberosNameShim(String name) {
+    KerberosNameShim(String name) {
       kerberosName = new KerberosName(name);
     }
 

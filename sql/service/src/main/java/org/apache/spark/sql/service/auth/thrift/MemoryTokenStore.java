@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -91,7 +91,8 @@ public class MemoryTokenStore implements DelegationTokenStore {
                           DelegationTokenInformation token) {
     DelegationTokenInformation tokenInfo = tokens.putIfAbsent(tokenIdentifier, token);
     if (LOG.isTraceEnabled()) {
-      LOG.trace("addToken: tokenIdentifier = " + tokenIdentifier + ", added = " + (tokenInfo == null));
+      LOG.trace("addToken: tokenIdentifier = " +
+          tokenIdentifier + ", added = " + (tokenInfo == null));
     }
     return (tokenInfo == null);
   }
@@ -100,7 +101,8 @@ public class MemoryTokenStore implements DelegationTokenStore {
   public boolean removeToken(DelegationTokenIdentifier tokenIdentifier) {
     DelegationTokenInformation tokenInfo = tokens.remove(tokenIdentifier);
     if (LOG.isTraceEnabled()) {
-      LOG.trace("removeToken: tokenIdentifier = " + tokenIdentifier + ", removed = " + (tokenInfo != null));
+      LOG.trace("removeToken: tokenIdentifier = " +
+          tokenIdentifier + ", removed = " + (tokenInfo != null));
     }
     return tokenInfo != null;
   }
@@ -119,7 +121,7 @@ public class MemoryTokenStore implements DelegationTokenStore {
     List<DelegationTokenIdentifier> result = new ArrayList<DelegationTokenIdentifier>(
         tokens.size());
     for (DelegationTokenIdentifier id : tokens.keySet()) {
-        result.add(id);
+      result.add(id);
     }
     return result;
   }
@@ -130,7 +132,8 @@ public class MemoryTokenStore implements DelegationTokenStore {
   }
 
   @Override
-  public void init(Object hmsHandler, HadoopThriftAuthBridge.Server.ServerMode smode) throws TokenStoreException {
+  public void init(Object hmsHandler, HadoopThriftAuthBridge.Server.ServerMode smode)
+      throws TokenStoreException {
     // no-op
   }
 }

@@ -395,7 +395,8 @@ public class Utils {
               key.substring(JdbcConnectionParams.SPARK_VAR_PREFIX.length()), info.getProperty(key));
         } else if (key.startsWith(JdbcConnectionParams.SPARK_CONF_PREFIX)) {
           connParams.getHiveConfs().put(
-              key.substring(JdbcConnectionParams.SPARK_CONF_PREFIX.length()), info.getProperty(key));
+              key.substring(JdbcConnectionParams.SPARK_CONF_PREFIX.length()),
+                  info.getProperty(key));
         }
       }
     }

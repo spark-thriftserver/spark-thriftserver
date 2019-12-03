@@ -19,7 +19,6 @@
 package org.apache.spark.sql.service.cli.thrift;
 
 import org.apache.spark.sql.SQLContext;
-import org.apache.spark.sql.service.SparkSQLEnv;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.auth.SparkAuthUtils;
 import org.apache.spark.sql.service.auth.shims.ShimLoader;
@@ -61,7 +60,8 @@ public class ThriftBinaryCLIService extends ThriftCLIService {
       TProcessorFactory processorFactory = sparkAuthFactory.getAuthProcFactory(this);
       TServerSocket serverSocket = null;
       List<String> sslVersionBlacklist = new ArrayList<String>();
-      for (String sslVersion : sqlConf.getConf(ServiceConf.THRIFTSERVER_SSL_PROTOCOL_BLACKLIST()).split(",")) {
+      for (String sslVersion : sqlConf.getConf(ServiceConf.THRIFTSERVER_SSL_PROTOCOL_BLACKLIST())
+          .split(",")) {
         sslVersionBlacklist.add(sslVersion);
       }
       if (!((boolean) sqlConf.getConf(ServiceConf.THRIFTSERVER_USE_SSL()))) {
@@ -72,17 +72,24 @@ public class ThriftBinaryCLIService extends ThriftCLIService {
           throw new IllegalArgumentException(ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PATH().key()
               + " Not configured for SSL connection");
         }
-        org.apache.hadoop.conf.Configuration hadoopConf = sqlContext.sparkContext().hadoopConfiguration();
+        org.apache.hadoop.conf.Configuration hadoopConf =
+            sqlContext.sparkContext().hadoopConfiguration();
         String keyStorePassword = ShimLoader.getHadoopShims().getPassword(hadoopConf,
-            ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PASSWORD().key().substring("spark.hadoop.".length()));
+            ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PASSWORD().key()
+                .substring("spark.hadoop.".length()));
         serverSocket = SparkAuthUtils.getServerSSLSocket(sparkHost, portNum, keyStorePath,
             keyStorePassword, sslVersionBlacklist);
       }
 
       // Server args
-      int maxMessageSize = (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_MAX_MESSAGE_SIZE());
-      int requestTimeout = new Long((long) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_LOGIN_TIMEOUT())).intValue();
-      int beBackoffSlotLength = new Long(((long) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_LOGIN_BEBACKOFF_SLOT_LENGTH()))).intValue();
+      int maxMessageSize =
+          (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_MAX_MESSAGE_SIZE());
+      int requestTimeout =
+          new Long((long) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_LOGIN_TIMEOUT()))
+              .intValue();
+      int beBackoffSlotLength =
+          new Long(((long) sqlConf.getConf(
+              ServiceConf.THRIFTSERVER_THRIFT_LOGIN_BEBACKOFF_SLOT_LENGTH()))).intValue();
       TThreadPoolServer.Args sargs = new TThreadPoolServer.Args(serverSocket)
           .processorFactory(processorFactory).transportFactory(transportFactory)
           .protocolFactory(new TBinaryProtocol.Factory())

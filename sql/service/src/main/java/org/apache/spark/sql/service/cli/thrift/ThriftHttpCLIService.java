@@ -21,7 +21,6 @@ package org.apache.spark.sql.service.cli.thrift;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Shell;
 import org.apache.spark.sql.SQLContext;
-import org.apache.spark.sql.service.SparkSQLEnv;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.auth.shims.ShimLoader;
 import org.apache.spark.sql.service.cli.CLIService;
@@ -83,15 +82,20 @@ public class ThriftHttpCLIService extends ThriftCLIService {
       // Change connector if SSL is used
       if (useSsl) {
         String keyStorePath = sqlConf.getConf(ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PATH());
-        org.apache.hadoop.conf.Configuration hadoopConf = sqlContext.sparkContext().hadoopConfiguration();
-        String keyStorePassword = ShimLoader.getHadoopShims().getPassword(hadoopConf,
-            ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PASSWORD().key().substring("spark.hadoop.".length()));
+        org.apache.hadoop.conf.Configuration hadoopConf =
+            sqlContext.sparkContext().hadoopConfiguration();
+        String keyStorePassword = ShimLoader.getHadoopShims()
+           .getPassword(hadoopConf,
+               ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PASSWORD()
+                   .key().substring("spark.hadoop.".length()));
         if (keyStorePath.isEmpty()) {
-          throw new IllegalArgumentException(ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PATH().key()
+          throw
+              new IllegalArgumentException(ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PATH().key()
               + " Not configured for SSL connection");
         }
         SslContextFactory sslContextFactory = new SslContextFactory.Server();
-        String[] excludedProtocols = sqlConf.getConf(ServiceConf.THRIFTSERVER_SSL_PROTOCOL_BLACKLIST()).split(",");
+        String[] excludedProtocols =
+            sqlConf.getConf(ServiceConf.THRIFTSERVER_SSL_PROTOCOL_BLACKLIST()).split(",");
         LOG.info("HTTP Server SSL: adding excluded protocols: " +
              Arrays.toString(excludedProtocols));
         sslContextFactory.addExcludeProtocols(excludedProtocols);
@@ -117,7 +121,9 @@ public class ThriftHttpCLIService extends ThriftCLIService {
       connector.setPort(portNum);
       // Linux:yes, Windows:no
       connector.setReuseAddress(!Shell.WINDOWS);
-      int maxIdleTime = new Long(((long) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_MAX_IDLE_TIME()))).intValue();
+      int maxIdleTime =
+          new Long(((long) sqlConf.getConf(ServiceConf
+               .THRIFTSERVER_THRIFT_HTTP_MAX_IDLE_TIME()))).intValue();
       connector.setIdleTimeout(maxIdleTime);
 
       httpServer.addConnector(connector);

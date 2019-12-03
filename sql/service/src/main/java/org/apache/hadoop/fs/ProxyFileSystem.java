@@ -68,11 +68,11 @@ public class ProxyFileSystem extends FilterFileSystem {
   }
 
   public ProxyFileSystem() {
-    throw new RuntimeException ("Unsupported constructor");
+    throw new RuntimeException("Unsupported constructor");
   }
 
   public ProxyFileSystem(FileSystem fs) {
-    throw new RuntimeException ("Unsupported constructor");
+    throw new RuntimeException("Unsupported constructor");
   }
 
   /**
@@ -112,7 +112,7 @@ public class ProxyFileSystem extends FilterFileSystem {
   @Override
   public void initialize(URI name, Configuration conf) throws IOException {
     try {
-      URI realUri = new URI (realScheme, realAuthority,
+      URI realUri = new URI(realScheme, realAuthority,
                             name.getPath(), name.getQuery(), name.getFragment());
       super.initialize(realUri, conf);
     } catch (URISyntaxException e) {
@@ -161,7 +161,8 @@ public class ProxyFileSystem extends FilterFileSystem {
 
   @Override
   public FSDataOutputStream create(Path f, FsPermission permission,
-                                   boolean overwrite, int bufferSize, short replication, long blockSize,
+                                   boolean overwrite, int bufferSize,
+                                   short replication, long blockSize,
                                    Progressable progress) throws IOException {
     return super.create(swizzleParamPath(f), permission,
         overwrite, bufferSize, replication, blockSize, progress);

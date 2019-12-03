@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,7 +37,7 @@ public interface HadoopShims {
    * Create a proxy file system that can serve a given scheme/authority using some
    * other file system.
    */
-  public FileSystem createProxyFileSystem(FileSystem fs, URI uri);
+  FileSystem createProxyFileSystem(FileSystem fs, URI uri);
 
   /**
    * Use password API (if available) to fetch credentials/password
@@ -45,21 +45,25 @@ public interface HadoopShims {
    * @param name
    * @return
    */
-  public String getPassword(Configuration conf, String name) throws IOException;
+  String getPassword(Configuration conf, String name) throws IOException;
 
   /**
    * Returns a shim to wrap KerberosName
    */
-  public KerberosNameShim getKerberosNameShim(String name) throws IOException;
+  KerberosNameShim getKerberosNameShim(String name) throws IOException;
 
   /**
    * Shim for KerberosName
    */
-  public interface KerberosNameShim {
-    public String getDefaultRealm();
-    public String getServiceName();
-    public String getHostName();
-    public String getRealm();
-    public String getShortName() throws IOException;
+  interface KerberosNameShim {
+    String getDefaultRealm();
+
+    String getServiceName();
+
+    String getHostName();
+
+    String getRealm();
+
+    String getShortName() throws IOException;
   }
 }

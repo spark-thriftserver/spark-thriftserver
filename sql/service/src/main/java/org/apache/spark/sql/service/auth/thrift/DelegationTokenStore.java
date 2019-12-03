@@ -34,7 +34,7 @@ public interface DelegationTokenStore extends Configurable, Closeable {
   /**
    * Exception for internal token store errors that typically cannot be handled by the caller.
    */
-  public static class TokenStoreException extends RuntimeException {
+  class TokenStoreException extends RuntimeException {
     private static final long serialVersionUID = -8693819817623074083L;
 
     public TokenStoreException(Throwable cause) {

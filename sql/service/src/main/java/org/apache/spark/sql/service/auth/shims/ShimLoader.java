@@ -43,7 +43,8 @@ public abstract class ShimLoader {
       new HashMap<String, String>();
 
   static {
-    HADOOP_SHIM_CLASSES.put(HADOOP23VERSIONNAME, "org.apache.spark.sql.service.auth.shims.Hadoop23Shims");
+    HADOOP_SHIM_CLASSES.put(HADOOP23VERSIONNAME,
+        "org.apache.spark.sql.service.auth.shims.Hadoop23Shims");
   }
 
   /**

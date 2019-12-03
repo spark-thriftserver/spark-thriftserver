@@ -40,21 +40,22 @@ public class OperationLog {
   private final LogFile logFile;
   private LoggingLevel opLoggingLevel = LoggingLevel.UNKNOWN;
 
-  public static enum LoggingLevel {
+  public enum LoggingLevel {
     NONE, EXECUTION, PERFORMANCE, VERBOSE, UNKNOWN
   }
 
-  public OperationLog(String name, File file, SQLConf sqlConf) throws FileNotFoundException {
+  public OperationLog(String name, File file, SQLConf sqlConf)
+      throws FileNotFoundException {
     operationName = name;
     logFile = new LogFile(file);
 
     if (((boolean) sqlConf.getConf(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_ENABLE()))) {
-      String logLevel = (String) sqlConf.getConf(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_LEVEL());
+      String logLevel = sqlConf.getConf(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_LEVEL());
       opLoggingLevel = getLoggingLevel(logLevel);
     }
   }
 
-  public static LoggingLevel getLoggingLevel (String mode) {
+  public static LoggingLevel getLoggingLevel(String mode) {
     if (mode.equalsIgnoreCase("none")) {
       return LoggingLevel.NONE;
     } else if (mode.equalsIgnoreCase("execution")) {

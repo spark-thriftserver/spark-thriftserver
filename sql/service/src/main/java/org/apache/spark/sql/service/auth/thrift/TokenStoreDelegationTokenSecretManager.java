@@ -50,16 +50,17 @@ public class TokenStoreDelegationTokenSecretManager extends DelegationTokenSecre
   private static final Logger LOGGER =
       LoggerFactory.getLogger(TokenStoreDelegationTokenSecretManager.class.getName());
 
-  final private long keyUpdateInterval;
-  final private long tokenRemoverScanInterval;
+  private final long keyUpdateInterval;
+  private final long tokenRemoverScanInterval;
   private Thread tokenRemoverThread;
 
-  final private DelegationTokenStore tokenStore;
+  private final DelegationTokenStore tokenStore;
 
-  public TokenStoreDelegationTokenSecretManager(long delegationKeyUpdateInterval,
-      long delegationTokenMaxLifetime, long delegationTokenRenewInterval,
-      long delegationTokenRemoverScanInterval,
-      DelegationTokenStore sharedStore) {
+  TokenStoreDelegationTokenSecretManager(long delegationKeyUpdateInterval,
+                                         long delegationTokenMaxLifetime,
+                                         long delegationTokenRenewInterval,
+                                         long delegationTokenRemoverScanInterval,
+                                         DelegationTokenStore sharedStore) {
     super(delegationKeyUpdateInterval, delegationTokenMaxLifetime, delegationTokenRenewInterval,
         delegationTokenRemoverScanInterval);
     this.keyUpdateInterval = delegationKeyUpdateInterval;
@@ -253,7 +254,7 @@ public class TokenStoreDelegationTokenSecretManager extends DelegationTokenSecre
   protected void rollMasterKeyExt() throws IOException {
     Map<Integer, DelegationKey> keys = reloadKeys();
     int currentKeyId = super.currentId;
-    SparkDelegationTokenSupport.rollMasterKey(org.apache.spark.sql.service.auth.thrift.TokenStoreDelegationTokenSecretManager.this);
+    SparkDelegationTokenSupport.rollMasterKey(TokenStoreDelegationTokenSecretManager.this);
     List<DelegationKey> keysAfterRoll = Arrays.asList(getAllKeys());
     for (DelegationKey key : keysAfterRoll) {
       keys.remove(key.getKeyId());

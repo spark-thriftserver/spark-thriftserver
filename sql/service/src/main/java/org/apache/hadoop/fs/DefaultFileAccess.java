@@ -54,7 +54,8 @@ public class DefaultFileAccess {
   }
 
   public static void checkFileAccess(FileSystem fs, FileStatus stat, FsAction action,
-                                     String user, List<String> groups) throws IOException, AccessControlException {
+                                     String user, List<String> groups)
+      throws IOException, AccessControlException {
 
     if (groups == null) {
       groups = emptyGroups;

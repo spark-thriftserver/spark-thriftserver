@@ -27,10 +27,10 @@ import org.apache.thrift.transport.TTransportFactory;
 import java.net.Socket;
 import java.util.concurrent.ConcurrentMap;
 
-/** TUGIContainingTransport associates ugi information with connection (transport).
- *  Wraps underlying <code>TSocket</code> transport and annotates it with ugi.
-*/
-
+/**
+ * TUGIContainingTransport associates ugi information with connection (transport).
+ * Wraps underlying <code>TSocket</code> transport and annotates it with ugi.
+ */
 public class TUGIContainingTransport extends TFilterTransport {
 
   private UserGroupInformation ugi;

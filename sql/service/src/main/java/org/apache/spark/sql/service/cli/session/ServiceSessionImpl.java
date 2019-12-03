@@ -661,7 +661,8 @@ public class ServiceSessionImpl implements ServiceSession {
   @Override
   public String getDelegationToken(SparkAuthFactory authFactory, String owner, String renewer)
       throws ServiceSQLException {
-    SparkAuthFactory.verifyProxyAccess(getUsername(), owner, getIpAddress(), sqlContext.sparkContext().hadoopConfiguration());
+    SparkAuthFactory.verifyProxyAccess(getUsername(), owner, getIpAddress(),
+        sqlContext.sparkContext().hadoopConfiguration());
     return authFactory.getDelegationToken(owner, renewer, getIpAddress());
   }
 

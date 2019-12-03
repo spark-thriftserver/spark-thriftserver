@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -66,21 +66,21 @@ public class SparkStringUtils {
   private static final DecimalFormat decimalFormat;
 
   private static final CharSequenceTranslator ESCAPE_JAVA =
-          new LookupTranslator(
-                  new String[][] {
-                          {"\"", "\\\""},
-                          {"\\", "\\\\"},
-                  }).with(
-                  new LookupTranslator(EntityArrays.JAVA_CTRL_CHARS_ESCAPE()));
+      new LookupTranslator(
+          new String[][]{
+              {"\"", "\\\""},
+              {"\\", "\\\\"},
+          }).with(
+          new LookupTranslator(EntityArrays.JAVA_CTRL_CHARS_ESCAPE()));
 
   private static final CharSequenceTranslator ESCAPE_HIVE_COMMAND =
-          new LookupTranslator(
-                  new String[][] {
-                          {"'", "\\'"},
-                          {";", "\\;"},
-                          {"\\", "\\\\"},
-                  }).with(
-                  new LookupTranslator(EntityArrays.JAVA_CTRL_CHARS_ESCAPE()));
+      new LookupTranslator(
+          new String[][]{
+              {"'", "\\'"},
+              {";", "\\;"},
+              {"\\", "\\\\"},
+          }).with(
+          new LookupTranslator(EntityArrays.JAVA_CTRL_CHARS_ESCAPE()));
 
   /**
    * Maintain a String pool to reduce memory.
@@ -101,7 +101,7 @@ public class SparkStringUtils {
    * @return The identical string cached in the string pool.
    */
   public static String intern(String str) {
-    if(str == null) {
+    if (str == null) {
       return null;
     }
     return STRING_INTERNER.intern(str);
@@ -113,11 +113,11 @@ public class SparkStringUtils {
    * @return An identical list with its strings interned.
    */
   public static List<String> intern(List<String> list) {
-    if(list == null) {
+    if (list == null) {
       return null;
     }
     List<String> newList = new ArrayList<String>(list.size());
-    for(String str : list) {
+    for (String str : list) {
       newList.add(intern(str));
     }
     return newList;
@@ -129,7 +129,7 @@ public class SparkStringUtils {
    * @return An identical map with its strings interned.
    */
   public static Map<String, String> intern(Map<String, String> map) {
-    if(map == null) {
+    if (map == null) {
       return null;
     }
 
@@ -138,7 +138,7 @@ public class SparkStringUtils {
       return map;
     }
     Map<String, String> newMap = new HashMap<String, String>(map.size());
-    for(Map.Entry<String, String> entry : map.entrySet()) {
+    for (Map.Entry<String, String> entry : map.entrySet()) {
       newMap.put(intern(entry.getKey()), intern(entry.getValue()));
     }
     return newMap;
@@ -207,7 +207,7 @@ public class SparkStringUtils {
    */
   public static String formatPercent(double done, int digits) {
     DecimalFormat percentFormat = new DecimalFormat("0.00%");
-    double scale = Math.pow(10.0, digits+2);
+    double scale = Math.pow(10.0, digits + 2);
     double rounded = Math.floor(done * scale);
     percentFormat.setDecimalSeparatorAlwaysShown(false);
     percentFormat.setMinimumFractionDigits(digits);
@@ -223,7 +223,9 @@ public class SparkStringUtils {
    */
 
   public static String arrayToString(String[] strs) {
-    if (strs.length == 0) { return ""; }
+    if (strs.length == 0) {
+      return "";
+    }
     StringBuilder sbuf = new StringBuilder();
     sbuf.append(strs[0]);
     for (int idx = 1; idx < strs.length; idx++) {
@@ -246,14 +248,16 @@ public class SparkStringUtils {
       throw new IllegalArgumentException("bytes == null");
     }
     StringBuilder s = new StringBuilder();
-    for(int i = start; i < end; i++) {
+    for (int i = start; i < end; i++) {
       s.append(String.format("%02x", bytes[i]));
     }
     return s.toString();
   }
 
-  /** Same as byteToHexString(bytes, 0, bytes.length). */
-  public static String byteToHexString(byte bytes[]) {
+  /**
+   * Same as byteToHexString(bytes, 0, bytes.length).
+   */
+  public static String byteToHexString(byte[] bytes) {
     return byteToHexString(bytes, 0, bytes.length);
   }
 
@@ -271,16 +275,17 @@ public class SparkStringUtils {
     }
     return bts;
   }
+
   /**
    *
    * @param uris
    */
-  public static String uriToString(URI[] uris){
+  public static String uriToString(URI[] uris) {
     if (uris == null) {
       return null;
     }
     StringBuilder ret = new StringBuilder(uris[0].toString());
-    for(int i = 1; i < uris.length;i++){
+    for (int i = 1; i < uris.length; i++) {
       ret.append(",");
       ret.append(uris[i].toString());
     }
@@ -295,17 +300,17 @@ public class SparkStringUtils {
    * @throws IllegalArgumentException
    *           If any string in str violates RFC&nbsp;2396.
    */
-  public static URI[] stringToURI(String[] str){
+  public static URI[] stringToURI(String[] str) {
     if (str == null) {
       return null;
     }
     URI[] uris = new URI[str.length];
-    for (int i = 0; i < str.length;i++){
-      try{
+    for (int i = 0; i < str.length; i++) {
+      try {
         uris[i] = new URI(str[i]);
-      }catch(URISyntaxException ur){
+      } catch (URISyntaxException ur) {
         throw new IllegalArgumentException(
-                "Failed to create uri for " + str[i], ur);
+            "Failed to create uri for " + str[i], ur);
       }
     }
     return uris;
@@ -315,16 +320,17 @@ public class SparkStringUtils {
    *
    * @param str
    */
-  public static Path[] stringToPath(String[] str){
+  public static Path[] stringToPath(String[] str) {
     if (str == null) {
       return null;
     }
     Path[] p = new Path[str.length];
-    for (int i = 0; i < str.length;i++){
+    for (int i = 0; i < str.length; i++) {
       p[i] = new Path(str[i]);
     }
     return p;
   }
+
   /**
    *
    * Given a finish and start time in long milliseconds, returns a
@@ -334,7 +340,7 @@ public class SparkStringUtils {
    * @param finishTime finish time
    * @param startTime start time
    */
-  public static String formatTimeDiff(long finishTime, long startTime){
+  public static String formatTimeDiff(long finishTime, long startTime) {
     long timeDiff = finishTime - startTime;
     return formatTime(timeDiff);
   }
@@ -346,19 +352,19 @@ public class SparkStringUtils {
    *
    * @param timeDiff The time difference to format
    */
-  public static String formatTime(long timeDiff){
+  public static String formatTime(long timeDiff) {
     StringBuilder buf = new StringBuilder();
-    long hours = timeDiff / (60*60*1000);
-    long rem = (timeDiff % (60*60*1000));
-    long minutes =  rem / (60*1000);
-    rem = rem % (60*1000);
+    long hours = timeDiff / (60 * 60 * 1000);
+    long rem = (timeDiff % (60 * 60 * 1000));
+    long minutes = rem / (60 * 1000);
+    rem = rem % (60 * 1000);
     long seconds = rem / 1000;
 
-    if (hours != 0){
+    if (hours != 0) {
       buf.append(hours);
       buf.append("hrs, ");
     }
-    if (minutes != 0){
+    if (minutes != 0) {
       buf.append(minutes);
       buf.append("mins, ");
     }
@@ -367,6 +373,7 @@ public class SparkStringUtils {
     buf.append("sec");
     return buf.toString();
   }
+
   /**
    * Formats time in ms and appends difference (finishTime - startTime)
    * as returned by formatTimeDiff().
@@ -378,12 +385,12 @@ public class SparkStringUtils {
    * @return formatted value.
    */
   public static String getFormattedTimeWithDiff(DateFormat dateFormat,
-                                                long finishTime, long startTime){
+                                                long finishTime, long startTime) {
     StringBuilder buf = new StringBuilder();
     if (0 != finishTime) {
       buf.append(dateFormat.format(new Date(finishTime)));
-      if (0 != startTime){
-        buf.append(" (" + formatTimeDiff(finishTime , startTime) + ")");
+      if (0 != startTime) {
+        buf.append(" (" + formatTimeDiff(finishTime, startTime) + ")");
       }
     }
     return buf.toString();
@@ -394,9 +401,9 @@ public class SparkStringUtils {
    * @param str the comma seperated string values
    * @return the arraylist of the comma seperated string values
    */
-  public static String[] getStrings(String str){
+  public static String[] getStrings(String str) {
     Collection<String> values = getStringCollection(str);
-    if(values.size() == 0) {
+    if (values.size() == 0) {
       return null;
     }
     return values.toArray(new String[values.size()]);
@@ -407,12 +414,12 @@ public class SparkStringUtils {
    * @param str comma seperated string values
    * @return an <code>ArrayList</code> of string values
    */
-  public static Collection<String> getStringCollection(String str){
+  public static Collection<String> getStringCollection(String str) {
     List<String> values = new ArrayList<String>();
     if (str == null) {
       return values;
     }
-    StringTokenizer tokenizer = new StringTokenizer (str,",");
+    StringTokenizer tokenizer = new StringTokenizer(str, ",");
     values = new ArrayList<String>();
     while (tokenizer.hasMoreTokens()) {
       values.add(tokenizer.nextToken());
@@ -421,21 +428,23 @@ public class SparkStringUtils {
   }
 
   /**
-   * Splits a comma separated value <code>String</code>, trimming leading and trailing whitespace on each value.
+   * Splits a comma separated value <code>String</code>,
+   * trimming leading and trailing whitespace on each value.
    * @param str a comma separated <String> with values
    * @return a <code>Collection</code> of <code>String</code> values
    */
-  public static Collection<String> getTrimmedStringCollection(String str){
+  public static Collection<String> getTrimmedStringCollection(String str) {
     return new ArrayList<String>(
-            Arrays.asList(getTrimmedStrings(str)));
+        Arrays.asList(getTrimmedStrings(str)));
   }
 
   /**
-   * Splits a comma separated value <code>String</code>, trimming leading and trailing whitespace on each value.
+   * Splits a comma separated value <code>String</code>,
+   * trimming leading and trailing whitespace on each value.
    * @param str a comma separated <String> with values
    * @return an array of <code>String</code> values
    */
-  public static String[] getTrimmedStrings(String str){
+  public static String[] getTrimmedStrings(String str) {
     if (null == str || "".equals(str.trim())) {
       return emptyStringArray;
     }
@@ -443,11 +452,11 @@ public class SparkStringUtils {
     return str.trim().split("\\s*,\\s*");
   }
 
-  final public static String[] emptyStringArray = {};
-  final public static char COMMA = ',';
-  final public static char EQUALS = '=';
-  final public static String COMMA_STR = ",";
-  final public static char ESCAPE_CHAR = '\\';
+  public static final String[] emptyStringArray = {};
+  public static final char COMMA = ',';
+  public static final char EQUALS = '=';
+  public static final String COMMA_STR = ",";
+  public static final char ESCAPE_CHAR = '\\';
 
   /**
    * Split a string using the default separator
@@ -466,8 +475,8 @@ public class SparkStringUtils {
    * @return an array of strings
    */
   public static String[] split(
-          String str, char escapeChar, char separator) {
-    if (str==null) {
+      String str, char escapeChar, char separator) {
+    if (str == null) {
       return null;
     }
     ArrayList<String> strList = new ArrayList<String>();
@@ -481,7 +490,7 @@ public class SparkStringUtils {
     strList.add(split.toString());
     // remove trailing empty split(s)
     int last = strList.size(); // last split
-    while (--last>=0 && "".equals(strList.get(last))) {
+    while (--last >= 0 && "".equals(strList.get(last))) {
       strList.remove(last);
     }
     return strList.toArray(new String[strList.size()]);
@@ -494,7 +503,7 @@ public class SparkStringUtils {
    * @return an array of strings
    */
   public static String[] split(
-          String str, char separator) {
+      String str, char separator) {
     // String.split returns a single empty result for splitting the empty
     // string.
     if ("".equals(str)) {
@@ -503,14 +512,14 @@ public class SparkStringUtils {
     ArrayList<String> strList = new ArrayList<String>();
     int startIndex = 0;
     int nextIndex = 0;
-    while ((nextIndex = str.indexOf((int)separator, startIndex)) != -1) {
+    while ((nextIndex = str.indexOf((int) separator, startIndex)) != -1) {
       strList.add(str.substring(startIndex, nextIndex));
       startIndex = nextIndex + 1;
     }
     strList.add(str.substring(startIndex));
     // remove trailing empty split(s)
     int last = strList.size(); // last split
-    while (--last>=0 && "".equals(strList.get(last))) {
+    while (--last >= 0 && "".equals(strList.get(last))) {
       strList.remove(last);
     }
     return strList.toArray(new String[strList.size()]);
@@ -595,8 +604,8 @@ public class SparkStringUtils {
       } else {
         split.append(curChar);
         numPreEscapes = (curChar == escapeChar)
-                ? (++numPreEscapes) % 2
-                : 0;
+            ? (++numPreEscapes) % 2
+            : 0;
       }
     }
     return -1;
@@ -621,8 +630,8 @@ public class SparkStringUtils {
    * @return an escaped string
    */
   public static String escapeString(
-          String str, char escapeChar, char charToEscape) {
-    return escapeString(str, escapeChar, new char[] {charToEscape});
+      String str, char escapeChar, char charToEscape) {
+    return escapeString(str, escapeChar, new char[]{charToEscape});
   }
 
   // check if the character array has the character
@@ -644,7 +653,7 @@ public class SparkStringUtils {
       return null;
     }
     StringBuilder result = new StringBuilder();
-    for (int i=0; i<str.length(); i++) {
+    for (int i = 0; i < str.length(); i++) {
       char curChar = str.charAt(i);
       if (curChar == escapeChar || hasChar(charsToEscape, curChar)) {
         // special char
@@ -697,8 +706,8 @@ public class SparkStringUtils {
    * @return an unescaped string
    */
   public static String unEscapeString(
-          String str, char escapeChar, char charToEscape) {
-    return unEscapeString(str, escapeChar, new char[] {charToEscape});
+      String str, char escapeChar, char charToEscape) {
+    return unEscapeString(str, escapeChar, new char[]{charToEscape});
   }
 
   /**
@@ -711,13 +720,13 @@ public class SparkStringUtils {
     }
     StringBuilder result = new StringBuilder(str.length());
     boolean hasPreEscape = false;
-    for (int i=0; i<str.length(); i++) {
+    for (int i = 0; i < str.length(); i++) {
       char curChar = str.charAt(i);
       if (hasPreEscape) {
         if (curChar != escapeChar && !hasChar(charsToEscape, curChar)) {
           // no special char
           throw new IllegalArgumentException("Illegal escaped string " + str +
-                  " unescaped " + escapeChar + " at " + (i-1));
+              " unescaped " + escapeChar + " at " + (i - 1));
         }
         // otherwise discard the escape char
         result.append(curChar);
@@ -725,7 +734,7 @@ public class SparkStringUtils {
       } else {
         if (hasChar(charsToEscape, curChar)) {
           throw new IllegalArgumentException("Illegal escaped string " + str +
-                  " unescaped " + curChar + " at " + i);
+              " unescaped " + curChar + " at " + i);
         } else if (curChar == escapeChar) {
           hasPreEscape = true;
         } else {
@@ -733,9 +742,9 @@ public class SparkStringUtils {
         }
       }
     }
-    if (hasPreEscape ) {
+    if (hasPreEscape) {
       throw new IllegalArgumentException("Illegal escaped string " + str +
-              ", not expecting " + escapeChar + " in the end." );
+          ", not expecting " + escapeChar + " in the end.");
     }
     return result.toString();
   }
@@ -745,8 +754,11 @@ public class SparkStringUtils {
    * @return hostname
    */
   public static String getHostname() {
-    try {return "" + InetAddress.getLocalHost();}
-    catch(UnknownHostException uhe) {return "" + uhe;}
+    try {
+      return "" + InetAddress.getLocalHost();
+    } catch (UnknownHostException uhe) {
+      return "" + uhe;
+    }
   }
 
 
@@ -755,7 +767,7 @@ public class SparkStringUtils {
    * which can be represented by a 64-bit integer.
    * TraditionalBinaryPrefix symbol are case insensitive.
    */
-  public static enum TraditionalBinaryPrefix {
+  public enum TraditionalBinaryPrefix {
     KILO(1024),
     MEGA(KILO.value << 10),
     GIGA(MEGA.value << 10),
@@ -776,7 +788,7 @@ public class SparkStringUtils {
      */
     public static TraditionalBinaryPrefix valueOf(char symbol) {
       symbol = Character.toUpperCase(symbol);
-      for(TraditionalBinaryPrefix prefix : TraditionalBinaryPrefix.values()) {
+      for (TraditionalBinaryPrefix prefix : TraditionalBinaryPrefix.values()) {
         if (symbol == prefix.symbol) {
           return prefix;
         }
@@ -808,11 +820,11 @@ public class SparkStringUtils {
           prefix = TraditionalBinaryPrefix.valueOf(lastchar).value;
         } catch (IllegalArgumentException e) {
           throw new IllegalArgumentException("Invalid size prefix '" + lastchar
-                  + "' in '" + s
-                  + "'. Allowed prefixes are k, m, g, t, p, e(case insensitive)");
+              + "' in '" + s
+              + "'. Allowed prefixes are k, m, g, t, p, e(case insensitive)");
         }
         long num = Long.parseLong(s.substring(0, lastpos));
-        if (num > (Long.MAX_VALUE/prefix) || num < (Long.MIN_VALUE/prefix)) {
+        if (num > (Long.MAX_VALUE / prefix) || num < (Long.MIN_VALUE / prefix)) {
           throw new IllegalArgumentException(s + " does not fit in a Long");
         }
         return num * prefix;
@@ -826,29 +838,39 @@ public class SparkStringUtils {
    * @return HTML Escaped String representation
    */
   public static String escapeHTML(String string) {
-    if(string == null) {
+    if (string == null) {
       return null;
     }
     StringBuilder sb = new StringBuilder();
     boolean lastCharacterWasSpace = false;
     char[] chars = string.toCharArray();
-    for(char c : chars) {
-      if(c == ' ') {
-        if(lastCharacterWasSpace){
+    for (char c : chars) {
+      if (c == ' ') {
+        if (lastCharacterWasSpace) {
           lastCharacterWasSpace = false;
           sb.append("&nbsp;");
-        }else {
-          lastCharacterWasSpace=true;
+        } else {
+          lastCharacterWasSpace = true;
           sb.append(" ");
         }
-      }else {
+      } else {
         lastCharacterWasSpace = false;
-        switch(c) {
-          case '<': sb.append("&lt;"); break;
-          case '>': sb.append("&gt;"); break;
-          case '&': sb.append("&amp;"); break;
-          case '"': sb.append("&quot;"); break;
-          default : sb.append(c);break;
+        switch (c) {
+          case '<':
+            sb.append("&lt;");
+            break;
+          case '>':
+            sb.append("&gt;");
+            break;
+          case '&':
+            sb.append("&amp;");
+            break;
+          case '"':
+            sb.append("&quot;");
+            break;
+          default:
+            sb.append(c);
+            break;
         }
       }
     }
@@ -913,7 +935,7 @@ public class SparkStringUtils {
    */
   public static String joinIgnoringEmpty(String[] strings, char separator) {
     ArrayList<String> list = new ArrayList<String>();
-    for(String str : strings) {
+    for (String str : strings) {
       if (StringUtils.isNotBlank(str)) {
         list.add(str);
       }
