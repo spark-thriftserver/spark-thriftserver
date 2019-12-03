@@ -224,10 +224,10 @@ class ExecutorProxyPlugin(sparkConf: SparkConf, hadoopConf: Configuration) exten
     }
   }
 
-  def proxy(user: String)(f: () => Unit): Unit = {
+  def proxy[A](user: String)(f: => A): A = {
     val ugi = getProxyUserUGI(user)
-    ugi.doAs(new PrivilegedExceptionAction[Unit]() {
-      override def run(): Unit = {
+    ugi.doAs(new PrivilegedExceptionAction[A]() {
+      override def run(): A = {
         f
       }
     })

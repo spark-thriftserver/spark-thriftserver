@@ -409,7 +409,7 @@ private[spark] class Executor(
           if (proxyUser == null) {
             runWithProxy()
           } else {
-            proxyPlugin.proxy(proxyUser)(() => runWithProxy())
+            proxyPlugin.proxy(proxyUser)(runWithProxy())
           }
         case _ =>
           runWithProxy()
