@@ -47,6 +47,7 @@ import org.apache.hadoop.hive.serde2.`lazy`.LazySimpleSerDe
 import org.apache.hadoop.security.UserGroupInformation
 
 import org.apache.spark.{SparkConf, SparkException}
+import org.apache.spark.deploy.SparkHadoopUtil
 import org.apache.spark.internal.Logging
 import org.apache.spark.metrics.source.HiveCatalogMetrics
 import org.apache.spark.sql.AnalysisException
@@ -164,10 +165,10 @@ private[hive] class HiveClientImpl(
       try {
         Hive.closeCurrent()
         val currentConf = conf
-        val hive = if (UserGroupInformation.isSecurityEnabled) {
+        val ugi = UserGroupInformation.createProxyUser(user, UserGroupInformation.getLoginUser)
+        val hive = if (obtainDelegationTokenRequired(currentConf, ugi)) {
           currentConf.set("hive.metastore.token.signature", IMPERSONATION_TOKEN_SIGNATURE)
           val delegationTokenStr = getDelegationToken(user)
-          val ugi = UserGroupInformation.createProxyUser(user, UserGroupInformation.getLoginUser)
           org.apache.hadoop.hive.shims.Utils.setTokenStr(ugi, delegationTokenStr,
             IMPERSONATION_TOKEN_SIGNATURE)
           ugi.doAs(new PrivilegedExceptionAction[Hive]() {
@@ -184,6 +185,12 @@ private[hive] class HiveClientImpl(
         Thread.currentThread().setContextClassLoader(original)
       }
     }
+  }
+
+  def obtainDelegationTokenRequired(hiveConf: HiveConf, ugi: UserGroupInformation): Boolean = {
+    UserGroupInformation.isSecurityEnabled &&
+      hiveConf.getTrimmed(ConfVars.METASTOREURIS.varname, "").nonEmpty &&
+      SparkHadoopUtil.get.isProxyUser(ugi)
   }
 
   /**
