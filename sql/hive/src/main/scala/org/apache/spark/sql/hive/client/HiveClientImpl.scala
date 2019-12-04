@@ -137,8 +137,8 @@ private[hive] class HiveClientImpl(
       // Switch to the initClassLoader.
       Thread.currentThread().setContextClassLoader(initClassLoader)
       try {
-        SessionState.setCurrentSessionState(null)
-        Hive.set(null)
+        SessionState.detachSession()
+        Hive.closeCurrent()
         val state = newState(user)
         sessionStateMap.put(user, state)
         state
@@ -163,8 +163,8 @@ private[hive] class HiveClientImpl(
       // Switch to the initClassLoader.
       Thread.currentThread().setContextClassLoader(initClassLoader)
       try {
-        SessionState.setCurrentSessionState(null)
-        Hive.set(null)
+        SessionState.detachSession()
+        Hive.closeCurrent()
         val currentConf = conf
         currentConf.set("hive.metastore.token.signature", IMPERSONATION_TOKEN_SIGNATURE)
         val delegationTokenStr = getDelegationToken(user)
