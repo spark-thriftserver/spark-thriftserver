@@ -137,7 +137,6 @@ private[hive] class HiveClientImpl(
       // Switch to the initClassLoader.
       Thread.currentThread().setContextClassLoader(initClassLoader)
       try {
-        SessionState.detachSession()
         Hive.closeCurrent()
         val state = newState(user)
         sessionStateMap.put(user, state)
@@ -163,19 +162,22 @@ private[hive] class HiveClientImpl(
       // Switch to the initClassLoader.
       Thread.currentThread().setContextClassLoader(initClassLoader)
       try {
-        SessionState.detachSession()
         Hive.closeCurrent()
         val currentConf = conf
-        currentConf.set("hive.metastore.token.signature", IMPERSONATION_TOKEN_SIGNATURE)
-        val delegationTokenStr = getDelegationToken(user)
-        val ugi = UserGroupInformation.createProxyUser(user, UserGroupInformation.getLoginUser)
-        org.apache.hadoop.hive.shims.Utils.setTokenStr(ugi, delegationTokenStr,
-          IMPERSONATION_TOKEN_SIGNATURE)
-        val hive = ugi.doAs(new PrivilegedExceptionAction[Hive]() {
-          override def run(): Hive = {
-            Hive.get(currentConf)
-          }
-        })
+        val hive = if (UserGroupInformation.isSecurityEnabled) {
+          currentConf.set("hive.metastore.token.signature", IMPERSONATION_TOKEN_SIGNATURE)
+          val delegationTokenStr = getDelegationToken(user)
+          val ugi = UserGroupInformation.createProxyUser(user, UserGroupInformation.getLoginUser)
+          org.apache.hadoop.hive.shims.Utils.setTokenStr(ugi, delegationTokenStr,
+            IMPERSONATION_TOKEN_SIGNATURE)
+          ugi.doAs(new PrivilegedExceptionAction[Hive]() {
+            override def run(): Hive = {
+              Hive.get(currentConf)
+            }
+          })
+        } else {
+          Hive.get(currentConf)
+        }
         sessionHiveMap.put(user, hive)
         hive
       } finally {
@@ -312,10 +314,15 @@ private[hive] class HiveClientImpl(
     }
     // Disable CBO because we removed the Calcite dependency.
     hiveConf.setBoolean("hive.cbo.enable", false)
-    val state = new SessionState(hiveConf, user)
 
-    if (client != null) {
-      Hive.set(client)
+    val state = if (version == hive.v12) {
+      new SessionState(hiveConf)
+    } else {
+      new SessionState(hiveConf, userName())
+    }
+
+    if (sessionHiveMap.containsKey(userName())) {
+      Hive.set(sessionHiveMap.get(userName()))
     }
     // Hive 2.3 will set UDFClassLoader to hiveConf when initializing SessionState
     // since HIVE-11878, and ADDJarCommand will add jars to clientLoader.classLoader.
