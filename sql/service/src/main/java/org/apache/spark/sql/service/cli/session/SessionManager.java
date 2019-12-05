@@ -38,7 +38,7 @@ import org.apache.spark.sql.service.cli.SessionHandle;
 import org.apache.spark.sql.service.internal.ServiceConf;
 import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
 import org.apache.spark.sql.service.server.SparkServer2;
-import org.apache.spark.sql.service.server.ThreadFactoryWithGarbageCleanup;
+import org.apache.spark.sql.service.server.ThreadFactoryWithName;
 import org.apache.spark.sql.service.cli.operation.OperationManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,7 +103,7 @@ public class SessionManager extends CompositeService {
     String threadPoolName = "SparkServer2-Background-Pool";
     backgroundOperationPool = new ThreadPoolExecutor(poolSize, poolSize,
         keepAliveTime, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(poolQueueSize),
-        new ThreadFactoryWithGarbageCleanup(threadPoolName));
+        new ThreadFactoryWithName(threadPoolName));
     backgroundOperationPool.allowCoreThreadTimeOut(true);
 
     checkInterval = (long) sqlConf.getConf(ServiceConf.THRIFTSERVER_SESSION_CHECK_INTERVAL());

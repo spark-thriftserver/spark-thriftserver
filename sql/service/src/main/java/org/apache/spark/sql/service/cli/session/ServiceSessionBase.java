@@ -18,6 +18,7 @@
 
 package org.apache.spark.sql.service.cli.session;
 
+import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.cli.SessionHandle;
 import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
@@ -75,6 +76,8 @@ public interface ServiceSessionBase {
   String getPassword();
 
   SQLConf getSQLConf();
+
+  SQLContext getSQLContext();
 
   Map<String, String> getVariables();
 

@@ -28,8 +28,6 @@ import org.apache.spark.sql.service.cli.thrift.ThriftBinaryCLIService;
 import org.apache.spark.sql.service.cli.thrift.ThriftCLIService;
 import org.apache.spark.sql.service.cli.thrift.ThriftHttpCLIService;
 import org.apache.spark.sql.service.internal.ServiceConf;
-import scala.runtime.AbstractFunction0;
-import scala.runtime.BoxedUnit;
 
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -39,8 +37,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.spark.util.ShutdownHookManager;
 
 /**
  * SparkServer2.
@@ -69,25 +65,6 @@ public class SparkServer2 extends CompositeService {
     }
     addService(thriftCLIService);
     super.init(sqlConf);
-
-    // Add a shutdown hook for catching SIGTERM & SIGINT
-    // this must be higher than the Hadoop Filesystem priority of 10,
-    // which the default priority is.
-    // The signature of the callback must match that of a scala () -> Unit
-    // function
-    ShutdownHookManager.addShutdownHook(
-        new AbstractFunction0<BoxedUnit>() {
-          public BoxedUnit apply() {
-            try {
-              LOG.info("Hive Server Shutdown hook invoked");
-              stop();
-            } catch (Throwable e) {
-              LOG.warn("Ignoring Exception while stopping Hive Server from shutdown hook",
-                  e);
-            }
-            return BoxedUnit.UNIT;
-          }
-        });
   }
 
   public static boolean isHTTPTransportMode(SQLConf sqlConf) {
