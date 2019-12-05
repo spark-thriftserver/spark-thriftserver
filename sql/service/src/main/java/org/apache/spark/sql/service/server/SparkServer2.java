@@ -69,25 +69,6 @@ public class SparkServer2 extends CompositeService {
     }
     addService(thriftCLIService);
     super.init(sqlConf);
-
-    // Add a shutdown hook for catching SIGTERM & SIGINT
-    // this must be higher than the Hadoop Filesystem priority of 10,
-    // which the default priority is.
-    // The signature of the callback must match that of a scala () -> Unit
-    // function
-    ShutdownHookManager.addShutdownHook(
-        new AbstractFunction0<BoxedUnit>() {
-          public BoxedUnit apply() {
-            try {
-              LOG.info("Hive Server Shutdown hook invoked");
-              stop();
-            } catch (Throwable e) {
-              LOG.warn("Ignoring Exception while stopping Hive Server from shutdown hook",
-                  e);
-            }
-            return BoxedUnit.UNIT;
-          }
-        });
   }
 
   public static boolean isHTTPTransportMode(SQLConf sqlConf) {

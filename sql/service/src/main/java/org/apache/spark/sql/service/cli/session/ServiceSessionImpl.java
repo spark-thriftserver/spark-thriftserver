@@ -28,6 +28,7 @@ import java.util.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.internal.SQLConf;
+import org.apache.spark.sql.internal.VariableSubstitution;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.cli.*;
 import org.apache.spark.sql.service.cli.ServiceSQLException;
@@ -36,8 +37,6 @@ import org.apache.spark.sql.service.cli.file.SparkFileProcessor;
 import org.apache.spark.sql.service.cli.operation.*;
 import org.apache.spark.sql.service.internal.ServiceConf;
 import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
-import org.apache.spark.sql.service.server.ThreadWithGarbageCleanup;
-import org.apache.spark.sql.service.utils.VariableSubstitution;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -166,7 +165,7 @@ public class ServiceSessionImpl implements ServiceSession {
   // Copy from org.apache.hadoop.hive.ql.processors.SetProcessor, only change:
   // setConf(varname, propName, varvalue, true) when varname.startsWith(SPARKCONF_PREFIX)
   private int setVariable(String varname, String varvalue) throws Exception {
-    VariableSubstitution substitution = new VariableSubstitution(sessionVariables);
+    VariableSubstitution substitution = new VariableSubstitution(sqlConf);
     if (varvalue.contains("\n")){
       LOG.error("Warning: Value had a \\n character in it.");
     }
@@ -176,13 +175,13 @@ public class ServiceSessionImpl implements ServiceSession {
       return 1;
     } else if (varname.startsWith(SYSTEM_PREFIX)){
       String propName = varname.substring(SYSTEM_PREFIX.length());
-      System.getProperties().setProperty(propName, substitution.substitute(sqlConf,varvalue));
+      System.getProperties().setProperty(propName, substitution.substitute(varvalue));
     } else if (varname.startsWith(SPARKCONF_PREFIX)){
       String propName = varname.substring(SPARKCONF_PREFIX.length());
       setConf(varname, propName, varvalue, true);
     } else if (varname.startsWith(SPARKVAR_PREFIX)) {
       String propName = varname.substring(SPARKVAR_PREFIX.length());
-      sessionVariables.put(propName, substitution.substitute(sqlConf,varvalue));
+      sessionVariables.put(propName, substitution.substitute(varvalue));
     } else {
       setConf(varname, varname, varvalue, true);
     }
@@ -193,8 +192,8 @@ public class ServiceSessionImpl implements ServiceSession {
   private void setConf(String varname, String key, String varvalue, boolean register)
           throws IllegalArgumentException {
     VariableSubstitution substitution =
-        new VariableSubstitution(sessionVariables);
-    String value = substitution.substitute(sqlConf, varvalue);
+        new VariableSubstitution(sqlConf);
+    String value = substitution.substitute(varvalue);
     sessionOverriddenConf.put(key, value);
   }
 
@@ -266,19 +265,7 @@ public class ServiceSessionImpl implements ServiceSession {
     }
   }
 
-  /**
-   * 1. We'll remove the ThreadLocal SessionState as this thread might now serve
-   * other requests.
-   * 2. We'll cache the ThreadLocal RawStore object for this background thread
-   * for an orderly cleanup when this thread is garbage collected later.
-   * @see ThreadWithGarbageCleanup#finalize()
-   */
   protected synchronized void release(boolean userAccess) {
-    if (ThreadWithGarbageCleanup.currentThread() instanceof ThreadWithGarbageCleanup) {
-      ThreadWithGarbageCleanup currentThread =
-          (ThreadWithGarbageCleanup) ThreadWithGarbageCleanup.currentThread();
-      currentThread.cacheThreadLocalRawStore();
-    }
     if (userAccess) {
       lastAccessTime = System.currentTimeMillis();
     }
@@ -307,6 +294,11 @@ public class ServiceSessionImpl implements ServiceSession {
   @Override
   public SQLConf getSQLConf() {
     return sqlConf;
+  }
+
+  @Override
+  public SQLContext getSQLContext() {
+    return sqlContext;
   }
 
   @Override
