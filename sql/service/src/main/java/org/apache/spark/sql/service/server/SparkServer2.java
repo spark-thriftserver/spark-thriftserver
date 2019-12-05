@@ -28,8 +28,6 @@ import org.apache.spark.sql.service.cli.thrift.ThriftBinaryCLIService;
 import org.apache.spark.sql.service.cli.thrift.ThriftCLIService;
 import org.apache.spark.sql.service.cli.thrift.ThriftHttpCLIService;
 import org.apache.spark.sql.service.internal.ServiceConf;
-import scala.runtime.AbstractFunction0;
-import scala.runtime.BoxedUnit;
 
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -39,8 +37,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.spark.util.ShutdownHookManager;
 
 /**
  * SparkServer2.
