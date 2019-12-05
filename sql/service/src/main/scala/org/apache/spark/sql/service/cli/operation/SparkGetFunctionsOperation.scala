@@ -39,7 +39,6 @@ import org.apache.spark.util.{Utils => SparkUtils}
  * @param functionName function name pattern
  */
 private[service] class SparkGetFunctionsOperation(
-    sqlContext: SQLContext,
     parentSession: ServiceSession,
     catalogName: String,
     schemaName: String,

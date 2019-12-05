@@ -34,9 +34,7 @@ import org.apache.spark.util.{Utils => SparkUtils}
  * @param sqlContext SQLContext to use
  * @param parentSession a ServiceSession from SessionManager
  */
-private[service] class SparkGetCatalogsOperation(
-    sqlContext: SQLContext,
-    parentSession: ServiceSession)
+private[service] class SparkGetCatalogsOperation(parentSession: ServiceSession)
   extends SparkMetadataOperation(parentSession, OperationType.GET_CATALOGS) with Logging {
 
   private var statementId: String = _

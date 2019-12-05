@@ -42,7 +42,6 @@ import org.apache.spark.util.{Utils => SparkUtils}
  * @param columnName column name
  */
 private[service] class SparkGetColumnsOperation(
-    sqlContext: SQLContext,
     parentSession: ServiceSession,
     catalogName: String,
     schemaName: String,

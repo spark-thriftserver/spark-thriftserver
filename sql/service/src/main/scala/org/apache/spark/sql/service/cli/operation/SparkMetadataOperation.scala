@@ -29,6 +29,7 @@ private[service] abstract class SparkMetadataOperation(
     opType: OperationType)
   extends Operation(session, opType) with Logging {
 
+  protected val sqlContext = session.getSQLContext
   protected val DEFAULT_HIVE_CATALOG: String = ""
   protected var RESULT_SET_SCHEMA: TableSchema = null
   protected val SEARCH_STRING_ESCAPE: Char = '\\'

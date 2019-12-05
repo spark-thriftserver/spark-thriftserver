@@ -35,9 +35,7 @@ import org.apache.spark.util.{Utils => SparkUtils}
  * @param sqlContext SQLContext to use
  * @param parentSession a ServiceSession from SessionManager
  */
-private[service] class SparkGetTableTypesOperation(
-    sqlContext: SQLContext,
-    parentSession: ServiceSession)
+private[service] class SparkGetTableTypesOperation(parentSession: ServiceSession)
   extends SparkMetadataOperation(parentSession, OperationType.GET_TABLE_TYPES)
   with Logging {
 

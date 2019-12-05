@@ -43,7 +43,6 @@ import org.apache.spark.util.{Utils => SparkUtils}
  * @param tableTypes list of allowed table types, e.g. "TABLE", "VIEW"
  */
 private[service] class SparkGetTablesOperation(
-    sqlContext: SQLContext,
     parentSession: ServiceSession,
     catalogName: String,
     schemaName: String,

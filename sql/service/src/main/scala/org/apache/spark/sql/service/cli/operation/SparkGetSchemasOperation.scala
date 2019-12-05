@@ -38,7 +38,6 @@ import org.apache.spark.util.{Utils => SparkUtils}
  * @param schemaName database name, null or a concrete database name
  */
 private[service] class SparkGetSchemasOperation(
-    sqlContext: SQLContext,
     parentSession: ServiceSession,
     catalogName: String,
     schemaName: String)

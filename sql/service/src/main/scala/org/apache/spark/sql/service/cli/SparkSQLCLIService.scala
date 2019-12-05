@@ -32,7 +32,7 @@ import org.apache.spark.sql.service.{AbstractService, Service, ServiceException}
 import org.apache.spark.sql.service.ReflectionUtils._
 import org.apache.spark.sql.service.Service.STATE
 import org.apache.spark.sql.service.auth.SparkAuthFactory
-import org.apache.spark.sql.service.cli.session.SparkSQLSessionManager
+import org.apache.spark.sql.service.cli.session.SessionManager
 import org.apache.spark.sql.service.internal.ServiceConf
 import org.apache.spark.sql.service.server.SparkServer2
 import org.apache.spark.sql.service.utils.Utils
@@ -45,10 +45,10 @@ private[service] class SparkSQLCLIService(
 
   override def init(sqlConf: SQLConf): Unit = {
     setSuperField(this, "sqlConf", sqlConf)
+    val sessionManager = new SessionManager(sparkServer, sqlContext)
+    setSuperField(this, "sessionManager", sessionManager)
+    addService(sessionManager)
 
-    val sparkSqlSessionManager = new SparkSQLSessionManager(sparkServer, sqlContext)
-    setSuperField(this, "sessionManager", sparkSqlSessionManager)
-    addService(sparkSqlSessionManager)
     var sparkServiceUGI: UserGroupInformation = null
     var httpUGI: UserGroupInformation = null
 
