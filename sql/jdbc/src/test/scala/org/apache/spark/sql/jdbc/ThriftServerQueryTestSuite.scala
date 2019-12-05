@@ -82,19 +82,10 @@ class ThriftServerQueryTestSuite extends SQLQueryTestSuite {
     // Missing UDF
     "postgreSQL/boolean.sql",
     "postgreSQL/case.sql",
-    // SPARK-28624
-    "date.sql",
     // SPARK-28620
     "postgreSQL/float4.sql",
     // SPARK-28636
-    "decimalArithmeticOperations.sql",
-    "literals.sql",
-    "subquery/scalar-subquery/scalar-subquery-predicate.sql",
-    "subquery/in-subquery/in-limit.sql",
-    "subquery/in-subquery/in-group-by.sql",
-    "subquery/in-subquery/simple-in.sql",
-    "subquery/in-subquery/in-order-by.sql",
-    "subquery/in-subquery/in-set-operations.sql"
+    "literals.sql"
   )
 
   override def runQueries(
