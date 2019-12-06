@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,11 +18,11 @@
 package org.apache.spark.sql.service.cli.operation;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.internal.ServiceConf;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.sql.SQLException;
@@ -34,18 +34,21 @@ import java.util.List;
  * for accessing, reading, writing, and removing the file.
  */
 public class OperationLog {
-  private static final Log LOG = LogFactory.getLog(OperationLog.class.getName());
+  private static final Logger LOG = LoggerFactory.getLogger(OperationLog.class.getName());
 
   private final String operationName;
   private final LogFile logFile;
   private LoggingLevel opLoggingLevel = LoggingLevel.UNKNOWN;
 
+  public PrintStream getPrintStream() {
+    return logFile.getPrintStream();
+  }
+
   public enum LoggingLevel {
     NONE, EXECUTION, PERFORMANCE, VERBOSE, UNKNOWN
   }
 
-  public OperationLog(String name, File file, SQLConf sqlConf)
-      throws FileNotFoundException {
+  public OperationLog(String name, File file, SQLConf sqlConf) throws FileNotFoundException {
     operationName = name;
     logFile = new LogFile(file);
 
@@ -55,7 +58,7 @@ public class OperationLog {
     }
   }
 
-  public static LoggingLevel getLoggingLevel(String mode) {
+  public static LoggingLevel getLoggingLevel (String mode) {
     if (mode.equalsIgnoreCase("none")) {
       return LoggingLevel.NONE;
     } else if (mode.equalsIgnoreCase("execution")) {
@@ -77,12 +80,12 @@ public class OperationLog {
    * Singleton OperationLog object per thread.
    */
   private static final ThreadLocal<OperationLog> THREAD_LOCAL_OPERATION_LOG = new
-          ThreadLocal<OperationLog>() {
-            @Override
-            protected synchronized OperationLog initialValue() {
-              return null;
-            }
-          };
+      ThreadLocal<OperationLog>() {
+        @Override
+        protected OperationLog initialValue() {
+          return null;
+        }
+      };
 
   public static void setCurrentOperationLog(OperationLog operationLog) {
     THREAD_LOCAL_OPERATION_LOG.set(operationLog);
@@ -105,6 +108,16 @@ public class OperationLog {
   }
 
   /**
+   * Write operation execution logs into log file
+   * @param operationLogMessage one line of log emitted from log4j
+   */
+  public void writeOperationLog(LoggingLevel level, String operationLogMessage) {
+    if (opLoggingLevel.compareTo(level) < 0) return;
+    logFile.write(operationLogMessage);
+  }
+
+
+  /**
    * Read operation execution logs from log file
    * @param isFetchFirst true if the Enum FetchOrientation value is Fetch_First
    * @param maxRows the max number of fetched lines from log
@@ -112,7 +125,7 @@ public class OperationLog {
    * @throws java.sql.SQLException
    */
   public List<String> readOperationLog(boolean isFetchFirst, long maxRows)
-          throws SQLException{
+      throws SQLException{
     return logFile.read(isFetchFirst, maxRows);
   }
 
@@ -127,9 +140,9 @@ public class OperationLog {
    * Wrapper for read/write the operation log file
    */
   private class LogFile {
-    private File file;
+    private final File file;
     private BufferedReader in;
-    private PrintStream out;
+    private final PrintStream out;
     private volatile boolean isRemoved;
 
     LogFile(File file) throws FileNotFoundException {
@@ -145,7 +158,7 @@ public class OperationLog {
     }
 
     synchronized List<String> read(boolean isFetchFirst, long maxRows)
-            throws SQLException{
+        throws SQLException{
       // reset the BufferReader, if fetching from the beginning of the file
       if (isFetchFirst) {
         resetIn();
@@ -154,7 +167,7 @@ public class OperationLog {
       return readResults(maxRows);
     }
 
-    void remove() {
+    synchronized void remove() {
       try {
         if (in != null) {
           in.close();
@@ -162,8 +175,10 @@ public class OperationLog {
         if (out != null) {
           out.close();
         }
-        FileUtils.forceDelete(file);
-        isRemoved = true;
+        if (!isRemoved) {
+          FileUtils.forceDelete(file);
+          isRemoved = true;
+        }
       } catch (Exception e) {
         LOG.error("Failed to remove corresponding log file of operation: " + operationName, e);
       }
@@ -171,7 +186,7 @@ public class OperationLog {
 
     private void resetIn() {
       if (in != null) {
-        IOUtils.cleanup(LOG, in);
+        IOUtils.closeStream(in);
         in = null;
       }
     }
@@ -183,10 +198,10 @@ public class OperationLog {
         } catch (FileNotFoundException e) {
           if (isRemoved) {
             throw new SQLException("The operation has been closed and its log file " +
-                    file.getAbsolutePath() + " has been removed.", e);
+                file.getAbsolutePath() + " has been removed.", e);
           } else {
             throw new SQLException("Operation Log file " + file.getAbsolutePath() +
-                    " is not found.", e);
+                " is not found.", e);
           }
         }
       }
@@ -205,13 +220,17 @@ public class OperationLog {
         } catch (IOException e) {
           if (isRemoved) {
             throw new SQLException("The operation has been closed and its log file " +
-                    file.getAbsolutePath() + " has been removed.", e);
+                file.getAbsolutePath() + " has been removed.", e);
           } else {
             throw new SQLException("Reading operation log file encountered an exception: ", e);
           }
         }
       }
       return logs;
+    }
+
+    public PrintStream getPrintStream() {
+      return out;
     }
   }
 }

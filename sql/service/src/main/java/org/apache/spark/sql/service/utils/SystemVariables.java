@@ -20,12 +20,12 @@ package org.apache.spark.sql.service.utils;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.spark.sql.internal.SQLConf;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SystemVariables {
-  private static final Log l4j = LogFactory.getLog(SystemVariables.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SystemVariables.class);
   protected static Pattern varPat = Pattern.compile("\\$\\{[^\\}\\$ ]+\\}");
   public static final String ENV_PREFIX = "env:";
   public static final String SYSTEM_PREFIX = "system:";
@@ -44,7 +44,7 @@ public class SystemVariables {
         val = System.getProperty(var.substring("system:".length()));
       }
     } catch (SecurityException var5) {
-      l4j.warn("Unexpected SecurityException in Configuration", var5);
+      LOG.warn("Unexpected SecurityException in Configuration", var5);
     }
 
     if (val == null && var.startsWith("env:")) {
