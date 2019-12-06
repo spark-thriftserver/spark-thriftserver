@@ -36,7 +36,6 @@ class VariableSubstitution(conf: SQLConf) {
     .bind("sparkconf", provider)
     .bind("hivevar", provider)
     .bind("hiveconf", provider)
-    .bind("sparkvar", provider)
 
   /**
    * Given a query, does variable substitution and return the result.
