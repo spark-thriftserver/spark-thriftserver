@@ -226,13 +226,9 @@ class SessionManager(sparkServer2: SparkServer2, sqlContext: SQLContext)
   def openSession(protocol: TProtocolVersion, username: String, password: String,
                   ipAddress: String, sessionConf: util.Map[String, String],
                   withImpersonation: Boolean, delegationToken: String): SessionHandle = {
-    logWarning("create new session context")
-    logWarning(s"sqlContext = ${sqlContext}")
     val ctx = if (sqlContext.conf.hiveThriftServerSingleSession) {
-      logWarning("single session")
       sqlContext
     } else {
-      logWarning("No single session")
       sqlContext.newSession()
     }
     if (sessionConf != null && sessionConf.containsKey("use:database")) {
