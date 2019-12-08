@@ -34,6 +34,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.CompositeService;
+import org.apache.spark.sql.service.SparkThriftServer2;
 import org.apache.spark.sql.service.cli.ServiceSQLException;
 import org.apache.spark.sql.service.cli.SessionHandle;
 import org.apache.spark.sql.service.internal.ServiceConf;
@@ -276,6 +277,9 @@ public class SessionManager extends CompositeService {
     if (isOperationLogEnabled) {
       session.setOperationLogSessionDir(operationLogRootDir);
     }
+    SparkThriftServer2.listener().onSessionCreated(session.getIpAddress(),
+        session.getSessionHandle().getSessionId().toString(),
+        session.getUserName());
     setConfMap(session.getSQLContext(), session.getVariables());
     setConfMap(session.getSQLContext(), session.getOverriddenConf());
     if (sessionConf != null && sessionConf.containsKey("use:database")) {
@@ -295,11 +299,13 @@ public class SessionManager extends CompositeService {
   }
 
   public void closeSession(SessionHandle sessionHandle) throws ServiceSQLException {
+    SparkThriftServer2.listener().onSessionClosed(sessionHandle.getSessionId().toString());
     ServiceSession session = handleToSession.remove(sessionHandle);
     if (session == null) {
       throw new ServiceSQLException("Session does not exist!");
     }
     session.close();
+    operationManager.sessionToActivePool().remove(sessionHandle);
   }
 
   public ServiceSession getSession(SessionHandle sessionHandle) throws ServiceSQLException {

@@ -159,7 +159,7 @@ object SparkThriftServer2 extends Logging {
   /**
    * An inner sparkListener called in sc.stop to clean up the SparkThriftServer2
    */
-  private[service] class SparkThriftServer2Listener(
+  class SparkThriftServer2Listener(
       val server: SparkServer2,
       val conf: SQLConf) extends SparkListener {
 
