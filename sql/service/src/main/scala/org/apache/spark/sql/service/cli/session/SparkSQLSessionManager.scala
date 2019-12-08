@@ -68,6 +68,7 @@ private[service] class SparkSQLSessionManager(
     }
     setConfMap(ctx, session.getVariables)
     setConfMap(ctx, session.getOverriddenConf)
+    ctx.conf.setConfString("proxy.test.session.user", session.getUserName)
     if (sessionConf != null && sessionConf.containsKey("use:database")) {
       ctx.sql(s"use ${sessionConf.get("use:database")}")
     }
