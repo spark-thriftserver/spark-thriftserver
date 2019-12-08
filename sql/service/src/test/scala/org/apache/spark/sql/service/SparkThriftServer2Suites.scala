@@ -38,6 +38,7 @@ import org.scalatest.BeforeAndAfterAll
 
 import org.apache.spark.{SparkException, SparkFunSuite}
 import org.apache.spark.internal.Logging
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.hive.test.HiveTestJars
 import org.apache.spark.sql.internal.StaticSQLConf
 import org.apache.spark.sql.internal.StaticSQLConf.HIVE_THRIFT_SERVER_SINGLESESSION
@@ -284,10 +285,9 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
       { statement =>
 
         val queries = Seq(
-            "CREATE TABLE test_map(key INT, value STRING)",
-            s"LOAD DATA LOCAL INPATH '${TestData.smallKv}' OVERWRITE INTO TABLE test_map",
-            "CACHE TABLE test_table AS SELECT key FROM test_map ORDER BY key DESC",
-            "CREATE DATABASE db1")
+          s"CREATE TABLE test_map(key INT, value STRING) USING csv LOCATION '${TestData.smallKv}'",
+          "CACHE TABLE test_table AS SELECT key FROM test_map ORDER BY key DESC",
+          "CREATE DATABASE db1")
 
         queries.foreach(statement.execute)
 
@@ -400,7 +400,7 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
           statement.executeQuery("SELECT key FROM test_map ORDER BY KEY DESC")
         }
 
-        statement.execute("CREATE TABLE test_map2(key INT, value STRING)")
+        statement.execute("CREATE TABLE test_map2(key INT, value STRING) USING parquet")
       },
 
       // access default database
@@ -423,8 +423,7 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
   ignore("test jdbc cancel") {
     withJdbcStatement("test_map") { statement =>
       val queries = Seq(
-        "CREATE TABLE test_map(key INT, value STRING)",
-        s"LOAD DATA LOCAL INPATH '${TestData.smallKv}' OVERWRITE INTO TABLE test_map")
+        s"CREATE TABLE test_map(key INT, value STRING) USING csv LOCATION '${TestData.smallKv}'")
 
       queries.foreach(statement.execute)
       implicit val ec = ExecutionContext.fromExecutorService(
@@ -480,6 +479,7 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
   }
 
   test("test add jar") {
+    assume(SparkSession.hiveClassesArePresent, "Test without Hive support.")
     withMultipleConnectionJdbcStatement("smallKV", "addJar")(
       {
         statement =>
@@ -491,8 +491,7 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
       {
         statement =>
           val queries = Seq(
-            "CREATE TABLE smallKV(key INT, val STRING)",
-            s"LOAD DATA LOCAL INPATH '${TestData.smallKv}' OVERWRITE INTO TABLE smallKV",
+            s"CREATE TABLE smallKV(key INT, val STRING) USING csv LOCATION '${TestData.smallKv}'",
             """CREATE TABLE addJar(key string)
               |ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe'
             """.stripMargin)
@@ -526,6 +525,7 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
   }
 
   test("SPARK-11595 ADD JAR with input path having URL scheme") {
+    assume(SparkSession.hiveClassesArePresent, "Test without Hive support.")
     withJdbcStatement("test_udtf") { statement =>
       try {
         val jarPath = "../hive/src/test/resources/TestUDTF.jar"
@@ -554,7 +554,7 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
         val dataPath = "../hive/src/test/resources/data/files/kv1.txt"
 
         Seq(
-          "CREATE TABLE test_udtf(key INT, value STRING)",
+          "CREATE TABLE test_udtf(key INT, value STRING) USING hive",
           s"LOAD DATA LOCAL INPATH '$dataPath' OVERWRITE INTO TABLE test_udtf"
         ).foreach(statement.execute)
 
