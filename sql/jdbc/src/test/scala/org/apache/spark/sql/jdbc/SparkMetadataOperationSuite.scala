@@ -19,7 +19,7 @@ package org.apache.spark.sql.jdbc
 
 import java.sql.{DatabaseMetaData, ResultSet}
 
-import org.apache.spark.sql.service.ThriftserverShimUtils
+import org.apache.spark.sql.service.{ServerMode, SparkThriftJdbcTest, ThriftserverShimUtils}
 
 class SparkMetadataOperationSuite extends SparkThriftJdbcTest {
 

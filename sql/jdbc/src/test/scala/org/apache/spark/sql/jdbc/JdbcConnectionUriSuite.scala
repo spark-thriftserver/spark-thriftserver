@@ -19,6 +19,7 @@ package org.apache.spark.sql.jdbc
 
 import java.sql.DriverManager
 
+import org.apache.spark.sql.service.{ServerMode, SparkThriftServer2Test}
 import org.apache.spark.util.{Utils => SparkUtils}
 
 class JdbcConnectionUriSuite extends SparkThriftServer2Test {

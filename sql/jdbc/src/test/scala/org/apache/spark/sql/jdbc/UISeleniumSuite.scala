@@ -27,7 +27,7 @@ import org.scalatest.time.SpanSugar._
 import org.scalatestplus.selenium.WebBrowser
 
 import org.apache.spark.sql.internal.StaticSQLConf
-import org.apache.spark.sql.service.SparkThriftServer2
+import org.apache.spark.sql.service.{ServerMode, SparkThriftJdbcTest, SparkThriftServer2, TestData}
 import org.apache.spark.sql.service.internal.ServiceConf
 import org.apache.spark.ui.SparkUICssErrorHandler
 
