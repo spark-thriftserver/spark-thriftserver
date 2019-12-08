@@ -283,6 +283,7 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
   }
 
   test("test multiple session") {
+    assume(SparkSession.hiveClassesArePresent, "Test without Hive support.")
     import org.apache.spark.sql.internal.SQLConf
     var defaultV1: String = null
     var defaultV2: String = null
