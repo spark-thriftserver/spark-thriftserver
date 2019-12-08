@@ -40,17 +40,16 @@ import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.spark.sql.service.utils.SystemVariables.ENV_PREFIX;
+import static org.apache.spark.sql.service.utils.SystemVariables.SPARKCONF_PREFIX;
+import static org.apache.spark.sql.service.utils.SystemVariables.SPARKVAR_PREFIX;
+import static org.apache.spark.sql.service.utils.SystemVariables.SYSTEM_PREFIX;
+
 /**
  * ServiceSession
  *
  */
 public class ServiceSessionImpl implements ServiceSession {
-  private static final String ENV_PREFIX = "env:";
-  private static final String SYSTEM_PREFIX = "system:";
-  private static final String SPARKCONF_PREFIX = "sparkconf:";
-  private static final String SPARKVAR_PREFIX = "sparkvar:";
-  private static final String SET_COLUMN_NAME = "set:";
-
   private final SessionHandle sessionHandle;
   private String username;
   private final String password;
@@ -153,7 +152,7 @@ public class ServiceSessionImpl implements ServiceSession {
   private void configureSession(Map<String, String> sessionConfMap) throws ServiceSQLException {
     for (Map.Entry<String, String> entry : sessionConfMap.entrySet()) {
       String key = entry.getKey();
-      if (key.startsWith(SET_COLUMN_NAME)) {
+      if (key.startsWith("set:")) {
         try {
           setVariable(key.substring(4), entry.getValue());
         } catch (Exception e) {
