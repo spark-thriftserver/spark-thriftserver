@@ -69,7 +69,7 @@ public class Utils {
     // Prefer using a shorter camelCase param name instead of using the same name as the
     // corresponding
     // SparkServer2 config.
-    // For a jdbc url: jdbc:spark://<host>:<port>/dbName;sess_var_list?spark_conf_list#spark_var_list,
+    // For url: jdbc:spark://<host>:<port>/dbName;sess_var_list?spark_conf_list#spark_var_list,
     // client side params are specified in sess_var_list
 
     // Client param names:
@@ -275,7 +275,7 @@ public class Utils {
   /**
    * Parse JDBC connection URL
    * The new format of the URL is:
-   * jdbc:spark://<host1>:<port1>,<host2>:<port2>/dbName;sess_var_list?spark_conf_list#spark_var_list
+   * jdbc:spark://<host1>:<port1>,<host2>:<port2>/dbName;sess_var_list?conf_list#var_list
    * where the optional sess, conf and var lists are semicolon separated <key>=<val> pairs.
    * For utilizing dynamic service discovery with SparkServer2 multiple comma separated host:port
    * pairs can be specified as shown above.
