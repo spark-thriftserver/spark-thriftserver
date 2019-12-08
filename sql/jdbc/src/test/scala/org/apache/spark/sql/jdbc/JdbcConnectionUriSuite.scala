@@ -17,53 +17,6 @@
 
 package org.apache.spark.sql.jdbc
 
-import java.sql.DriverManager
-
-import org.apache.spark.sql.service.{ServerMode, SparkThriftServer2Test}
-import org.apache.spark.util.{Utils => SparkUtils}
-
-class JdbcConnectionUriSuite extends SparkThriftServer2Test {
-  SparkUtils.classForName(classOf[SparkDriver].getCanonicalName)
-
-  override def mode: ServerMode.Value = ServerMode.binary
-
-  val JDBC_TEST_DATABASE = "jdbc_test_database"
-  val USER = System.getProperty("user.name")
-  val PASSWORD = ""
-
-  override protected def beforeAll(): Unit = {
-    super.beforeAll()
-
-    val jdbcUri = s"jdbc:spark://localhost:$serverPort/"
-    val connection = DriverManager.getConnection(jdbcUri, USER, PASSWORD)
-    val statement = connection.createStatement()
-    statement.execute(s"CREATE DATABASE $JDBC_TEST_DATABASE")
-    connection.close()
-  }
-
-  override protected def afterAll(): Unit = {
-    try {
-      val jdbcUri = s"jdbc:spark://localhost:$serverPort/"
-      val connection = DriverManager.getConnection(jdbcUri, USER, PASSWORD)
-      val statement = connection.createStatement()
-      statement.execute(s"DROP DATABASE $JDBC_TEST_DATABASE")
-      connection.close()
-    } finally {
-      super.afterAll()
-    }
-  }
-
-  test("SPARK-17819 Support default database in connection URIs") {
-    val jdbcUri = s"jdbc:spark://localhost:$serverPort/$JDBC_TEST_DATABASE"
-    val connection = DriverManager.getConnection(jdbcUri, USER, PASSWORD)
-    val statement = connection.createStatement()
-    try {
-      val resultSet = statement.executeQuery("select current_database()")
-      resultSet.next()
-      assert(resultSet.getString(1) === JDBC_TEST_DATABASE)
-    } finally {
-      statement.close()
-      connection.close()
-    }
-  }
+class JdbcConnectionUriSuite extends org.apache.spark.sql.service.JdbcConnectionUriSuite {
+  override def jdbcDriver: String = classOf[SparkDriver].getCanonicalName
 }
