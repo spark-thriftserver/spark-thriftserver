@@ -54,24 +54,8 @@ private[service] class SparkSQLSessionManager(
       super.openSession(protocol, username, passwd, ipAddress, sessionConf, withImpersonation,
           delegationToken)
     val session = super.getSession(sessionHandle)
-    logWarning(s"super.getSession ${session.getSessionHandle}")
     SparkThriftServer2.listener.onSessionCreated(
       session.getIpAddress, sessionHandle.getSessionId.toString, session.getUsername)
-    logWarning("create new session context")
-    logWarning(s"sqlContext = ${sqlContext}")
-    val ctx = if (sqlContext.conf.hiveThriftServerSingleSession) {
-      logWarning("single session")
-      sqlContext
-    } else {
-      logWarning("No single session")
-      sqlContext.newSession()
-    }
-    setConfMap(ctx, session.getVariables)
-    setConfMap(ctx, session.getOverriddenConf)
-    if (sessionConf != null && sessionConf.containsKey("use:database")) {
-      ctx.sql(s"use ${sessionConf.get("use:database")}")
-    }
-    sparkSqlOperationManager.sessionToContexts.put(sessionHandle, ctx)
     sessionHandle
   }
 
@@ -79,14 +63,5 @@ private[service] class SparkSQLSessionManager(
     SparkThriftServer2.listener.onSessionClosed(sessionHandle.getSessionId.toString)
     super.closeSession(sessionHandle)
     sparkSqlOperationManager.sessionToActivePool.remove(sessionHandle)
-    sparkSqlOperationManager.sessionToContexts.remove(sessionHandle)
-  }
-
-  def setConfMap(conf: SQLContext, confMap: java.util.Map[String, String]): Unit = {
-    val iterator = confMap.entrySet().iterator()
-    while (iterator.hasNext) {
-      val kv = iterator.next()
-      conf.setConf(kv.getKey, kv.getValue)
-    }
   }
 }

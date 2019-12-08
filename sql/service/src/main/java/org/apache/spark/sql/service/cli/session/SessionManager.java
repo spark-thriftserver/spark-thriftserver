@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
@@ -243,15 +244,21 @@ public class SessionManager extends CompositeService {
       String ipAddress, Map<String, String> sessionConf, boolean withImpersonation,
       String delegationToken) throws ServiceSQLException {
     ServiceSession session;
+    SQLContext ctx = null;
+    if(sqlContext.conf().hiveThriftServerSingleSession()) {
+      ctx = sqlContext;
+    } else {
+      ctx = sqlContext.newSession();
+    }
     // If doAs is set to true for SparkServer2, we will create a proxy object for the session impl.
     // Within the proxy object, we wrap the method call in a UserGroupInformation#doAs
     if (withImpersonation) {
       ServiceSessionImplwithUGI sessionWithUGI = new ServiceSessionImplwithUGI(protocol, username,
-          password, sqlContext, ipAddress, delegationToken);
+          password, ctx, ipAddress, delegationToken);
       session = ServiceSessionProxy.getProxy(sessionWithUGI, sessionWithUGI.getSessionUgi());
       sessionWithUGI.setProxySession(session);
     } else {
-      session = new ServiceSessionImpl(protocol, username, password, sqlContext, ipAddress);
+      session = new ServiceSessionImpl(protocol, username, password, ctx, ipAddress);
     }
     session.setSessionManager(this);
     session.setOperationManager(operationManager);
@@ -269,8 +276,22 @@ public class SessionManager extends CompositeService {
     if (isOperationLogEnabled) {
       session.setOperationLogSessionDir(operationLogRootDir);
     }
+    setConfMap(session.getSQLContext(), session.getVariables());
+    setConfMap(session.getSQLContext(), session.getOverriddenConf());
+    if (sessionConf != null && sessionConf.containsKey("use:database")) {
+      session.getSQLContext().sql("use " + sessionConf.get("use:database"));
+    }
     handleToSession.put(session.getSessionHandle(), session);
     return session.getSessionHandle();
+  }
+
+
+  public void setConfMap(SQLContext sqlContext, java.util.Map<String, String> confMap) {
+    Iterator<Map.Entry<String, String>> iterator = confMap.entrySet().iterator();
+    while (iterator.hasNext()) {
+      Map.Entry<String, String> kv = iterator.next();
+      sqlContext.setConf(kv.getKey(), kv.getValue());
+    }
   }
 
   public void closeSession(SessionHandle sessionHandle) throws ServiceSQLException {
