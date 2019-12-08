@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
@@ -33,6 +34,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.CompositeService;
+import org.apache.spark.sql.service.SparkThriftServer2;
 import org.apache.spark.sql.service.cli.ServiceSQLException;
 import org.apache.spark.sql.service.cli.SessionHandle;
 import org.apache.spark.sql.service.internal.ServiceConf;
@@ -243,15 +245,21 @@ public class SessionManager extends CompositeService {
       String ipAddress, Map<String, String> sessionConf, boolean withImpersonation,
       String delegationToken) throws ServiceSQLException {
     ServiceSession session;
+    SQLContext ctx = null;
+    if(sqlContext.conf().hiveThriftServerSingleSession()) {
+      ctx = sqlContext;
+    } else {
+      ctx = sqlContext.newSession();
+    }
     // If doAs is set to true for SparkServer2, we will create a proxy object for the session impl.
     // Within the proxy object, we wrap the method call in a UserGroupInformation#doAs
     if (withImpersonation) {
       ServiceSessionImplwithUGI sessionWithUGI = new ServiceSessionImplwithUGI(protocol, username,
-          password, sqlContext, ipAddress, delegationToken);
+          password, ctx, ipAddress, delegationToken);
       session = ServiceSessionProxy.getProxy(sessionWithUGI, sessionWithUGI.getSessionUgi());
       sessionWithUGI.setProxySession(session);
     } else {
-      session = new ServiceSessionImpl(protocol, username, password, sqlContext, ipAddress);
+      session = new ServiceSessionImpl(protocol, username, password, ctx, ipAddress);
     }
     session.setSessionManager(this);
     session.setOperationManager(operationManager);
@@ -269,16 +277,24 @@ public class SessionManager extends CompositeService {
     if (isOperationLogEnabled) {
       session.setOperationLogSessionDir(operationLogRootDir);
     }
+    SparkThriftServer2.listener().onSessionCreated(session.getIpAddress(),
+        session.getSessionHandle().getSessionId().toString(),
+        session.getUserName());
+    if (sessionConf != null && sessionConf.containsKey("use:database")) {
+      session.getSQLContext().sql("use " + sessionConf.get("use:database"));
+    }
     handleToSession.put(session.getSessionHandle(), session);
     return session.getSessionHandle();
   }
 
   public void closeSession(SessionHandle sessionHandle) throws ServiceSQLException {
+    SparkThriftServer2.listener().onSessionClosed(sessionHandle.getSessionId().toString());
     ServiceSession session = handleToSession.remove(sessionHandle);
     if (session == null) {
       throw new ServiceSQLException("Session does not exist!");
     }
     session.close();
+    operationManager.sessionToActivePool().remove(sessionHandle);
   }
 
   public ServiceSession getSession(SessionHandle sessionHandle) throws ServiceSQLException {

@@ -126,7 +126,7 @@ public class SparkAuthFactory {
         String keytab = conf.getConf(ServiceConf.THRIFTSERVER_KERBEROS_KEYTAB());
         if (needUgiLogin(UserGroupInformation.getCurrentUser(),
           SecurityUtil.getServerPrincipal(principal, "0.0.0.0"), keytab)) {
-          saslServer = ShimLoader.getHadoopThriftAuthBridge().createServer(principal, keytab);
+          saslServer = ShimLoader.getHadoopThriftAuthBridge().createServer(keytab, principal);
         } else {
           // Using the default constructor to avoid unnecessary UGI login.
           saslServer = new HadoopThriftAuthBridge.Server();

@@ -23,7 +23,6 @@ import java.util.regex.Pattern
 import org.apache.commons.lang3.exception.ExceptionUtils
 
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.service.SparkThriftServer2
 import org.apache.spark.sql.service.cli._
 import org.apache.spark.sql.service.cli.session.ServiceSession
@@ -38,7 +37,6 @@ import org.apache.spark.util.{Utils => SparkUtils}
  * @param schemaName database name, null or a concrete database name
  */
 private[service] class SparkGetSchemasOperation(
-    sqlContext: SQLContext,
     parentSession: ServiceSession,
     catalogName: String,
     schemaName: String)
