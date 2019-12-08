@@ -494,11 +494,9 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
     withMultipleConnectionJdbcStatement("smallKV", "addJar")(
       {
         statement =>
-          // TODO: revisit it later
-          // val jarFile = org.apache.spark.sql.hive.test.HiveTestJars
-          //  .getHiveHcatalogCoreJar().getCanonicalPath
+          val jarFile = HiveTestJars.getHiveHcatalogCoreJar().getCanonicalPath
 
-          statement.executeQuery(s"ADD JAR jarFile")
+          statement.executeQuery(s"ADD JAR $jarFile")
       },
 
       {
@@ -667,7 +665,7 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
     }
   }
 
-  test("SPARK-28463: Thriftserver throws BigDecimal incompatible with SparkDecimal") {
+  test("SPARK-28463: Thriftserver throws BigDecimal incompatible with HiveDecimal") {
     withJdbcStatement() { statement =>
       val rs = statement.executeQuery("SELECT CAST(1 AS decimal(38, 18))")
       assert(rs.next())
@@ -1019,7 +1017,7 @@ abstract class SparkThriftServer2Test extends SparkFunSuite with BeforeAndAfterA
       val tempLog4jConf = SparkUtils.createTempDir().getCanonicalPath
 
       Files.write(
-        """log4j.rootCategory=info, console
+        """log4j.rootCategory=DEBUG, console
           |log4j.appender.console=org.apache.log4j.ConsoleAppender
           |log4j.appender.console.target=System.err
           |log4j.appender.console.layout=org.apache.log4j.PatternLayout
