@@ -293,10 +293,13 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
       { statement =>
 
         val queries = Seq(
-            "CREATE TABLE test_map(key INT, value STRING)",
-            s"LOAD DATA LOCAL INPATH '${TestData.smallKv}' OVERWRITE INTO TABLE test_map",
-            "CACHE TABLE test_table AS SELECT key FROM test_map ORDER BY key DESC",
-            "CREATE DATABASE db1")
+          "CREATE TABLE test_map(key INT, value STRING) USING PARQUET",
+          """
+            | INSERT INTO TABLE test_map VALUES (238,'val_238'), (86,'val_86'),
+            | (311,'val_311'), (27,'val_27'), (165,'val_165')
+          """.stripMargin,
+          "CACHE TABLE test_table AS SELECT key FROM test_map ORDER BY key DESC",
+          "CREATE DATABASE db1")
 
         queries.foreach(statement.execute)
 
@@ -409,7 +412,7 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
           statement.executeQuery("SELECT key FROM test_map ORDER BY KEY DESC")
         }
 
-        statement.execute("CREATE TABLE test_map2(key INT, value STRING)")
+        statement.execute("CREATE TABLE test_map2(key INT, value STRING) USING PARQUET")
       },
 
       // access default database
