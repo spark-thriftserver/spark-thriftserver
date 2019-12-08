@@ -141,10 +141,11 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
     }
   }
 
-  test("Support beeline --hiveconf and --hivevar") {
+  test("Support beeline --hiveconf, --hivevar and --sparkconf") {
     withJdbcStatement() { statement =>
       executeTest(hiveConfList)
       executeTest(hiveVarList)
+      executeTest(sparkConfList)
       def executeTest(hiveList: String): Unit = {
         hiveList.split(";").foreach{ m =>
           val kv = m.split("=")
@@ -866,10 +867,10 @@ abstract class SparkThriftJdbcTest extends SparkThriftServer2Test with JdbcTestH
        |hive.server2.thrift.http.path=cliservice;
        |spark.sql.thriftserver.transport.mode=http;
        |spark.sql.thriftserver.thrift.http.path=cliservice;
-       |${hiveConfList}#${hiveVarList}
+       |${hiveConfList}#${hiveVarList};${sparkConfList}
      """.stripMargin.split("\n").mkString.trim
   } else {
-    s"${jdbcUrlPrefix}localhost:$serverPort/?${hiveConfList}#${hiveVarList}"
+    s"${jdbcUrlPrefix}localhost:$serverPort/?${hiveConfList}#${hiveVarList};${sparkConfList}"
   }
 
   def withMultipleConnectionJdbcStatement(tableNames: String*)(fs: (Statement => Unit)*): Unit = {
@@ -930,6 +931,7 @@ abstract class SparkThriftServer2Test extends SparkFunSuite with BeforeAndAfterA
 
   protected val hiveConfList = "a=avalue;b=bvalue"
   protected val hiveVarList = "c=cvalue;d=dvalue"
+  protected val sparkConfList = "spark.sql.thriftserver.teste=evalue"
   protected def user = System.getProperty("user.name")
 
   protected var warehousePath: File = _
@@ -977,6 +979,7 @@ abstract class SparkThriftServer2Test extends SparkFunSuite with BeforeAndAfterA
        |  --conf ${ServiceConf.THRIFTSERVER_TRANSPORT_MODE.key}=$mode
        |  --conf ${ServiceConf.THRIFTSERVER_LOGGING_OPERATION_LOG_LOCATION.key}=$operationLogPath
        |  --conf $portConf=$port
+       |  --driver-java-options -Dderby.system.home=$metastoreJdbcUri
        |  --driver-class-path $driverClassPath
        |  --conf spark.ui.enabled=false
        |  ${extraConf.mkString("\n")}
