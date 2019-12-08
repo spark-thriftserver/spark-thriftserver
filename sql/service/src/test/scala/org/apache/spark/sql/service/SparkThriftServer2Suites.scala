@@ -38,8 +38,6 @@ import org.scalatest.BeforeAndAfterAll
 
 import org.apache.spark.{SparkException, SparkFunSuite}
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.hive.test.HiveTestJars
 import org.apache.spark.sql.internal.StaticSQLConf
 import org.apache.spark.sql.internal.StaticSQLConf.HIVE_THRIFT_SERVER_SINGLESESSION
 import org.apache.spark.sql.service.auth.PlainSaslHelper
@@ -478,54 +476,53 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
     }
   }
 
-  test("test add jar") {
-    assume(SparkSession.hiveClassesArePresent, "Test without Hive support.")
-    withMultipleConnectionJdbcStatement("smallKV", "addJar")(
-      {
-        statement =>
-          val jarFile = HiveTestJars.getHiveHcatalogCoreJar().getCanonicalPath
-
-          statement.executeQuery(s"ADD JAR $jarFile")
-      },
-
-      {
-        statement =>
-          val queries = Seq(
-            s"CREATE TABLE smallKV(key INT, val STRING) USING csv LOCATION '${TestData.smallKv}'",
-            """CREATE TABLE addJar(key string)
-              |ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe'
-            """.stripMargin)
-
-          queries.foreach(statement.execute)
-
-          statement.executeQuery(
-            """
-              |INSERT INTO TABLE addJar SELECT 'k1' as key FROM smallKV limit 1
-            """.stripMargin)
-
-          val actualResult =
-            statement.executeQuery("SELECT key FROM addJar")
-          val actualResultBuffer = new collection.mutable.ArrayBuffer[String]()
-          while (actualResult.next()) {
-            actualResultBuffer += actualResult.getString(1)
-          }
-          actualResult.close()
-
-          val expectedResult =
-            statement.executeQuery("SELECT 'k1'")
-          val expectedResultBuffer = new collection.mutable.ArrayBuffer[String]()
-          while (expectedResult.next()) {
-            expectedResultBuffer += expectedResult.getString(1)
-          }
-          expectedResult.close()
-
-          assert(expectedResultBuffer === actualResultBuffer)
-      }
-    )
-  }
+//  test("test add jar") {
+//    withMultipleConnectionJdbcStatement("smallKV", "addJar")(
+//      {
+//        statement =>
+//          val jarFile = org.apache.spark.sql.hive.test.HiveTestJars
+//            .getHiveHcatalogCoreJar().getCanonicalPath
+//
+//          statement.executeQuery(s"ADD JAR $jarFile")
+//      },
+//
+//      {
+//        statement =>
+//          val queries = Seq(
+//            s"CREATE TABLE smallKV(key INT, val STRING) USING csv LOCATION '${TestData.smallKv}'",
+//            """CREATE TABLE addJar(key string)
+//              |ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe'
+//            """.stripMargin)
+//
+//          queries.foreach(statement.execute)
+//
+//          statement.executeQuery(
+//            """
+//              |INSERT INTO TABLE addJar SELECT 'k1' as key FROM smallKV limit 1
+//            """.stripMargin)
+//
+//          val actualResult =
+//            statement.executeQuery("SELECT key FROM addJar")
+//          val actualResultBuffer = new collection.mutable.ArrayBuffer[String]()
+//          while (actualResult.next()) {
+//            actualResultBuffer += actualResult.getString(1)
+//          }
+//          actualResult.close()
+//
+//          val expectedResult =
+//            statement.executeQuery("SELECT 'k1'")
+//          val expectedResultBuffer = new collection.mutable.ArrayBuffer[String]()
+//          while (expectedResult.next()) {
+//            expectedResultBuffer += expectedResult.getString(1)
+//          }
+//          expectedResult.close()
+//
+//          assert(expectedResultBuffer === actualResultBuffer)
+//      }
+//    )
+//  }
 
   test("SPARK-11595 ADD JAR with input path having URL scheme") {
-    assume(SparkSession.hiveClassesArePresent, "Test without Hive support.")
     withJdbcStatement("test_udtf") { statement =>
       try {
         val jarPath = "../hive/src/test/resources/TestUDTF.jar"
