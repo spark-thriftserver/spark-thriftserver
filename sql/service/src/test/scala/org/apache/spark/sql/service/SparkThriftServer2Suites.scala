@@ -924,6 +924,8 @@ abstract class SparkThriftJdbcTest extends SparkThriftServer2Test with JdbcTestH
   private def jdbcUri = if (mode == ServerMode.http) {
     s"""${jdbcUrlPrefix}localhost:$serverPort/
        |default?
+       |hive.server2.transport.mode=http;
+       |hive.server2.thrift.http.path=cliservice;
        |spark.sql.thriftserver.transport.mode=http;
        |spark.sql.thriftserver.thrift.http.path=cliservice;
        |${hiveConfList}#${hiveVarList}
