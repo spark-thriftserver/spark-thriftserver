@@ -40,16 +40,20 @@ import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.spark.sql.service.utils.SystemVariables.ENV_PREFIX;
-import static org.apache.spark.sql.service.utils.SystemVariables.SPARKCONF_PREFIX;
-import static org.apache.spark.sql.service.utils.SystemVariables.SPARKVAR_PREFIX;
-import static org.apache.spark.sql.service.utils.SystemVariables.SYSTEM_PREFIX;
-
 /**
  * ServiceSession
  *
  */
 public class ServiceSessionImpl implements ServiceSession {
+
+  public static final String ENV_PREFIX = "env:";
+  public static final String SYSTEM_PREFIX = "system:";
+  public static final String SPARKCONF_PREFIX = "sparkconf:";
+  public static final String SPARKVAR_PREFIX = "sparkvar:";
+  public static final String HIVECONF_PREFIX = "hiveconf:";
+  public static final String HIVEVAR_PREFIX = "hivevar:";
+  public static final String SET_COLUMN_NAME = "set:";
+
   private final SessionHandle sessionHandle;
   private String username;
   private final String password;
@@ -150,7 +154,7 @@ public class ServiceSessionImpl implements ServiceSession {
   private void configureSession(Map<String, String> sessionConfMap) throws ServiceSQLException {
     for (Map.Entry<String, String> entry : sessionConfMap.entrySet()) {
       String key = entry.getKey();
-      if (key.startsWith("set:")) {
+      if (key.startsWith(SET_COLUMN_NAME)) {
         try {
           setVariable(key.substring(4), entry.getValue());
         } catch (Exception e) {
@@ -164,21 +168,27 @@ public class ServiceSessionImpl implements ServiceSession {
   // setConf(varname, propName, varvalue, true) when varname.startsWith(SPARKCONF_PREFIX)
   private int setVariable(String varname, String varvalue) throws Exception {
     VariableSubstitution substitution = new VariableSubstitution(sqlConf);
-    if (varvalue.contains("\n")){
+    if (varvalue.contains("\n")) {
       LOG.error("Warning: Value had a \\n character in it.");
     }
     varname = varname.trim();
-    if (varname.startsWith(ENV_PREFIX)){
+    if (varname.startsWith(ENV_PREFIX)) {
       LOG.error("env:* variables can not be set.");
       return 1;
-    } else if (varname.startsWith(SYSTEM_PREFIX)){
+    } else if (varname.startsWith(SYSTEM_PREFIX)) {
       String propName = varname.substring(SYSTEM_PREFIX.length());
       System.getProperties().setProperty(propName, substitution.substitute(varvalue));
-    } else if (varname.startsWith(SPARKCONF_PREFIX)){
+    } else if (varname.startsWith(SPARKCONF_PREFIX)) {
       String propName = varname.substring(SPARKCONF_PREFIX.length());
       sqlContext.setConf(propName, substitution.substitute(varvalue));
     } else if (varname.startsWith(SPARKVAR_PREFIX)) {
       String propName = varname.substring(SPARKVAR_PREFIX.length());
+      sqlContext.setConf(propName, substitution.substitute(varvalue));
+    } else if (varname.startsWith(HIVECONF_PREFIX)) {
+      String propName = varname.substring(HIVECONF_PREFIX.length());
+      sqlContext.setConf(propName, substitution.substitute(varvalue));
+    } else if (varname.startsWith(HIVEVAR_PREFIX)) {
+      String propName = varname.substring(HIVEVAR_PREFIX.length());
       sqlContext.setConf(propName, substitution.substitute(varvalue));
     } else {
       sqlContext.setConf(varname, varvalue);
