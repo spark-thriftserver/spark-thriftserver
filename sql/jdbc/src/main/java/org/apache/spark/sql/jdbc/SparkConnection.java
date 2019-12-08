@@ -391,8 +391,8 @@ public class SparkConnection implements java.sql.Connection {
                   // Set the context attribute to true which will be interpreted by the request
                   // interceptor
                   if (ret) {
-                    context.setAttribute(Utils.HIVE_SERVER2_RETRY_KEY,
-                        Utils.HIVE_SERVER2_RETRY_TRUE);
+                    context.setAttribute(Utils.SPARK_SERVER2_RETRY_KEY,
+                        Utils.SPARK_SERVER2_RETRY_TRUE);
                   }
                   return ret;
                 }
@@ -636,12 +636,12 @@ public class SparkConnection implements java.sql.Connection {
 
     Map<String, String> openConf = new HashMap<String, String>();
     // for remote JDBC client, try to set the conf var using 'set foo=bar'
-    for (Entry<String, String> hiveConf : connParams.getHiveConfs().entrySet()) {
+    for (Entry<String, String> hiveConf : connParams.getSparkConfs().entrySet()) {
       openConf.put("set:sparkconf:" + hiveConf.getKey(), hiveConf.getValue());
     }
-    // For remote JDBC client, try to set the hive var using 'set sparkvar:key=value'
-    for (Entry<String, String> hiveVar : connParams.getHiveVars().entrySet()) {
-      openConf.put("set:sparkvar:" + hiveVar.getKey(), hiveVar.getValue());
+    // For remote JDBC client, try to set the hive var using 'set spark:key=value'
+    for (Entry<String, String> hiveVar : connParams.getSparkVars().entrySet()) {
+      openConf.put("set:spark:" + hiveVar.getKey(), hiveVar.getValue());
     }
     // switch the database
     openConf.put("use:database", connParams.getDbName());
