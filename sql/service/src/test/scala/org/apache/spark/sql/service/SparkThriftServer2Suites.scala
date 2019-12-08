@@ -867,10 +867,10 @@ abstract class SparkThriftJdbcTest extends SparkThriftServer2Test with JdbcTestH
        |hive.server2.thrift.http.path=cliservice;
        |spark.sql.thriftserver.transport.mode=http;
        |spark.sql.thriftserver.thrift.http.path=cliservice;
-       |${hiveConfList}#${hiveVarList};${sparkConfList}
+       |${hiveConfList};${sparkConfList}#${hiveVarList}
      """.stripMargin.split("\n").mkString.trim
   } else {
-    s"${jdbcUrlPrefix}localhost:$serverPort/?${hiveConfList}#${hiveVarList};${sparkConfList}"
+    s"${jdbcUrlPrefix}localhost:$serverPort/?${hiveConfList};${sparkConfList}#${hiveVarList}"
   }
 
   def withMultipleConnectionJdbcStatement(tableNames: String*)(fs: (Statement => Unit)*): Unit = {
