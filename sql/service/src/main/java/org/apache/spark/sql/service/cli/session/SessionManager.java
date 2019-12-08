@@ -280,22 +280,11 @@ public class SessionManager extends CompositeService {
     SparkThriftServer2.listener().onSessionCreated(session.getIpAddress(),
         session.getSessionHandle().getSessionId().toString(),
         session.getUserName());
-    setConfMap(session.getSQLContext(), session.getVariables());
-    setConfMap(session.getSQLContext(), session.getOverriddenConf());
     if (sessionConf != null && sessionConf.containsKey("use:database")) {
       session.getSQLContext().sql("use " + sessionConf.get("use:database"));
     }
     handleToSession.put(session.getSessionHandle(), session);
     return session.getSessionHandle();
-  }
-
-
-  public void setConfMap(SQLContext sqlContext, java.util.Map<String, String> confMap) {
-    Iterator<Map.Entry<String, String>> iterator = confMap.entrySet().iterator();
-    while (iterator.hasNext()) {
-      Map.Entry<String, String> kv = iterator.next();
-      sqlContext.setConf(kv.getKey(), kv.getValue());
-    }
   }
 
   public void closeSession(SessionHandle sessionHandle) throws ServiceSQLException {
