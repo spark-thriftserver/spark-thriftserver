@@ -24,7 +24,6 @@ import java.sql.{Date, DriverManager, SQLException, Statement}
 import java.util.{Locale, UUID}
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.concurrent.duration._
@@ -39,7 +38,6 @@ import org.scalatest.BeforeAndAfterAll
 
 import org.apache.spark.{SparkException, SparkFunSuite}
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.hive.test.HiveTestJars
 import org.apache.spark.sql.internal.StaticSQLConf
 import org.apache.spark.sql.internal.StaticSQLConf.HIVE_THRIFT_SERVER_SINGLESESSION
@@ -183,15 +181,6 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
     }
   }
 
-  ignore("Checks Hive version") {
-    withJdbcStatement() { statement =>
-      val resultSet = statement.executeQuery("SET spark.sql.hive.version")
-      resultSet.next()
-      assert(resultSet.getString(1) === "spark.sql.hive.version")
-      // assert(resultSet.getString(2) === HiveUtils.builtinHiveVersion)
-    }
-  }
-
   test("SPARK-3004 regression: result set containing NULL") {
     withJdbcStatement("test_null") { statement =>
       val queries = Seq(
@@ -284,7 +273,6 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
   }
 
   test("test multiple session") {
-    assume(SparkSession.hiveClassesArePresent, "Test without Hive support.")
     import org.apache.spark.sql.internal.SQLConf
     var defaultV1: String = null
     var defaultV2: String = null
@@ -491,7 +479,6 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
   }
 
   test("test add jar") {
-    assume(SparkSession.hiveClassesArePresent, "Test without Hive support.")
     withMultipleConnectionJdbcStatement("smallKV", "addJar")(
       {
         statement =>
@@ -537,42 +524,7 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
     )
   }
 
-  ignore("Checks Hive version via SET -v") {
-    withJdbcStatement() { statement =>
-      val resultSet = statement.executeQuery("SET -v")
-
-      val conf = mutable.Map.empty[String, String]
-      while (resultSet.next()) {
-        conf += resultSet.getString(1) -> resultSet.getString(2)
-      }
-
-      // if (HiveUtils.isHive23) {
-      //   assert(conf.get(HiveUtils.FAKE_HIVE_VERSION.key) === Some("2.3.6"))
-      // } else {
-      //   assert(conf.get(HiveUtils.FAKE_HIVE_VERSION.key) === Some("1.2.1"))
-      // }
-    }
-  }
-
-  ignore("Checks Hive version via SET") {
-    withJdbcStatement() { statement =>
-      val resultSet = statement.executeQuery("SET")
-
-      val conf = mutable.Map.empty[String, String]
-      while (resultSet.next()) {
-        conf += resultSet.getString(1) -> resultSet.getString(2)
-      }
-
-      // if (HiveUtils.isHive23) {
-      //   assert(conf.get(HiveUtils.FAKE_HIVE_VERSION.key) === Some("2.3.6"))
-      // } else {
-      //   assert(conf.get(HiveUtils.FAKE_HIVE_VERSION.key) === Some("1.2.1"))
-      // }
-    }
-  }
-
   test("SPARK-11595 ADD JAR with input path having URL scheme") {
-    assume(SparkSession.hiveClassesArePresent, "Test without Hive support.")
     withJdbcStatement("test_udtf") { statement =>
       try {
         val jarPath = "../hive/src/test/resources/TestUDTF.jar"
@@ -641,21 +593,17 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
       })
     }
 
-    //    withCLIServiceClient { client =>
-    //      val user = System.getProperty("user.name")
-    //      val sessionHandle = client.openSession(user, "")
-    //      val sessionID = sessionHandle.getSessionId
-    //
-    //      if (HiveUtils.isHive23) {
-    //        assert(pipeoutFileList(sessionID).length == 2)
-    //      } else {
-    //        assert(pipeoutFileList(sessionID).length == 1)
-    //      }
-    //
-    //      client.closeSession(sessionHandle)
-    //
-    //      assert(pipeoutFileList(sessionID).length == 0)
-    //    }
+    withCLIServiceClient { client =>
+      val user = System.getProperty("user.name")
+      val sessionHandle = client.openSession(user, "")
+      val sessionID = sessionHandle.getSessionId
+
+      assert(pipeoutFileList(sessionID).length == 2)
+
+      client.closeSession(sessionHandle)
+
+      assert(pipeoutFileList(sessionID).length == 0)
+    }
   }
 
   test("SPARK-24829 Checks cast as float") {
@@ -783,7 +731,6 @@ class SingleSessionSuite extends SparkThriftJdbcTest {
     s"--conf ${HIVE_THRIFT_SERVER_SINGLESESSION.key}=true" :: Nil
 
   test("share the temporary functions across JDBC connections") {
-    assume(SparkSession.hiveClassesArePresent, "Test without Hive support.")
     withMultipleConnectionJdbcStatement()(
       { statement =>
         val jarPath = "../hive/src/test/resources/TestUDTF.jar"
@@ -894,15 +841,6 @@ class SparkThriftHttpServerSuite extends SparkThriftJdbcTest {
         resultSet.getInt(1)
       }
     }
-  }
-
-  ignore("Checks Hive version") {
-    //    withJdbcStatement() { statement =>
-    //      val resultSet = statement.executeQuery("SET spark.sql.hive.version")
-    //      resultSet.next()
-    //      assert(resultSet.getString(1) === "spark.sql.hive.version")
-    //      assert(resultSet.getString(2) === HiveUtils.builtinHiveVersion)
-    //    }
   }
 
   test("SPARK-24829 Checks cast as float") {
@@ -1207,6 +1145,7 @@ abstract class SparkThriftServer2Test extends SparkFunSuite with BeforeAndAfterA
 }
 
 trait JdbcTestHelper {
+
   protected def jdbcDriver: String = classOf[HiveDriver].getCanonicalName
 
   val jdbcUrlPrefix: String = if (classOf[HiveDriver].getCanonicalName.equals(jdbcDriver)) {

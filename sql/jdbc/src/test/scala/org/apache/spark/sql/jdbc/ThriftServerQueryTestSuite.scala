@@ -17,34 +17,6 @@
 
 package org.apache.spark.sql.jdbc
 
-import java.io.File
-import java.sql.{DriverManager, SQLException, Statement, Timestamp}
-import java.util.{Locale, MissingFormatArgumentException}
-
-import scala.util.{Random, Try}
-import scala.util.control.NonFatal
-
-import org.apache.commons.lang3.exception.ExceptionUtils
-
-import org.apache.spark.SparkException
-import org.apache.spark.sql.SQLQueryTestSuite
-import org.apache.spark.sql.catalyst.analysis.NoSuchTableException
-import org.apache.spark.sql.catalyst.util.fileToString
-import org.apache.spark.sql.execution.HiveResult
-import org.apache.spark.sql.internal.SQLConf
-import org.apache.spark.sql.service.SparkThriftServer2
-import org.apache.spark.sql.service.internal.ServiceConf
-import org.apache.spark.sql.types._
-
-/**
- * Re-run all the tests in SQLQueryTestSuite via Thrift Server.
- * Note that this TestSuite does not support maven.
- *
- * TODO:
- *   1. Support UDF testing.
- *   2. Support DESC command.
- *   3. Support SHOW command.
- */
 class ThriftServerQueryTestSuite extends org.apache.spark.sql.service.ThriftServerQueryTestSuite {
   override def jdbcDriver: String = classOf[SparkDriver].getCanonicalName
 }
