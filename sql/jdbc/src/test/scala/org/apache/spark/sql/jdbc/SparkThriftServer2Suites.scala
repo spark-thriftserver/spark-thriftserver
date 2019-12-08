@@ -283,7 +283,6 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
   }
 
   test("test multiple session") {
-    assume(SparkSession.hiveClassesArePresent, "Test without Hive support.")
     import org.apache.spark.sql.internal.SQLConf
     var defaultV1: String = null
     var defaultV2: String = null
@@ -573,10 +572,9 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
   }
 
   test("SPARK-11595 ADD JAR with input path having URL scheme") {
-    assume(SparkSession.hiveClassesArePresent, "Test without Hive support.")
     withJdbcStatement("test_udtf") { statement =>
       try {
-        val jarPath = "../hive/src/test/resources/TestUDTF.jar"
+        val jarPath = "/src/test/resources/TestUDTF.jar"
         val jarURL = s"file://${System.getProperty("user.dir")}/$jarPath"
 
         Seq(
@@ -784,10 +782,9 @@ class SingleSessionSuite extends SparkThriftJdbcTest {
     s"--conf ${HIVE_THRIFT_SERVER_SINGLESESSION.key}=true" :: Nil
 
   test("share the temporary functions across JDBC connections") {
-    assume(SparkSession.hiveClassesArePresent, "Test without Hive support.")
     withMultipleConnectionJdbcStatement()(
       { statement =>
-        val jarPath = "../hive/src/test/resources/TestUDTF.jar"
+        val jarPath = "/src/test/resources/TestUDTF.jar"
         val jarURL = s"file://${System.getProperty("user.dir")}/$jarPath"
 
         // Configurations and temporary functions added in this session should be visible to all
