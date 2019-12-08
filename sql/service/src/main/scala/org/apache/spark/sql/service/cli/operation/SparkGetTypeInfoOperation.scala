@@ -22,7 +22,6 @@ import java.util.UUID
 import org.apache.commons.lang3.exception.ExceptionUtils
 
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.service.{SparkThriftServer2, ThriftserverShimUtils}
 import org.apache.spark.sql.service.cli._
 import org.apache.spark.sql.service.cli.session.ServiceSession
@@ -35,7 +34,6 @@ import org.apache.spark.util.{Utils => SparkUtils}
  * @param parentSession a ServiceSession from SessionManager
  */
 private[service] class SparkGetTypeInfoOperation(
-    sqlContext: SQLContext,
     parentSession: ServiceSession)
   extends SparkMetadataOperation(parentSession, OperationType.GET_TYPE_INFO) with Logging {
 

@@ -23,7 +23,6 @@ import java.util.regex.Pattern
 import org.apache.commons.lang3.exception.ExceptionUtils
 
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.catalyst.catalog.SessionCatalog
 import org.apache.spark.sql.service.SparkThriftServer2
 import org.apache.spark.sql.service.cli._
@@ -42,7 +41,6 @@ import org.apache.spark.util.{Utils => SparkUtils}
  * @param columnName column name
  */
 private[service] class SparkGetColumnsOperation(
-    sqlContext: SQLContext,
     parentSession: ServiceSession,
     catalogName: String,
     schemaName: String,
