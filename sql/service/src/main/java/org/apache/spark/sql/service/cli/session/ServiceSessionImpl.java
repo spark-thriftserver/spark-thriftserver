@@ -40,10 +40,7 @@ import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.spark.sql.service.utils.SystemVariables.ENV_PREFIX;
-import static org.apache.spark.sql.service.utils.SystemVariables.SPARKCONF_PREFIX;
-import static org.apache.spark.sql.service.utils.SystemVariables.SPARKVAR_PREFIX;
-import static org.apache.spark.sql.service.utils.SystemVariables.SYSTEM_PREFIX;
+import static org.apache.spark.sql.service.utils.SystemVariables.*;
 
 /**
  * ServiceSession
@@ -173,14 +170,20 @@ public class ServiceSessionImpl implements ServiceSession {
     if (varname.startsWith(ENV_PREFIX)){
       LOG.error("env:* variables can not be set.");
       return 1;
-    } else if (varname.startsWith(SYSTEM_PREFIX)){
+    } else if (varname.startsWith(SYSTEM_PREFIX)) {
       String propName = varname.substring(SYSTEM_PREFIX.length());
       System.getProperties().setProperty(propName, substitution.substitute(varvalue));
-    } else if (varname.startsWith(SPARKCONF_PREFIX)){
+    } else if (varname.startsWith(SPARKCONF_PREFIX)) {
       String propName = varname.substring(SPARKCONF_PREFIX.length());
       setConf(varname, propName, varvalue, true);
     } else if (varname.startsWith(SPARKVAR_PREFIX)) {
       String propName = varname.substring(SPARKVAR_PREFIX.length());
+      sessionVariables.put(propName, substitution.substitute(varvalue));
+    } else if (varname.startsWith(HIVECONF_PREFIX)) {
+      String propName = varname.substring(HIVECONF_PREFIX.length());
+      setConf(varname, propName, varvalue, true);
+    } else if (varname.startsWith(HIVEVAR_PREFIX)) {
+      String propName = varname.substring(HIVEVAR_PREFIX.length());
       sessionVariables.put(propName, substitution.substitute(varvalue));
     } else {
       setConf(varname, varname, varvalue, true);
