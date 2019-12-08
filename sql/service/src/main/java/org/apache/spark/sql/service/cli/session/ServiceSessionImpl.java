@@ -61,8 +61,6 @@ public class ServiceSessionImpl implements ServiceSession {
   private File sessionLogDir;
   private volatile long lastAccessTime;
   private volatile long lastIdleTime;
-  private Map<String, String> sessionVariables = new HashMap<String, String>();
-  private Map<String, String> sessionOverriddenConf = new HashMap<String, String>();
 
   public ServiceSessionImpl(TProtocolVersion protocol, String username, String password,
                             SQLContext sqlContext, String ipAddress) {
@@ -167,7 +165,7 @@ public class ServiceSessionImpl implements ServiceSession {
       LOG.error("Warning: Value had a \\n character in it.");
     }
     varname = varname.trim();
-    if (varname.startsWith(ENV_PREFIX)){
+    if (varname.startsWith(ENV_PREFIX)) {
       LOG.error("env:* variables can not be set.");
       return 1;
     } else if (varname.startsWith(SYSTEM_PREFIX)) {
@@ -175,29 +173,20 @@ public class ServiceSessionImpl implements ServiceSession {
       System.getProperties().setProperty(propName, substitution.substitute(varvalue));
     } else if (varname.startsWith(SPARKCONF_PREFIX)) {
       String propName = varname.substring(SPARKCONF_PREFIX.length());
-      setConf(varname, propName, varvalue, true);
+      sqlContext.setConf(propName, substitution.substitute(varvalue));
     } else if (varname.startsWith(SPARKVAR_PREFIX)) {
       String propName = varname.substring(SPARKVAR_PREFIX.length());
-      sessionVariables.put(propName, substitution.substitute(varvalue));
+      sqlContext.setConf(propName, substitution.substitute(varvalue));
     } else if (varname.startsWith(HIVECONF_PREFIX)) {
       String propName = varname.substring(HIVECONF_PREFIX.length());
-      setConf(varname, propName, varvalue, true);
+      sqlContext.setConf(propName, substitution.substitute(varvalue));
     } else if (varname.startsWith(HIVEVAR_PREFIX)) {
       String propName = varname.substring(HIVEVAR_PREFIX.length());
-      sessionVariables.put(propName, substitution.substitute(varvalue));
+      sqlContext.setConf(propName, substitution.substitute(varvalue));
     } else {
-      setConf(varname, varname, varvalue, true);
+      sqlContext.setConf(varname, substitution.substitute(varvalue));
     }
     return 0;
-  }
-
-  // returns non-null string for validation fail
-  private void setConf(String varname, String key, String varvalue, boolean register)
-          throws IllegalArgumentException {
-    VariableSubstitution substitution =
-        new VariableSubstitution(sqlConf);
-    String value = substitution.substitute(varvalue);
-    sessionOverriddenConf.put(key, value);
   }
 
   @Override
@@ -302,16 +291,6 @@ public class ServiceSessionImpl implements ServiceSession {
   @Override
   public SQLContext getSQLContext() {
     return sqlContext;
-  }
-
-  @Override
-  public Map<String, String> getVariables() {
-    return sessionVariables;
-  }
-
-  @Override
-  public Map<String, String> getOverriddenConf() {
-    return sessionOverriddenConf;
   }
 
   @Override
