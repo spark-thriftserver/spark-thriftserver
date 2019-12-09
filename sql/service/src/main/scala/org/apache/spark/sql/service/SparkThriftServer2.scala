@@ -30,9 +30,6 @@ import org.apache.spark.internal.config.UI.UI_ENABLED
 import org.apache.spark.scheduler.{SparkListener, SparkListenerApplicationEnd, SparkListenerJobStart}
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.internal.SQLConf
-import org.apache.spark.sql.service.ReflectionUtils._
-import org.apache.spark.sql.service.cli.{ReflectedCompositeService, SparkSQLCLIService}
-import org.apache.spark.sql.service.cli.thrift.{ThriftBinaryCLIService, ThriftHttpCLIService}
 import org.apache.spark.sql.service.internal.ServiceConf
 import org.apache.spark.sql.service.server.SparkServer2
 import org.apache.spark.sql.service.ui.ThriftServerTab
@@ -289,33 +286,14 @@ object SparkThriftServer2 extends Logging {
 }
 
 private[spark] class SparkThriftServer2(sqlContext: SQLContext)
-  extends SparkServer2(sqlContext)
-  with ReflectedCompositeService {
+  extends SparkServer2(sqlContext) {
   // state is tracked internally so that the server only attempts to shut down if it successfully
   // started, and then once only.
   private val started = new AtomicBoolean(false)
 
   override def init(sqlConf: SQLConf): Unit = {
-    val sparkSqlCliService = new SparkSQLCLIService(this, sqlContext)
-    setSuperField(this, "cliService", sparkSqlCliService)
-    addService(sparkSqlCliService)
-
-    val thriftCliService = if (isHTTPTransportMode(sqlConf)) {
-      new ThriftHttpCLIService(sparkSqlCliService, sqlContext)
-    } else {
-      new ThriftBinaryCLIService(sparkSqlCliService, sqlContext)
-    }
-
-    setSuperField(this, "thriftCLIService", thriftCliService)
-    addService(thriftCliService)
-    initCompositeService(sqlConf)
+    super.init(sqlConf)
   }
-
-  private def isHTTPTransportMode(sqlConf: SQLConf): Boolean = {
-    val transportMode = sqlConf.getConf(ServiceConf.THRIFTSERVER_TRANSPORT_MODE)
-    transportMode.toLowerCase(Locale.ROOT).equals("http")
-  }
-
 
   override def start(): Unit = {
     super.start()
