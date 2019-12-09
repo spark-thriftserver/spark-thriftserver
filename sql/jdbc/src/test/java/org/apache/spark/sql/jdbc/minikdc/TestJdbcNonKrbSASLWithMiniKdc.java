@@ -21,8 +21,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.security.sasl.AuthenticationException;
 
@@ -34,10 +35,19 @@ import org.apache.spark.sql.service.internal.ServiceConf;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class TestJdbcNonKrbSASLWithMiniKdc extends TestJdbcWithMiniKdc {
+public class TestJdbcNonKrbSASLWithMiniKdc {
   public static final String SASL_NONKRB_USER1 = "nonkrbuser";
   public static final String SASL_NONKRB_USER2 = "nonkrbuser@realm.com";
   public static final String SASL_NONKRB_PWD = "mypwd";
+
+  // Need to hive.server2.session.hook to SessionHookTest in hive-site
+  public static final String SESSION_USER_NAME = "proxy.test.session.user";
+
+  protected static MiniSS2 miniSS2 = null;
+  protected static MiniHiveKdc miniHiveKdc = null;
+  protected static Map<String, String> confOverlay = new HashMap<String, String>();
+  protected Connection hs2Conn;
+
 
   public static class CustomAuthenticator implements PasswdAuthenticationProvider {
     @Override
@@ -59,6 +69,24 @@ public class TestJdbcNonKrbSASLWithMiniKdc extends TestJdbcWithMiniKdc {
     SparkSQLEnv.init();
     miniSS2 = MiniHiveKdc.getMiniSS2WithKerb(miniHiveKdc, SparkSQLEnv.sqlContext(), "CUSTOM");
     miniSS2.start(confOverlay);
+  }
+
+  /***
+   * Negative test, verify that connection to secure HS2 fails when
+   * required connection attributes are not provided
+   * @throws Exception
+   */
+  @Test
+  public void testConnectionNeg() throws Exception {
+    miniHiveKdc.loginUser(MiniHiveKdc.HIVE_TEST_USER_1);
+    try {
+      String url = miniSS2.getJdbcURL().replaceAll(";principal.*", "");
+      hs2Conn = DriverManager.getConnection(url);
+      fail("NON kerberos connection should fail");
+    } catch (SQLException e) {
+      // expected error
+      assertEquals("08S01", e.getSQLState().trim());
+    }
   }
 
   /***
@@ -142,5 +170,23 @@ public class TestJdbcNonKrbSASLWithMiniKdc extends TestJdbcWithMiniKdc {
     } finally {
       hs2Conn.close();
     }
+  }
+
+  /**
+   * Verify the config property value
+   *
+   * @param propertyName
+   * @param expectedValue
+   * @throws Exception
+   */
+  protected void verifyProperty(String propertyName, String expectedValue) throws Exception {
+    Statement stmt = hs2Conn.createStatement();
+    ResultSet res = stmt.executeQuery("set " + propertyName);
+    assertTrue(res.next());
+    String results[] = res.getString(1).split("=");
+    // Todo Current Spark Thrift Server not support Session Hook, we should add this feature later
+    // assertEquals("Property should be set", results.length, 2);
+    // assertEquals("Property should be set", expectedValue, results[1]);
+    assertEquals("Property should be set", results.length, 1);
   }
 }
