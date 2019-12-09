@@ -41,8 +41,6 @@ public class TestJdbcWithMiniKdcCookie {
 
   @BeforeClass
   public static void beforeTest() throws Exception {
-    SparkSQLEnvUtils.setStartUpProperties();
-    SparkSQLEnv.init();
     confMap.put(ServiceConf.THRIFTSERVER_TRANSPORT_MODE().key(), "http");
     System.err.println("Testing using HS2 mode : "
         + confMap.get(ServiceConf.THRIFTSERVER_TRANSPORT_MODE().key()));
@@ -50,6 +48,8 @@ public class TestJdbcWithMiniKdcCookie {
     // set a small time unit as cookie max age so that the server sends a 401
     confMap.put(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_MAX_AGE().key(), "1");
     miniHiveKdc = MiniHiveKdc.getMiniHiveKdc();
+    SparkSQLEnvUtils.setStartUpProperties();
+    SparkSQLEnv.init();
     miniHS2 = MiniHiveKdc.getMiniHS2WithKerb(miniHiveKdc, SparkSQLEnv.sqlContext());
     miniHS2.start(confMap);
   }

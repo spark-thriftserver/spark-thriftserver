@@ -44,8 +44,6 @@ public abstract class JdbcWithMiniKdcSQLAuthTest {
   protected static Map<String, String> confMap = new HashMap<String, String>();
 
   public static void beforeTestBase() throws Exception {
-    SparkSQLEnvUtils.setStartUpProperties();
-    SparkSQLEnv.init();
     System.err.println("Testing using HS2 mode:"
         + confMap.get(ServiceConf.THRIFTSERVER_TRANSPORT_MODE().key()));
 
@@ -53,6 +51,8 @@ public abstract class JdbcWithMiniKdcSQLAuthTest {
     confMap.put(ServiceConf.THRIFTSERVER_ENABLE_DOAS().key(), "false");
 
     miniHiveKdc = MiniHiveKdc.getMiniHiveKdc();
+    SparkSQLEnvUtils.setStartUpProperties();
+    SparkSQLEnv.init();
     miniHS2 = MiniHiveKdc.getMiniHS2WithKerb(miniHiveKdc, SparkSQLEnv.sqlContext());
     miniHS2.start(confMap);
   }

@@ -24,6 +24,7 @@ import org.apache.hadoop.security.GroupMappingServiceProvider;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.jdbc.miniSS2.MiniSS2;
+import org.apache.spark.sql.service.SparkSQLEnv;
 import org.apache.spark.sql.service.utils.Utils;
 
 import java.io.File;

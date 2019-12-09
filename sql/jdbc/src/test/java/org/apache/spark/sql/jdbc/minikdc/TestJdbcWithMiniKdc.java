@@ -42,10 +42,10 @@ public class TestJdbcWithMiniKdc {
 
   @BeforeClass
   public static void beforeTest() throws Exception {
-    SparkSQLEnvUtils.setStartUpProperties();
-    SparkSQLEnv.init();
     Class.forName(MiniSS2.getJdbcDriverName());
     miniHiveKdc = MiniHiveKdc.getMiniHiveKdc();
+    SparkSQLEnvUtils.setStartUpProperties();
+    SparkSQLEnv.init();
     miniSS2 = MiniHiveKdc.getMiniHS2WithKerb(miniHiveKdc, SparkSQLEnv.sqlContext());
     miniSS2.start(confOverlay);
   }
