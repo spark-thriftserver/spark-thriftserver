@@ -46,7 +46,7 @@ public class TestJdbcWithMiniKdc {
     miniHiveKdc = MiniHiveKdc.getMiniHiveKdc();
     SparkSQLEnvUtils.setStartUpProperties();
     SparkSQLEnv.init();
-    miniSS2 = MiniHiveKdc.getMiniHS2WithKerb(miniHiveKdc, SparkSQLEnv.sqlContext());
+    miniSS2 = MiniHiveKdc.getMiniSS2WithKerb(miniHiveKdc, SparkSQLEnv.sqlContext());
     miniSS2.start(confOverlay);
   }
 

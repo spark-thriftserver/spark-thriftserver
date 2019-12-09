@@ -31,7 +31,7 @@ public class TestJdbcWithMemoryTokenStore extends TestJdbcWithMiniKdc{
     miniHiveKdc = MiniHiveKdc.getMiniHiveKdc();
     SparkSQLEnvUtils.setStartUpProperties();
     SparkSQLEnv.init();
-    miniSS2 = MiniHiveKdc.getMiniHS2WithKerbWithRemoteHMS(miniHiveKdc, SparkSQLEnv.sqlContext());
+    miniSS2 = MiniHiveKdc.getMiniSS2WithKerb(miniHiveKdc, SparkSQLEnv.sqlContext());
     miniSS2.start(confOverlay);
   }
 }

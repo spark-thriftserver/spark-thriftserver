@@ -25,7 +25,6 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.Service;
-import org.apache.spark.sql.service.SparkSQLEnv;
 import org.apache.spark.sql.service.SparkThriftServer2;
 import org.apache.spark.sql.service.cli.CLIServiceClient;
 import org.apache.spark.sql.service.cli.SessionHandle;
@@ -170,9 +169,6 @@ public class MiniSS2 extends AbstractSparkService {
       sqlContext.setConf(ServiceConf.THRIFTSERVER_KERBEROS_KEYTAB(), serverKeytab);
       sqlContext.setConf(ServiceConf.THRIFTSERVER_AUTHENTICATION(), authType);
     }
-    String metaStoreURL =
-        "jdbc:derby:;databaseName=" + baseDir.getAbsolutePath() + File.separator
-            + "test_metastore;create=true";
 
     fs.mkdirs(baseFsDir);
     Path wareHouseDir = new Path(baseFsDir, "warehouse");

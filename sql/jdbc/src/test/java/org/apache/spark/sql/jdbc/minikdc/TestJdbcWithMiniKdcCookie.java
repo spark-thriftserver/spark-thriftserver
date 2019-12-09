@@ -50,7 +50,7 @@ public class TestJdbcWithMiniKdcCookie {
     miniHiveKdc = MiniHiveKdc.getMiniHiveKdc();
     SparkSQLEnvUtils.setStartUpProperties();
     SparkSQLEnv.init();
-    miniHS2 = MiniHiveKdc.getMiniHS2WithKerb(miniHiveKdc, SparkSQLEnv.sqlContext());
+    miniHS2 = MiniHiveKdc.getMiniSS2WithKerb(miniHiveKdc, SparkSQLEnv.sqlContext());
     miniHS2.start(confMap);
   }
 

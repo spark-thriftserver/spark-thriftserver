@@ -23,7 +23,6 @@ import static org.junit.Assert.fail;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.HashMap;
 
 import javax.security.sasl.AuthenticationException;
 
@@ -58,7 +57,7 @@ public class TestJdbcNonKrbSASLWithMiniKdc extends TestJdbcWithMiniKdc {
     miniHiveKdc = MiniHiveKdc.getMiniHiveKdc();
     SparkSQLEnvUtils.setStartUpProperties();
     SparkSQLEnv.init();
-    miniSS2 = MiniHiveKdc.getMiniHS2WithKerbWithRemoteHMS(miniHiveKdc, SparkSQLEnv.sqlContext());
+    miniSS2 = MiniHiveKdc.getMiniSS2WithKerb(miniHiveKdc, SparkSQLEnv.sqlContext(), "CUSTOM");
     miniSS2.start(confOverlay);
   }
 

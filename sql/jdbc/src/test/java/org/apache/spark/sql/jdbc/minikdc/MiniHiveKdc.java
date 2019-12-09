@@ -24,7 +24,6 @@ import org.apache.hadoop.security.GroupMappingServiceProvider;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.jdbc.miniSS2.MiniSS2;
-import org.apache.spark.sql.service.SparkSQLEnv;
 import org.apache.spark.sql.service.utils.Utils;
 
 import java.io.File;
@@ -161,8 +160,8 @@ public class MiniHiveKdc {
    * @return new MiniSS2 instance
    * @throws Exception
    */
-  public static MiniSS2 getMiniHS2WithKerb(MiniHiveKdc miniHiveKdc, SQLContext sqlContext) throws Exception {
-    return getMiniHS2WithKerb(miniHiveKdc, sqlContext, AUTHENTICATION_TYPE);
+  public static MiniSS2 getMiniSS2WithKerb(MiniHiveKdc miniHiveKdc, SQLContext sqlContext) throws Exception {
+    return getMiniSS2WithKerb(miniHiveKdc, sqlContext, AUTHENTICATION_TYPE);
   }
 
   /**
@@ -174,7 +173,7 @@ public class MiniHiveKdc {
    * @return new MiniSS2 instance
    * @throws Exception
    */
-  public static MiniSS2 getMiniHS2WithKerb(MiniHiveKdc miniHiveKdc, SQLContext sqlContext,
+  public static MiniSS2 getMiniSS2WithKerb(MiniHiveKdc miniHiveKdc, SQLContext sqlContext,
                                            String authType) throws Exception {
     String hivePrincipal =
         miniHiveKdc.getFullyQualifiedServicePrincipal(MiniHiveKdc.HIVE_SERVICE_PRINCIPAL);
@@ -183,38 +182,5 @@ public class MiniHiveKdc {
 
     return new MiniSS2.Builder().withSQLContext(sqlContext).withMiniKdc(hivePrincipal, hiveKeytab).
         withAuthenticationType(authType).build();
-  }
-
-  /**
-   * Create a MiniSS2 with the hive service principal and keytab in MiniHiveKdc
-   *
-   * @param miniHiveKdc
-   * @param sqlContext
-   * @return new MiniSS2 instance
-   * @throws Exception
-   */
-  public static MiniSS2 getMiniHS2WithKerbWithRemoteHMS(MiniHiveKdc miniHiveKdc, SQLContext sqlContext) throws Exception {
-    return getMiniHS2WithKerbWithRemoteHMS(miniHiveKdc, sqlContext, AUTHENTICATION_TYPE);
-  }
-
-  /**
-   * Create a MiniSS2 with the hive service principal and keytab in MiniHiveKdc. It uses remote HMS
-   * and can support a different Sasl authType
-   *
-   * @param miniHiveKdc
-   * @param sqlContext
-   * @param authType
-   * @return new MiniSS2 instance
-   * @throws Exception
-   */
-  public static MiniSS2 getMiniHS2WithKerbWithRemoteHMS(MiniHiveKdc miniHiveKdc, SQLContext sqlContext,
-                                                        String authType) throws Exception {
-    String hivePrincipal =
-        miniHiveKdc.getFullyQualifiedServicePrincipal(MiniHiveKdc.HIVE_SERVICE_PRINCIPAL);
-    String hiveKeytab = miniHiveKdc.getKeyTabFile(
-        miniHiveKdc.getServicePrincipalForUser(MiniHiveKdc.HIVE_SERVICE_PRINCIPAL));
-
-    return new MiniSS2.Builder().withSQLContext(sqlContext)
-        .withMiniKdc(hivePrincipal, hiveKeytab).withAuthenticationType(authType).build();
   }
 }
