@@ -20,10 +20,7 @@ package org.apache.spark.sql.jdbc.minikdc;
 import org.apache.spark.sql.jdbc.miniSS2.MiniSS2;
 import org.apache.spark.sql.service.SparkSQLEnv;
 import org.apache.spark.sql.service.internal.ServiceConf;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -79,6 +76,11 @@ public abstract class JdbcWithMiniKdcSQLAuthTest {
     miniHS2.stop();
   }
 
+  /**
+   * Spark without Hive can't support `grant` about statement
+   * @throws Exception
+   */
+  @Ignore
   @Test
   public void testAuthorization1() throws Exception {
 
@@ -95,8 +97,8 @@ public abstract class JdbcWithMiniKdcSQLAuthTest {
       stmt.execute("drop table if exists " + tableName1);
       stmt.execute("drop table if exists " + tableName2);
       // create tables
-      stmt.execute("create table " + tableName1 + "(i int) ");
-      stmt.execute("create table " + tableName2 + "(i int) ");
+      stmt.execute("create table " + tableName1 + "(i int) USING PARQUET ");
+      stmt.execute("create table " + tableName2 + "(i int) USING PARQUET");
       stmt.execute("grant select on table " + tableName2 + " to user "
           + MiniHiveKdc.HIVE_TEST_USER_2);
       stmt.close();
