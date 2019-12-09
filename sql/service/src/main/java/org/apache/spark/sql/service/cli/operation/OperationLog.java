@@ -59,7 +59,7 @@ public class OperationLog {
     }
   }
 
-  public static LoggingLevel getLoggingLevel (String mode) {
+  public static LoggingLevel getLoggingLevel(String mode) {
     if (mode.equalsIgnoreCase("none")) {
       return LoggingLevel.NONE;
     } else if (mode.equalsIgnoreCase("execution")) {
