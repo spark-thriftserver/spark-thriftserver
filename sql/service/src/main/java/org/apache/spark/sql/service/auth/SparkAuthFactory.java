@@ -17,6 +17,7 @@
  */
 package org.apache.spark.sql.service.auth;
 
+import org.apache.hadoop.security.SaslRpcServer;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.ProxyUsers;
@@ -203,6 +204,15 @@ public class SparkAuthFactory {
     } else {
       return saslServer.getRemoteAddress().getHostAddress();
     }
+  }
+
+  public String getUserAuthMechanism() {
+    return saslServer == null ? null : saslServer.getUserAuthMechanism();
+  }
+
+  public boolean isSASLKerberosUser() {
+    return SaslRpcServer.AuthMethod.KERBEROS.getMechanismName().equals(getUserAuthMechanism())
+        || SaslRpcServer.AuthMethod.TOKEN.getMechanismName().equals(getUserAuthMechanism());
   }
 
   // Perform kerberos login using the hadoop shim API if the configuration is available

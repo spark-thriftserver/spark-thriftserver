@@ -25,6 +25,8 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.Service;
+import org.apache.spark.sql.service.SparkSQLEnv;
+import org.apache.spark.sql.service.SparkThriftServer2;
 import org.apache.spark.sql.service.cli.CLIServiceClient;
 import org.apache.spark.sql.service.cli.SessionHandle;
 import org.apache.spark.sql.service.cli.thrift.ThriftBinaryCLIService;
@@ -180,7 +182,6 @@ public class MiniSS2 extends AbstractSparkService {
     fs.mkdirs(wareHouseDir);
     setWareHouseDir(wareHouseDir.toString());
     if (!usePortsFromConf) {
-      // reassign a new port, just in case if one of the MR services grabbed the last one
       setBinaryPort(findFreePort());
     }
     sqlContext.setConf(ServiceConf.THRIFTSERVER_THRIFT_BIND_HOST(), getHost());
@@ -198,14 +199,11 @@ public class MiniSS2 extends AbstractSparkService {
   }
 
   public void start(Map<String, String> confOverlay) throws Exception {
-
-    sparkServer2 = new SparkServer2(getSqlContext());
     // Set confOverlay parameters
     for (Map.Entry<String, String> entry : confOverlay.entrySet()) {
       setConfProperty(entry.getKey(), entry.getValue());
     }
-    sparkServer2.init(getSqlConf());
-    sparkServer2.start();
+    sparkServer2 = SparkThriftServer2.startWithContext(getSqlContext());
     waitForStartup();
     setStarted(true);
   }
@@ -345,7 +343,7 @@ public class MiniSS2 extends AbstractSparkService {
 
   private void waitForStartup() throws Exception {
     int waitTime = 0;
-    long startupTimeout = 1000L * 1000L;
+    long startupTimeout = 1000L * 10L;
     CLIServiceClient hs2Client = getServiceClientInternal();
     SessionHandle sessionHandle = null;
     do {
