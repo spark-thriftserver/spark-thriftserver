@@ -65,11 +65,11 @@ class UISeleniumSuite
 
     s"""$startScript
         |  --master local
-        |  --driver-java-options=-Dderby.system.home=$metastoreJdbcUri
         |  --conf ${StaticSQLConf.WAREHOUSE_PATH.key}=$warehousePath
         |  --conf ${ServiceConf.THRIFTSERVER_THRIFT_BIND_HOST.key}=localhost
         |  --conf ${ServiceConf.THRIFTSERVER_TRANSPORT_MODE.key}=$mode
         |  --conf $portConf=$port
+        |  --driver-java-options -Dderby.system.home=$metastorePath
         |  --driver-class-path ${sys.props("java.class.path")}
         |  --conf spark.ui.enabled=true
         |  --conf spark.ui.port=$uiPort

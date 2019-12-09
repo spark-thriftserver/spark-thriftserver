@@ -524,7 +524,8 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
   //   )
   // }
 
-  test("SPARK-11595 ADD JAR with input path having URL scheme") {
+  // TODO: Test UDF by `AddJarCommand`.
+  ignore("SPARK-11595 ADD JAR with input path having URL scheme") {
     withJdbcStatement("test_udtf") { statement =>
       try {
         val jarPath = "../hive/src/test/resources/TestUDTF.jar"
@@ -550,11 +551,8 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
         assert(rs1.next())
         assert(rs1.getString(1) === "Usage: N/A.")
 
-        val dataPath = "../hive/src/test/resources/data/files/kv1.txt"
-
         Seq(
-          "CREATE TABLE test_udtf(key INT, value STRING) USING hive",
-          s"LOAD DATA LOCAL INPATH '$dataPath' OVERWRITE INTO TABLE test_udtf"
+          s"CREATE TABLE test_udtf(key INT, value STRING) USING csv LOCATION '${TestData.smallKv}'"
         ).foreach(statement.execute)
 
         val rs2 = statement.executeQuery(
@@ -935,7 +933,6 @@ abstract class SparkThriftServer2Test extends SparkFunSuite with BeforeAndAfterA
 
   protected var warehousePath: File = _
   protected var metastorePath: File = _
-  protected def metastoreJdbcUri = s"jdbc:derby:;databaseName=$metastorePath;create=true"
 
   private val pidDir: File = SparkUtils.createTempDir(namePrefix = "thriftserver-pid")
   protected var logPath: File = _
@@ -978,7 +975,7 @@ abstract class SparkThriftServer2Test extends SparkFunSuite with BeforeAndAfterA
        |  --conf ${ServiceConf.THRIFTSERVER_TRANSPORT_MODE.key}=$mode
        |  --conf ${ServiceConf.THRIFTSERVER_LOGGING_OPERATION_LOG_LOCATION.key}=$operationLogPath
        |  --conf $portConf=$port
-       |  --driver-java-options -Dderby.system.home=$metastoreJdbcUri
+       |  --driver-java-options -Dderby.system.home=$metastorePath
        |  --driver-class-path $driverClassPath
        |  --conf spark.ui.enabled=false
        |  ${extraConf.mkString("\n")}
