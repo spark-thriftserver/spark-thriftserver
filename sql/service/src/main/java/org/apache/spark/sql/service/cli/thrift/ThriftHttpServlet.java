@@ -33,9 +33,8 @@ import javax.ws.rs.core.NewCookie;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.StringUtils;
-import org.apache.spark.sql.service.auth.shims.HadoopShims.KerberosNameShim;
-import org.apache.spark.sql.service.auth.shims.ShimLoader;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.CookieSigner;
 import org.apache.spark.sql.service.auth.*;
@@ -448,10 +447,10 @@ public class ThriftHttpServlet extends TServlet {
 
     private String getPrincipalWithoutRealm(String fullPrincipal)
         throws HttpAuthenticationException {
-      KerberosNameShim fullKerberosName;
+      KerberosName fullKerberosName;
       try {
-        fullKerberosName = ShimLoader.getHadoopShims().getKerberosNameShim(fullPrincipal);
-      } catch (IOException e) {
+        fullKerberosName = new KerberosName(fullPrincipal);
+      } catch (Exception e) {
         throw new HttpAuthenticationException(e);
       }
       String serviceName = fullKerberosName.getServiceName();
@@ -465,9 +464,9 @@ public class ThriftHttpServlet extends TServlet {
 
     private String getPrincipalWithoutRealmAndHost(String fullPrincipal)
         throws HttpAuthenticationException {
-      KerberosNameShim fullKerberosName;
+      KerberosName fullKerberosName;
       try {
-        fullKerberosName = ShimLoader.getHadoopShims().getKerberosNameShim(fullPrincipal);
+        fullKerberosName = new KerberosName(fullPrincipal);
         return fullKerberosName.getShortName();
       } catch (IOException e) {
         throw new HttpAuthenticationException(e);

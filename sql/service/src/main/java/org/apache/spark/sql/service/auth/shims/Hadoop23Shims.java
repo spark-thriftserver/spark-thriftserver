@@ -33,7 +33,13 @@ import java.security.AccessControlException;
  */
 public class Hadoop23Shims extends HadoopShimsSecure {
 
-  public Hadoop23Shims() {
+  private static Hadoop23Shims instance = new Hadoop23Shims();
+
+  private Hadoop23Shims() {
+  }
+
+  public static Hadoop23Shims getInstance() {
+    return instance;
   }
 
   class ProxyFileSystem23 extends ProxyFileSystem {

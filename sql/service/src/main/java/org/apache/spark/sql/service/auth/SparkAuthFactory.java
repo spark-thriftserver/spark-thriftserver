@@ -19,12 +19,11 @@ package org.apache.spark.sql.service.auth;
 
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.apache.hadoop.security.authorize.ProxyUsers;
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.ReflectionUtils;
-import org.apache.spark.sql.service.auth.shims.HadoopShims.KerberosNameShim;
-import org.apache.spark.sql.service.auth.shims.ShimLoader;
 import org.apache.spark.sql.service.auth.thrift.HadoopThriftAuthBridge;
 import org.apache.spark.sql.service.auth.thrift.HadoopThriftAuthBridge.Server.ServerMode;
 import org.apache.spark.sql.service.auth.thrift.SparkDelegationTokenManager;
@@ -126,7 +125,7 @@ public class SparkAuthFactory {
         String keytab = conf.getConf(ServiceConf.THRIFTSERVER_KERBEROS_KEYTAB());
         if (needUgiLogin(UserGroupInformation.getCurrentUser(),
           SecurityUtil.getServerPrincipal(principal, "0.0.0.0"), keytab)) {
-          saslServer = ShimLoader.getHadoopThriftAuthBridge().createServer(keytab, principal);
+          saslServer = HadoopThriftAuthBridge.getInstance().createServer(keytab, principal);
         } else {
           // Using the default constructor to avoid unnecessary UGI login.
           saslServer = new HadoopThriftAuthBridge.Server();
@@ -374,7 +373,7 @@ public class SparkAuthFactory {
     try {
       UserGroupInformation sessionUgi;
       if (UserGroupInformation.isSecurityEnabled()) {
-        KerberosNameShim kerbName = ShimLoader.getHadoopShims().getKerberosNameShim(realUser);
+        KerberosName kerbName = new KerberosName(realUser);
         sessionUgi = UserGroupInformation.createProxyUser(
             kerbName.getServiceName(), UserGroupInformation.getLoginUser());
       } else {

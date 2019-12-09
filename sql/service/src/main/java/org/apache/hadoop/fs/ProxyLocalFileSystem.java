@@ -20,7 +20,6 @@ package org.apache.hadoop.fs;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.MD5Hash;
-import org.apache.spark.sql.service.auth.shims.ShimLoader;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -63,7 +62,6 @@ public class ProxyLocalFileSystem extends FilterFileSystem {
     String authority = name.getAuthority() != null ? name.getAuthority() : "";
     String proxyUriString = scheme + "://" + authority + "/";
 
-    fs = ShimLoader.getHadoopShims().createProxyFileSystem(localFs, URI.create(proxyUriString));
 
     fs.initialize(name, conf);
   }

@@ -22,7 +22,6 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Shell;
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
-import org.apache.spark.sql.service.auth.shims.ShimLoader;
 import org.apache.spark.sql.service.cli.CLIService;
 import org.apache.spark.sql.service.internal.ServiceConf;
 import org.apache.spark.sql.service.rpc.thrift.TCLIService;
@@ -84,10 +83,10 @@ public class ThriftHttpCLIService extends ThriftCLIService {
         String keyStorePath = sqlConf.getConf(ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PATH());
         org.apache.hadoop.conf.Configuration hadoopConf =
             sqlContext.sparkContext().hadoopConfiguration();
-        String keyStorePassword = ShimLoader.getHadoopShims()
-           .getPassword(hadoopConf,
-               ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PASSWORD()
-                   .key().substring("spark.hadoop.".length()));
+        char[] pw = hadoopConf.getPassword(
+                ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PASSWORD().key()
+                        .substring("spark.hadoop.".length()));
+        String keyStorePassword = new String(pw);
         if (keyStorePath.isEmpty()) {
           throw
               new IllegalArgumentException(ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PATH().key()
