@@ -84,8 +84,8 @@ public class ThriftHttpCLIService extends ThriftCLIService {
         org.apache.hadoop.conf.Configuration hadoopConf =
             sqlContext.sparkContext().hadoopConfiguration();
         char[] pw = hadoopConf.getPassword(
-                ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PASSWORD().key()
-                        .substring("spark.hadoop.".length()));
+            ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PASSWORD().key()
+                .substring("spark.hadoop.".length()));
         String keyStorePassword = new String(pw);
         if (keyStorePath.isEmpty()) {
           throw
