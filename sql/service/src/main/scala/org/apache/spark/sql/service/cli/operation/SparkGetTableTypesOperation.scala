@@ -22,7 +22,6 @@ import java.util.UUID
 import org.apache.commons.lang3.exception.ExceptionUtils
 
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.catalyst.catalog.CatalogTableType
 import org.apache.spark.sql.service.SparkThriftServer2
 import org.apache.spark.sql.service.cli._
@@ -36,7 +35,6 @@ import org.apache.spark.util.{Utils => SparkUtils}
  * @param parentSession a ServiceSession from SessionManager
  */
 private[service] class SparkGetTableTypesOperation(
-    sqlContext: SQLContext,
     parentSession: ServiceSession)
   extends SparkMetadataOperation(parentSession, OperationType.GET_TABLE_TYPES)
   with Logging {

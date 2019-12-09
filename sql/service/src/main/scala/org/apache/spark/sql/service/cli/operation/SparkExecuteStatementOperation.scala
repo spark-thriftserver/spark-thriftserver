@@ -47,10 +47,11 @@ private[service] class SparkExecuteStatementOperation(
     statement: String,
     confOverlay: JMap[String, String],
     runInBackground: Boolean = true)
-    (sqlContext: SQLContext, sessionToActivePool: JMap[SessionHandle, String])
+    (sessionToActivePool: JMap[SessionHandle, String])
   extends ExecuteStatementOperation(parentSession, statement, confOverlay, runInBackground)
   with Logging {
 
+  private val sqlContext: SQLContext = parentSession.getSQLContext
   private var result: DataFrame = _
 
   // We cache the returned rows to get iterators again in case the user wants to use FETCH_FIRST.

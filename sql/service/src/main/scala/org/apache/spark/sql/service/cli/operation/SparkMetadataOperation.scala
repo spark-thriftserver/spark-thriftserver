@@ -18,6 +18,7 @@
 package org.apache.spark.sql.service.cli.operation
 
 import org.apache.spark.internal.Logging
+import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.catalyst.catalog.CatalogTableType
 import org.apache.spark.sql.catalyst.catalog.CatalogTableType.{EXTERNAL, MANAGED, VIEW}
 import org.apache.spark.sql.service.cli.{OperationState, OperationType, ServiceSQLException, TableSchema}
@@ -33,6 +34,7 @@ private[service] abstract class SparkMetadataOperation(
   protected var RESULT_SET_SCHEMA: TableSchema = null
   protected val SEARCH_STRING_ESCAPE: Char = '\\'
 
+  protected val sqlContext: SQLContext = session.getSQLContext
   setHasResultSet(true)
 
   @throws[ServiceSQLException]

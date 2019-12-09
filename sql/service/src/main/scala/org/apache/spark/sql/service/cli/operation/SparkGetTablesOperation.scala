@@ -25,7 +25,6 @@ import scala.collection.JavaConverters._
 import org.apache.commons.lang3.exception.ExceptionUtils
 
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.catalyst.catalog.CatalogTableType._
 import org.apache.spark.sql.service.SparkThriftServer2
 import org.apache.spark.sql.service.cli._
@@ -43,7 +42,6 @@ import org.apache.spark.util.{Utils => SparkUtils}
  * @param tableTypes list of allowed table types, e.g. "TABLE", "VIEW"
  */
 private[service] class SparkGetTablesOperation(
-    sqlContext: SQLContext,
     parentSession: ServiceSession,
     catalogName: String,
     schemaName: String,
