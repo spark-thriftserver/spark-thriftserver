@@ -129,7 +129,7 @@ public class ThriftHttpCLIService extends ThriftCLIService {
       httpServer.addConnector(connector);
 
       // Thrift configs
-      sparkAuthFactory = new SparkAuthFactory(sqlContext);
+      sparkAuthFactory = new SparkAuthFactory(sqlConf);
       TProcessor processor = new TCLIService.Processor<Iface>(this);
       TProtocolFactory protocolFactory = new TBinaryProtocol.Factory();
       // Set during the init phase of SparkServer2 if auth mode is kerberos

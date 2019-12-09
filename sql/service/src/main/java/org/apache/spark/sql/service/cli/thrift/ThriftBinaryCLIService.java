@@ -55,7 +55,7 @@ public class ThriftBinaryCLIService extends ThriftCLIService {
           new ThreadFactoryWithName(threadPoolName));
 
       // Thrift configs
-      sparkAuthFactory = new SparkAuthFactory(sqlContext);
+      sparkAuthFactory = new SparkAuthFactory(sqlConf);
       TTransportFactory transportFactory = sparkAuthFactory.getAuthTransFactory();
       TProcessorFactory processorFactory = sparkAuthFactory.getAuthProcFactory(this);
       TServerSocket serverSocket = null;

@@ -17,7 +17,7 @@
  */
 package org.apache.spark.sql.jdbc.minikdc;
 
-import org.apache.spark.sql.SQLContext;
+import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.internal.ServiceConf;
 import org.junit.Assert;
@@ -27,18 +27,18 @@ import org.junit.Test;
 
 
 public class TestHiveAuthFactory {
-  private static SQLContext sqlContext = null;
+  private static SQLConf sqlConf = null;
   private static MiniHiveKdc miniHiveKdc = null;
 
   @BeforeClass
   public static void setUp() throws Exception {
-    sqlContext = new MiniSparkThriftServer.Builder().build().spark.sqlContext();
+    sqlConf = new SQLConf();
     miniHiveKdc = MiniHiveKdc.getMiniHiveKdc();
   }
 
   @AfterClass
   public static void tearDown() throws Exception {
-    sqlContext.sparkContext().stop();
+    sqlConf = null;
   }
 
   /**
@@ -47,17 +47,19 @@ public class TestHiveAuthFactory {
    */
   @Test
   public void testStartTokenManagerForMemoryTokenStore() throws Exception {
-    sqlContext.setConf(ServiceConf.THRIFTSERVER_AUTHENTICATION(), SparkAuthFactory.AuthTypes.KERBEROS.getAuthName());
-    String principalName = miniHiveKdc.getFullHiveServicePrincipal();
-    System.out.println("Principal: " + principalName);
+    sqlConf.setConf(ServiceConf.THRIFTSERVER_AUTHENTICATION(), SparkAuthFactory.AuthTypes.KERBEROS.getAuthName());
 
-    sqlContext.setConf(ServiceConf.THRIFTSERVER_KERBEROS_PRINCIPAL(), principalName);
+    miniHiveKdc.loginUser(miniHiveKdc.getHiveServicePrincipal());
+    String principalName = miniHiveKdc.getHiveServicePrincipal();
+    System.out.println("Principal: " + principalName);
+    sqlConf.setConf(ServiceConf.THRIFTSERVER_KERBEROS_PRINCIPAL(), principalName);
+
     String keyTabFile = miniHiveKdc.getKeyTabFile(miniHiveKdc.getHiveServicePrincipal());
     System.out.println("keyTabFile: " + keyTabFile);
     Assert.assertNotNull(keyTabFile);
-    sqlContext.setConf(ServiceConf.THRIFTSERVER_KERBEROS_KEYTAB(), keyTabFile);
+    sqlConf.setConf(ServiceConf.THRIFTSERVER_KERBEROS_KEYTAB(), keyTabFile);
 
-    SparkAuthFactory authFactory = new SparkAuthFactory(sqlContext);
+    SparkAuthFactory authFactory = new SparkAuthFactory(sqlConf);
     Assert.assertNotNull(authFactory);
     Assert.assertEquals("org.apache.sparkSession.sql.service.auth.thrift.HadoopThriftAuthBridge$Server$TUGIAssumingTransportFactory",
         authFactory.getAuthTransFactory().getClass().getName());
@@ -69,19 +71,19 @@ public class TestHiveAuthFactory {
    */
   @Test
   public void testStartTokenManagerForDBTokenStore() throws Exception {
-    sqlContext.setConf(ServiceConf.THRIFTSERVER_AUTHENTICATION(), SparkAuthFactory.AuthTypes.KERBEROS.getAuthName());
+    sqlConf.setConf(ServiceConf.THRIFTSERVER_AUTHENTICATION(), SparkAuthFactory.AuthTypes.KERBEROS.getAuthName());
     String principalName = miniHiveKdc.getFullHiveServicePrincipal();
     System.out.println("Principal: " + principalName);
 
-    sqlContext.setConf(ServiceConf.THRIFTSERVER_KERBEROS_PRINCIPAL(), principalName);
+    sqlConf.setConf(ServiceConf.THRIFTSERVER_KERBEROS_PRINCIPAL(), principalName);
     String keyTabFile = miniHiveKdc.getKeyTabFile(miniHiveKdc.getHiveServicePrincipal());
     System.out.println("keyTabFile: " + keyTabFile);
     Assert.assertNotNull(keyTabFile);
-    sqlContext.setConf(ServiceConf.THRIFTSERVER_KERBEROS_KEYTAB(), keyTabFile);
+    sqlConf.setConf(ServiceConf.THRIFTSERVER_KERBEROS_KEYTAB(), keyTabFile);
 
-    sqlContext.setConf(ServiceConf.THRIFTSERVER_CLUSTER_DELEGATION_TOKEN_STORE_CLS(), "org.apache.sparkSession.sql.service.auth.thrift.MemoryTokenStore");
+    sqlConf.setConf(ServiceConf.THRIFTSERVER_CLUSTER_DELEGATION_TOKEN_STORE_CLS(), "org.apache.sparkSession.sql.service.auth.thrift.MemoryTokenStore");
 
-    SparkAuthFactory authFactory = new SparkAuthFactory(sqlContext);
+    SparkAuthFactory authFactory = new SparkAuthFactory(sqlConf);
     Assert.assertNotNull(authFactory);
     Assert.assertEquals("org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge$Server$TUGIAssumingTransportFactory",
         authFactory.getAuthTransFactory().getClass().getName());
