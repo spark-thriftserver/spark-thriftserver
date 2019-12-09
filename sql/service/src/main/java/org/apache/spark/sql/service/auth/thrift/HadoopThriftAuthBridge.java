@@ -53,9 +53,6 @@ import java.util.Map;
 /**
  * Functions that bridge Thrift's SASL transports to Hadoop's
  * SASL callback handlers and authentication classes.
- * HIVE-11378 This class is not directly used anymore.  It now exists only as a shell to be
- * extended by HadoopThriftAuthBridge23 in 0.23 shims.  I have made it abstract
- * to avoid maintenance errors.
  */
 public class HadoopThriftAuthBridge {
   private static final Logger LOG = LoggerFactory.getLogger(HadoopThriftAuthBridge.class);
