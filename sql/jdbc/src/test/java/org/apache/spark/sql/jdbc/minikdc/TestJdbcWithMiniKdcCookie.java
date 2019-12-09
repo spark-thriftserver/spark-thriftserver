@@ -18,7 +18,7 @@
 package org.apache.spark.sql.jdbc.minikdc;
 
 import org.apache.spark.sql.jdbc.SparkConnection;
-import org.apache.spark.sql.jdbc.miniSS2.MiniSS2;
+import org.apache.spark.sql.jdbc.miniservice.MiniSS2;
 import org.apache.spark.sql.service.SparkSQLEnv;
 import org.apache.spark.sql.service.internal.ServiceConf;
 import org.junit.*;

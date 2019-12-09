@@ -28,7 +28,7 @@ import java.util.Map;
 import javax.security.sasl.AuthenticationException;
 
 import org.apache.spark.sql.jdbc.SparkConnection;
-import org.apache.spark.sql.jdbc.miniSS2.MiniSS2;
+import org.apache.spark.sql.jdbc.miniservice.MiniSS2;
 import org.apache.spark.sql.service.SparkSQLEnv;
 import org.apache.spark.sql.service.auth.PasswdAuthenticationProvider;
 import org.apache.spark.sql.service.internal.ServiceConf;
@@ -166,7 +166,8 @@ public class TestJdbcNonKrbSASLWithMiniKdc {
           MiniHiveKdc.HIVE_TEST_USER_2);
     } catch (SQLException e) {
       // Expected error
-      assertTrue(e.getMessage().contains("Delegation token only supported over remote client with kerberos authentication"));
+      assertTrue(e.getMessage().contains("Delegation token only supported over " +
+          "remote client with kerberos authentication"));
     } finally {
       hs2Conn.close();
     }
@@ -183,7 +184,7 @@ public class TestJdbcNonKrbSASLWithMiniKdc {
     Statement stmt = hs2Conn.createStatement();
     ResultSet res = stmt.executeQuery("set " + propertyName);
     assertTrue(res.next());
-    String results[] = res.getString(1).split("=");
+    String[] results = res.getString(1).split("=");
     // Todo Current Spark Thrift Server not support Session Hook, we should add this feature later
     // assertEquals("Property should be set", results.length, 2);
     // assertEquals("Property should be set", expectedValue, results[1]);

@@ -19,7 +19,7 @@ package org.apache.spark.sql.jdbc.minikdc;
 
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.spark.sql.jdbc.SparkConnection;
-import org.apache.spark.sql.jdbc.miniSS2.MiniSS2;
+import org.apache.spark.sql.jdbc.miniservice.MiniSS2;
 import org.apache.spark.sql.service.SparkSQLEnv;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.utils.Utils;
@@ -142,8 +142,8 @@ public class TestJdbcWithMiniKdc {
     assertTrue(token != null && !token.isEmpty());
     hs2Conn.close();
 
-    UserGroupInformation ugi = miniHiveKdc.
-        loginUser(MiniHiveKdc.HIVE_TEST_USER_1);
+    UserGroupInformation ugi =
+        miniHiveKdc.loginUser(MiniHiveKdc.HIVE_TEST_USER_1);
     // Store token in the cache
     storeToken(token, ugi);
     hs2Conn = DriverManager.getConnection(miniSS2.getBaseJdbcURL() +
@@ -224,7 +224,7 @@ public class TestJdbcWithMiniKdc {
     Statement stmt = hs2Conn.createStatement();
     ResultSet res = stmt.executeQuery("set " + propertyName);
     assertTrue(res.next());
-    String results[] = res.getString(1).split("=");
+    String[] results = res.getString(1).split("=");
     // Todo Current Spark Thrift Server not support Session Hook, we should add this feature later
     // assertEquals("Property should be set", results.length, 2);
     // assertEquals("Property should be set", expectedValue, results[1]);

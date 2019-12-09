@@ -15,7 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.spark.sql.jdbc.miniSS2;
+
+package org.apache.spark.sql.jdbc.miniservice;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +39,8 @@ public abstract class AbstractSparkService {
   private boolean startedSparkService = false;
   private List<String> addedProperties = new ArrayList<String>();
 
-  public AbstractSparkService(SQLContext sqlContext, String hostname, int binaryPort, int httpPort) {
+  public AbstractSparkService(SQLContext sqlContext, String hostname,
+                              int binaryPort, int httpPort) {
     this.sqlContext = sqlContext;
     this.hostname = hostname;
     this.binaryPort = binaryPort;

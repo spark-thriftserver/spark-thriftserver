@@ -27,5 +27,4 @@ public class TestJdbcWithMiniKdcSQLAuthHttp extends JdbcWithMiniKdcSQLAuthTest {
     confMap.put(ServiceConf.THRIFTSERVER_TRANSPORT_MODE().key(), "http");
     JdbcWithMiniKdcSQLAuthTest.beforeTestBase();
   }
-
 }

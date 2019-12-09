@@ -17,7 +17,7 @@
  */
 package org.apache.spark.sql.jdbc.minikdc;
 
-import org.apache.spark.sql.jdbc.miniSS2.MiniSS2;
+import org.apache.spark.sql.jdbc.miniservice.MiniSS2;
 import org.apache.spark.sql.service.SparkSQLEnv;
 import org.apache.spark.sql.service.internal.ServiceConf;
 import org.junit.BeforeClass;
@@ -27,7 +27,8 @@ public class TestJdbcWithMemoryTokenStore extends TestJdbcWithMiniKdc{
   @BeforeClass
   public static void beforeTest() throws Exception {
     Class.forName(MiniSS2.getJdbcDriverName());
-    confOverlay.put(ServiceConf.THRIFTSERVER_CLUSTER_DELEGATION_TOKEN_STORE_CLS().key(), "org.apache.spark.sql.service.auth.thrift.MemoryTokenStore");
+    confOverlay.put(ServiceConf.THRIFTSERVER_CLUSTER_DELEGATION_TOKEN_STORE_CLS().key(),
+        "org.apache.spark.sql.service.auth.thrift.MemoryTokenStore");
     miniHiveKdc = MiniHiveKdc.getMiniHiveKdc();
     SparkSQLEnvUtils.setStartUpProperties();
     SparkSQLEnv.init();

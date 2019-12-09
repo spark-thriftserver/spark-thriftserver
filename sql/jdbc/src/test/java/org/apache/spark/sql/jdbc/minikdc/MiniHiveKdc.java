@@ -23,7 +23,7 @@ import org.apache.hadoop.minikdc.MiniKdc;
 import org.apache.hadoop.security.GroupMappingServiceProvider;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.spark.sql.SQLContext;
-import org.apache.spark.sql.jdbc.miniSS2.MiniSS2;
+import org.apache.spark.sql.jdbc.miniservice.MiniSS2;
 import org.apache.spark.sql.service.utils.Utils;
 
 import java.io.File;
@@ -160,7 +160,8 @@ public class MiniHiveKdc {
    * @return new MiniSS2 instance
    * @throws Exception
    */
-  public static MiniSS2 getMiniSS2WithKerb(MiniHiveKdc miniHiveKdc, SQLContext sqlContext) throws Exception {
+  public static MiniSS2 getMiniSS2WithKerb(MiniHiveKdc miniHiveKdc,
+                                           SQLContext sqlContext) throws Exception {
     return getMiniSS2WithKerb(miniHiveKdc, sqlContext, AUTHENTICATION_TYPE);
   }
 
@@ -180,7 +181,7 @@ public class MiniHiveKdc {
     String hiveKeytab = miniHiveKdc.getKeyTabFile(
         miniHiveKdc.getServicePrincipalForUser(MiniHiveKdc.HIVE_SERVICE_PRINCIPAL));
 
-    return new MiniSS2.Builder().withSQLContext(sqlContext).withMiniKdc(hivePrincipal, hiveKeytab).
-        withAuthenticationType(authType).build();
+    return new MiniSS2.Builder().withSQLContext(sqlContext)
+        .withMiniKdc(hivePrincipal, hiveKeytab).withAuthenticationType(authType).build();
   }
 }

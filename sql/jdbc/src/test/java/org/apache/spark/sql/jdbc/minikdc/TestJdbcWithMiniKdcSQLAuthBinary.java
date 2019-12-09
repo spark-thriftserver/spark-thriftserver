@@ -27,5 +27,4 @@ public class TestJdbcWithMiniKdcSQLAuthBinary extends JdbcWithMiniKdcSQLAuthTest
     confMap.put(ServiceConf.THRIFTSERVER_TRANSPORT_MODE().key(), "binary");
     JdbcWithMiniKdcSQLAuthTest.beforeTestBase();
   }
-
 }

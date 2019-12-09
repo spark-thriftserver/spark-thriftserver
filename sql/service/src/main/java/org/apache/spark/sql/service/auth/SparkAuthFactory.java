@@ -24,7 +24,6 @@ import org.apache.hadoop.security.authorize.ProxyUsers;
 import org.apache.spark.SparkConf;
 import org.apache.spark.deploy.SparkHadoopUtil;
 import org.apache.spark.sql.internal.SQLConf;
-import org.apache.spark.sql.service.ReflectionUtils;
 import org.apache.spark.sql.service.SparkSQLEnv;
 import org.apache.spark.sql.service.auth.shims.HadoopShims.KerberosNameShim;
 import org.apache.spark.sql.service.auth.shims.ShimLoader;

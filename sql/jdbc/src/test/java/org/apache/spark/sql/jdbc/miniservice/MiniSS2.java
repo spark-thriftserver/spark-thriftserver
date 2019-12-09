@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.spark.sql.jdbc.miniSS2;
+package org.apache.spark.sql.jdbc.miniservice;
 
 import com.google.common.base.Preconditions;
 import org.apache.commons.io.FileUtils;
@@ -138,14 +138,19 @@ public class MiniSS2 extends AbstractSparkService {
 
   private MiniSS2(SQLContext sqlContext, boolean useMiniKdc,
                   String serverPrincipal, String serverKeytab,
-                  boolean usePortsFromConf, String authType, boolean cleanupLocalDirOnStartup) throws Exception {
+                  boolean usePortsFromConf, String authType,
+                  boolean cleanupLocalDirOnStartup) throws Exception {
     // Always use localhost for hostname as some tests like SSL CN validation ones
     // are tied to localhost being present in the certificate name
     super(
         sqlContext,
         "localhost",
-        (usePortsFromConf ? (int) sqlContext.conf().getConf(ServiceConf.THRIFTSERVER_THRIFT_PORT()) : findFreePort()),
-        (usePortsFromConf ? (int) sqlContext.conf().getConf(ServiceConf.THRIFTSERVER_HTTP_PORT()) : findFreePort()));
+        (usePortsFromConf ?
+            (int) sqlContext.conf().getConf(ServiceConf.THRIFTSERVER_THRIFT_PORT()) :
+            findFreePort()),
+        (usePortsFromConf ?
+            (int) sqlContext.conf().getConf(ServiceConf.THRIFTSERVER_HTTP_PORT()) :
+            findFreePort()));
     this.useMiniKdc = useMiniKdc;
     this.serverPrincipal = serverPrincipal;
     this.cleanupLocalDirOnStartup = cleanupLocalDirOnStartup;
@@ -280,7 +285,8 @@ public class MiniSS2 extends AbstractSparkService {
    *
    * @param dbName         - DB name to be included in the URL
    * @param sessionConfExt - Addional string to be appended to sessionConf part of url
-   * @param sparkConfExt    - Additional string to be appended to HiveConf part of url (excluding the ?)
+   * @param sparkConfExt   - Additional string to be appended to HiveConf part of url
+   *                       (excluding the ?)
    * @return
    * @throws Exception
    */

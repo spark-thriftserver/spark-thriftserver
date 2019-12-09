@@ -47,7 +47,8 @@ public class TestHiveAuthFactory {
    */
   @Test
   public void testStartTokenManagerForMemoryTokenStore() throws Exception {
-    sqlConf.setConf(ServiceConf.THRIFTSERVER_AUTHENTICATION(), SparkAuthFactory.AuthTypes.KERBEROS.getAuthName());
+    sqlConf.setConf(ServiceConf.THRIFTSERVER_AUTHENTICATION(),
+        SparkAuthFactory.AuthTypes.KERBEROS.getAuthName());
 
     miniHiveKdc.loginUser(miniHiveKdc.getHiveServicePrincipal());
     String principalName = miniHiveKdc.getHiveServicePrincipal();
@@ -61,7 +62,9 @@ public class TestHiveAuthFactory {
 
     SparkAuthFactory authFactory = new SparkAuthFactory(sqlConf);
     Assert.assertNotNull(authFactory);
-    Assert.assertEquals("org.apache.spark.sql.service.auth.thrift.HadoopThriftAuthBridge$Server$TUGIAssumingTransportFactory",
+    Assert.assertEquals(
+        "org.apache.spark.sql.service.auth.thrift." +
+            "HadoopThriftAuthBridge$Server$TUGIAssumingTransportFactory",
         authFactory.getAuthTransFactory().getClass().getName());
   }
 
@@ -71,7 +74,8 @@ public class TestHiveAuthFactory {
    */
   @Test
   public void testStartTokenManagerForDBTokenStore() throws Exception {
-    sqlConf.setConf(ServiceConf.THRIFTSERVER_AUTHENTICATION(), SparkAuthFactory.AuthTypes.KERBEROS.getAuthName());
+    sqlConf.setConf(ServiceConf.THRIFTSERVER_AUTHENTICATION(),
+        SparkAuthFactory.AuthTypes.KERBEROS.getAuthName());
     String principalName = miniHiveKdc.getFullHiveServicePrincipal();
     System.out.println("Principal: " + principalName);
 
@@ -81,11 +85,13 @@ public class TestHiveAuthFactory {
     Assert.assertNotNull(keyTabFile);
     sqlConf.setConf(ServiceConf.THRIFTSERVER_KERBEROS_KEYTAB(), keyTabFile);
 
-    sqlConf.setConf(ServiceConf.THRIFTSERVER_CLUSTER_DELEGATION_TOKEN_STORE_CLS(), "org.apache.sparkSession.sql.service.auth.thrift.MemoryTokenStore");
+    sqlConf.setConf(ServiceConf.THRIFTSERVER_CLUSTER_DELEGATION_TOKEN_STORE_CLS(),
+        "org.apache.sparkSession.sql.service.auth.thrift.MemoryTokenStore");
 
     SparkAuthFactory authFactory = new SparkAuthFactory(sqlConf);
     Assert.assertNotNull(authFactory);
-    Assert.assertEquals("org.apache.spark.sql.service.auth.thrift.HadoopThriftAuthBridge$Server$TUGIAssumingTransportFactory",
+    Assert.assertEquals("org.apache.spark.sql.service.auth.thrift." +
+            "HadoopThriftAuthBridge$Server$TUGIAssumingTransportFactory",
         authFactory.getAuthTransFactory().getClass().getName());
   }
 }
