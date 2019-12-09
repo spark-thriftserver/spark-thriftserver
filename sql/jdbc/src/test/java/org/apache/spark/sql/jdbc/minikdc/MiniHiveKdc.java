@@ -87,9 +87,6 @@ public class MiniHiveKdc {
     baseDir.deleteOnExit();
     workDir = new File(baseDir, "HiveMiniKdc");
 
-    Configuration conf = new Configuration();
-    conf.set(HADOOP_SECURITY_AUTHENTICATION, "kerberos");
-    UserGroupInformation.setConfiguration(conf);
     /**
      *  Hadoop security classes read the default realm via static initialization,
      *  before miniKdc is initialized. Hence we set the realm via a test configuration
