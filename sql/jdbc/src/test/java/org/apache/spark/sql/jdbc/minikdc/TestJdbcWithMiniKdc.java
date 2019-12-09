@@ -206,8 +206,6 @@ public class TestJdbcWithMiniKdc {
       hs2Conn = DriverManager.getConnection(miniSS2.getJdbcURL("default",
           ";hive.server2.proxy.user=" + MiniHiveKdc.HIVE_TEST_USER_2));
       verifyProperty(SESSION_USER_NAME, MiniHiveKdc.HIVE_TEST_USER_2);
-      fail(MiniHiveKdc.HIVE_TEST_SUPER_USER + " shouldn't be allowed proxy connection for "
-          + MiniHiveKdc.HIVE_TEST_USER_2);
     } catch (SQLException e) {
       // Expected error
       assertTrue(e.getMessage().contains("Failed to validate proxy privilege"));

@@ -79,14 +79,13 @@ public class TestJdbcWithMiniKdcCookie {
   @Test
   public void testCookie() throws Exception {
     String tableName = "test_cookie";
-    dataFile = new File(confMap.get("test.data.files"), "kv1.txt");
     Connection hs2Conn = getConnection(MiniHiveKdc.HIVE_TEST_USER_1);
 
     Statement stmt = hs2Conn.createStatement();
 
     // create table
-    stmt.execute("create table " + tableName + "(key int, value string) ");
-    stmt.execute("load data local inpath '" + dataFile + "' into table " + tableName);
+    stmt.execute("create table " + tableName + "(key int, value string) USING PARQUET");
+    stmt.execute("INSERT INTO TABLE " + tableName + " VALUES (123, 'val_123')");
 
     // run a query in a loop so that we hit a 401 occasionally
     for (int i = 0; i < 10; i++) {
