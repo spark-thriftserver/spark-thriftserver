@@ -18,7 +18,6 @@
 package org.apache.spark.sql.service.auth.thrift;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.FileSystem;
@@ -42,8 +41,6 @@ import org.slf4j.LoggerFactory;
 import javax.security.auth.callback.*;
 import javax.security.sasl.*;
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.security.PrivilegedAction;
