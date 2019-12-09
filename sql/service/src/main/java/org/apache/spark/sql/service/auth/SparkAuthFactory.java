@@ -125,7 +125,7 @@ public class SparkAuthFactory {
         String principal = conf.getConf(ServiceConf.THRIFTSERVER_KERBEROS_PRINCIPAL());
         String keytab = conf.getConf(ServiceConf.THRIFTSERVER_KERBEROS_KEYTAB());
         if (needUgiLogin(UserGroupInformation.getCurrentUser(),
-          SecurityUtil.getServerPrincipal(principal, "0.0.0.0"), keytab)) {
+            SecurityUtil.getServerPrincipal(principal, "0.0.0.0"), keytab)) {
           saslServer = ShimLoader.getHadoopThriftAuthBridge().createServer(keytab, principal);
         } else {
           // Using the default constructor to avoid unnecessary UGI login.
@@ -135,15 +135,14 @@ public class SparkAuthFactory {
         // start delegation token manager
         delegationTokenManager = new SparkDelegationTokenManager();
         SparkConf sparkConf = null;
-        if(SparkSQLEnv.sparkContext() != null) {
+        if (SparkSQLEnv.sparkContext() != null) {
           sparkConf = SparkSQLEnv.sparkContext().conf();
         } else {
           sparkConf = new SparkConf();
         }
-        SparkSQLEnv.sparkContext();
-          delegationTokenManager.startDelegationTokenSecretManager(
-                  SparkHadoopUtil.get().newConfiguration(sparkConf), ServerMode.HIVESERVER2);
-          ReflectionUtils.setSuperField(saslServer, "secretManager", delegationTokenManager);
+        delegationTokenManager.startDelegationTokenSecretManager(
+            SparkHadoopUtil.get().newConfiguration(sparkConf), ServerMode.HIVESERVER2);
+        saslServer.setSecretManager(delegationTokenManager.getSecretManager());
       }
     }
   }

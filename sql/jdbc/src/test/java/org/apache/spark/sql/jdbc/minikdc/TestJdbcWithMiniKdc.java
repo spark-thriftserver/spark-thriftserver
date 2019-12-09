@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -6,20 +6,21 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.spark.sql.jdbc.minikdc;
 
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.spark.sql.jdbc.SparkConnection;
+import org.apache.spark.sql.jdbc.miniSS2.MiniSS2;
+import org.apache.spark.sql.service.SparkSQLEnv;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.utils.Utils;
 import org.junit.*;
@@ -34,17 +35,19 @@ public class TestJdbcWithMiniKdc {
   // Need to hive.server2.session.hook to SessionHookTest in hive-site
   public static final String SESSION_USER_NAME = "proxy.test.session.user";
 
-  protected static MiniSparkThriftServer miniSS2 = null;
+  protected static MiniSS2 miniSS2 = null;
   protected static MiniHiveKdc miniHiveKdc = null;
   protected static Map<String, String> confOverlay = new HashMap<String, String>();
   protected Connection hs2Conn;
 
   @BeforeClass
   public static void beforeTest() throws Exception {
-    Class.forName(MiniSparkThriftServer.getJdbcDriverName());
+    SparkSQLEnvUtils.setStartUpProperties();
+    SparkSQLEnv.init();
+    Class.forName(MiniSS2.getJdbcDriverName());
     miniHiveKdc = MiniHiveKdc.getMiniHiveKdc();
-    miniSS2 = MiniHiveKdc.getMiniHS2WithKerb(miniHiveKdc, new HashMap<String, String>());
-    miniSS2.start();
+    miniSS2 = MiniHiveKdc.getMiniHS2WithKerb(miniHiveKdc, SparkSQLEnv.sqlContext());
+    miniSS2.start(confOverlay);
   }
 
   @Before
@@ -64,6 +67,8 @@ public class TestJdbcWithMiniKdc {
 
   @AfterClass
   public static void afterTest() throws Exception {
+    SparkSQLEnv.stop();
+    SparkSQLEnvUtils.clearStartUpProperties();
     miniSS2.stop();
   }
 

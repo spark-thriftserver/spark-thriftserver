@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -6,37 +6,29 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.spark.sql.jdbc.minikdc;
 
-import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION;
-import static org.junit.Assert.assertNotNull;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
-import org.apache.hadoop.conf.Configuration;
+import com.google.common.io.Files;
 import org.apache.hadoop.minikdc.MiniKdc;
 import org.apache.hadoop.security.GroupMappingServiceProvider;
 import org.apache.hadoop.security.UserGroupInformation;
-
-import com.google.common.io.Files;
-import org.apache.spark.sql.internal.SQLConf;
+import org.apache.spark.sql.SQLContext;
+import org.apache.spark.sql.jdbc.miniSS2.MiniSS2;
 import org.apache.spark.sql.service.utils.Utils;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * Wrapper around Hadoop's MiniKdc for use in hive tests.
@@ -161,63 +153,67 @@ public class MiniHiveKdc {
   }
 
   /**
-   * Create a MiniHS2 with the hive service principal and keytab in MiniHiveKdc
+   * Create a MiniSS2 with the hive service principal and keytab in MiniHiveKdc
+   *
    * @param miniHiveKdc
-   * @param conf
-   * @return new MiniHS2 instance
+   * @param sqlContext
+   * @return new MiniSS2 instance
    * @throws Exception
    */
-  public static MiniSparkThriftServer getMiniHS2WithKerb(MiniHiveKdc miniHiveKdc, Map<String , String> conf) throws Exception {
-    return getMiniHS2WithKerb(miniHiveKdc, conf, AUTHENTICATION_TYPE);
+  public static MiniSS2 getMiniHS2WithKerb(MiniHiveKdc miniHiveKdc, SQLContext sqlContext) throws Exception {
+    return getMiniHS2WithKerb(miniHiveKdc, sqlContext, AUTHENTICATION_TYPE);
   }
 
   /**
-   * Create a MiniHS2 with the hive service principal and keytab in MiniHiveKdc
+   * Create a MiniSS2 with the hive service principal and keytab in MiniHiveKdc
+   *
    * @param miniHiveKdc
-   * @param conf
+   * @param sqlContext
    * @param authType
-   * @return new MiniHS2 instance
+   * @return new MiniSS2 instance
    * @throws Exception
    */
-  public static MiniSparkThriftServer getMiniHS2WithKerb(MiniHiveKdc miniHiveKdc, Map<String, String> conf,
+  public static MiniSS2 getMiniHS2WithKerb(MiniHiveKdc miniHiveKdc, SQLContext sqlContext,
                                            String authType) throws Exception {
     String hivePrincipal =
         miniHiveKdc.getFullyQualifiedServicePrincipal(MiniHiveKdc.HIVE_SERVICE_PRINCIPAL);
     String hiveKeytab = miniHiveKdc.getKeyTabFile(
         miniHiveKdc.getServicePrincipalForUser(MiniHiveKdc.HIVE_SERVICE_PRINCIPAL));
 
-    return new MiniSparkThriftServer.Builder().withConf(conf).withMiniKdc(hivePrincipal, hiveKeytab).
+    return new MiniSS2.Builder().withSQLContext(sqlContext).withMiniKdc(hivePrincipal, hiveKeytab).
         withAuthenticationType(authType).build();
   }
 
   /**
-   * Create a MiniHS2 with the hive service principal and keytab in MiniHiveKdc
+   * Create a MiniSS2 with the hive service principal and keytab in MiniHiveKdc
+   *
    * @param miniHiveKdc
-   * @param conf
-   * @return new MiniHS2 instance
+   * @param sqlContext
+   * @return new MiniSS2 instance
    * @throws Exception
    */
-  public static MiniSparkThriftServer getMiniHS2WithKerbWithRemoteHMS(MiniHiveKdc miniHiveKdc, Map<String, String> conf) throws Exception {
-    return getMiniHS2WithKerbWithRemoteHMS(miniHiveKdc, conf, AUTHENTICATION_TYPE);
+  public static MiniSS2 getMiniHS2WithKerbWithRemoteHMS(MiniHiveKdc miniHiveKdc, SQLContext sqlContext) throws Exception {
+    return getMiniHS2WithKerbWithRemoteHMS(miniHiveKdc, sqlContext, AUTHENTICATION_TYPE);
   }
 
   /**
-   * Create a MiniHS2 with the hive service principal and keytab in MiniHiveKdc. It uses remote HMS
+   * Create a MiniSS2 with the hive service principal and keytab in MiniHiveKdc. It uses remote HMS
    * and can support a different Sasl authType
+   *
    * @param miniHiveKdc
-   * @param conf
+   * @param sqlContext
    * @param authType
-   * @return new MiniHS2 instance
+   * @return new MiniSS2 instance
    * @throws Exception
    */
-  public static MiniSparkThriftServer getMiniHS2WithKerbWithRemoteHMS(MiniHiveKdc miniHiveKdc, Map<String, String> conf,
+  public static MiniSS2 getMiniHS2WithKerbWithRemoteHMS(MiniHiveKdc miniHiveKdc, SQLContext sqlContext,
                                                         String authType) throws Exception {
     String hivePrincipal =
         miniHiveKdc.getFullyQualifiedServicePrincipal(MiniHiveKdc.HIVE_SERVICE_PRINCIPAL);
     String hiveKeytab = miniHiveKdc.getKeyTabFile(
         miniHiveKdc.getServicePrincipalForUser(MiniHiveKdc.HIVE_SERVICE_PRINCIPAL));
 
-    return new MiniSparkThriftServer.Builder().withConf(conf)
+    return new MiniSS2.Builder().withSQLContext(sqlContext)
         .withMiniKdc(hivePrincipal, hiveKeytab).withAuthenticationType(authType).build();
   }
 }

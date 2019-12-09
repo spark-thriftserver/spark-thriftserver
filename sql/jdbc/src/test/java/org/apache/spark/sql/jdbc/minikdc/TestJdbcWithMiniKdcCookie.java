@@ -15,11 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.spark.sql.jdbc.minikdc;
 
-import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.jdbc.SparkConnection;
+import org.apache.spark.sql.jdbc.miniSS2.MiniSS2;
+import org.apache.spark.sql.service.SparkSQLEnv;
 import org.apache.spark.sql.service.internal.ServiceConf;
 import org.junit.*;
 
@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.Properties;
 
 public class TestJdbcWithMiniKdcCookie {
-  private static MiniSparkThriftServer miniHS2 = null;
+  private static MiniSS2 miniHS2 = null;
   private static MiniHiveKdc miniHiveKdc = null;
   private Connection hs2Conn;
   File dataFile;
@@ -41,15 +41,17 @@ public class TestJdbcWithMiniKdcCookie {
 
   @BeforeClass
   public static void beforeTest() throws Exception {
-    confMap.put(ServiceConf.THRIFTSERVER_TRANSPORT_MODE().key(), MiniSparkThriftServer.SS2_HTTP_MODE);
+    SparkSQLEnvUtils.setStartUpProperties();
+    SparkSQLEnv.init();
+    confMap.put(ServiceConf.THRIFTSERVER_TRANSPORT_MODE().key(), "http");
     System.err.println("Testing using HS2 mode : "
         + confMap.get(ServiceConf.THRIFTSERVER_TRANSPORT_MODE().key()));
     confMap.put(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_AUTH_ENABLED().key(), "true");
     // set a small time unit as cookie max age so that the server sends a 401
     confMap.put(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_MAX_AGE().key(), "1");
     miniHiveKdc = MiniHiveKdc.getMiniHiveKdc();
-    miniHS2 = MiniHiveKdc.getMiniHS2WithKerb(miniHiveKdc, confMap);
-    miniHS2.start();
+    miniHS2 = MiniHiveKdc.getMiniHS2WithKerb(miniHiveKdc, SparkSQLEnv.sqlContext());
+    miniHS2.start(confMap);
   }
 
   @Before
@@ -69,6 +71,8 @@ public class TestJdbcWithMiniKdcCookie {
 
   @AfterClass
   public static void afterTest() throws Exception {
+    SparkSQLEnv.stop();
+    SparkSQLEnvUtils.clearStartUpProperties();
     miniHS2.stop();
   }
 
