@@ -164,7 +164,6 @@ public class OperationLog {
       if (isFetchFirst) {
         resetIn();
       }
-
       return readResults(maxRows);
     }
 
