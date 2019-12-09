@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.Map;
 import javax.security.sasl.SaslException;
 
-
 import org.apache.spark.sql.service.auth.thrift.HadoopThriftAuthBridge;
 import org.apache.spark.sql.service.auth.thrift.HadoopThriftAuthBridge.Server;
 import org.apache.spark.sql.service.cli.thrift.ThriftCLIService;

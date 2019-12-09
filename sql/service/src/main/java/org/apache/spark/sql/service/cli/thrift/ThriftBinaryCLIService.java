@@ -73,10 +73,10 @@ public class ThriftBinaryCLIService extends ThriftCLIService {
         }
         org.apache.hadoop.conf.Configuration hadoopConf =
             sqlContext.sparkContext().hadoopConfiguration();
-        char[] pw = hadoopConf.getPassword(
+        char[] pass = hadoopConf.getPassword(
             ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PASSWORD().key()
                 .substring("spark.hadoop.".length()));
-        String keyStorePassword = new String(pw);
+        String keyStorePassword = new String(pass);
         serverSocket = SparkAuthUtils.getServerSSLSocket(sparkHost, portNum, keyStorePath,
             keyStorePassword, sslVersionBlacklist);
       }

@@ -83,13 +83,12 @@ public class ThriftHttpCLIService extends ThriftCLIService {
         String keyStorePath = sqlConf.getConf(ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PATH());
         org.apache.hadoop.conf.Configuration hadoopConf =
             sqlContext.sparkContext().hadoopConfiguration();
-        char[] pw = hadoopConf.getPassword(
+        char[] pass = hadoopConf.getPassword(
             ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PASSWORD().key()
                 .substring("spark.hadoop.".length()));
-        String keyStorePassword = new String(pw);
+        String keyStorePassword = new String(pass);
         if (keyStorePath.isEmpty()) {
-          throw
-              new IllegalArgumentException(ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PATH().key()
+          throw new IllegalArgumentException(ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PATH().key()
               + " Not configured for SSL connection");
         }
         SslContextFactory sslContextFactory = new SslContextFactory.Server();
