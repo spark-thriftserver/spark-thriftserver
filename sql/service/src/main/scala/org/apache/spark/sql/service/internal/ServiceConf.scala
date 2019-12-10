@@ -35,20 +35,20 @@ object ServiceConf {
 
   val THRIFTSERVER_TRANSPORT_MODE = buildConf("spark.sql.thriftserver.transport.mode")
     .internal()
-    .doc("Transport mode of SparkServer2: 1. binary  2. http")
+    .doc("Transport mode of SparkThriftServer2: 1. binary  2. http")
     .stringConf
     .createWithDefault("binary")
 
   val THRIFTSERVER_THRIFT_BIND_HOST = buildConf("spark.sql.thriftserver.thrift.bind.host")
     .internal()
-    .doc("Bind host on which to run the SparkServer2 Thrift service.")
+    .doc("Bind host on which to run the SparkThriftServer2 Thrift service.")
     .stringConf
     .createWithDefault("")
 
 
   val THRIFTSERVER_HTTP_PORT = buildConf("spark.sql.thriftserver.http.port")
     .internal()
-    .doc("Port number of SparkServer2 Thrift interface " +
+    .doc("Port number of SparkThriftServer2 Thrift interface " +
       "when spark.sql.thriftserver.transport.mode is 'http'.")
     .intConf
     .createWithDefault(10001)
@@ -87,7 +87,7 @@ object ServiceConf {
   val THRIFTSERVER_THRIFT_HTTP_COOKIE_AUTH_ENABLED =
     buildConf("spark.sql.thriftserver.thrift.http.cookie.auth.enabled")
       .internal()
-      .doc("When true, SparkServer2 in HTTP transport mode," +
+      .doc("When true, SparkThriftServer2 in HTTP transport mode," +
         " will use cookie based authentication mechanism.")
       .booleanConf
       .createWithDefault(true)
@@ -129,7 +129,7 @@ object ServiceConf {
 
   val THRIFTSERVER_THRIFT_PORT = buildConf("spark.sql.thriftserver.thrift.port")
     .internal()
-    .doc("Port number of SparkServer2 Thrift interface " +
+    .doc("Port number of SparkThriftServer2 Thrift interface " +
       "when spark.sql.thriftserver.transport.mode is 'binary'.")
     .intConf
     .createWithDefault(10000)
@@ -137,14 +137,14 @@ object ServiceConf {
   val THRIFTSERVER_THRIFT_SASL_QOP = buildConf("spark.sql.thriftserver.thrift.sasl.qop")
     .internal()
     .doc("Sasl QOP value; set it to one of following values to enable higher levels of" +
-      "protection for SparkServer2 communication with clients." +
-      "Setting hadoop.rpc.protection to a higher level than SparkServer2 does not" +
+      "protection for SparkThriftServer2 communication with clients." +
+      "Setting hadoop.rpc.protection to a higher level than SparkThriftServer2 does not" +
       "make sense in most situations. HiveServer2 ignores hadoop.rpc.protection in favor" +
       "of spark.sql.thriftserver.thrift.sasl.qop." +
       "  \"auth\" - authentication only (default)" +
       "  \"auth-int\" - authentication plus integrity protection" +
       "  \"auth-conf\" - authentication plus integrity and confidentiality protection" +
-      "This is applicable only if SparkServer2 is configured to use Kerberos authentication.")
+      "This is applicable only if SparkThriftServer2 is configured to use Kerberos authentication.")
     .stringConf
     .createWithDefault("auth")
 
@@ -166,7 +166,8 @@ object ServiceConf {
   val THRIFTSERVER_THRIFT_LOGIN_BEBACKOFF_SLOT_LENGTH =
     buildConf("spark.sql.thriftserver.thrift.exponential.backoff.slot.length")
       .internal()
-      .doc("Binary exponential backoff slot time for Thrift clients during login to SparkServer2," +
+      .doc("Binary exponential backoff slot time for Thrift clients " +
+        "during login to SparkThriftServer2," +
         "for retries until hitting Thrift client timeout")
       .timeConf(TimeUnit.MILLISECONDS)
       .createWithDefault(100)
@@ -175,7 +176,7 @@ object ServiceConf {
   val THRIFTSERVER_THRIFT_LOGIN_TIMEOUT =
     buildConf("spark.sql.thriftserver.thrift.login.timeout")
       .internal()
-      .doc("Timeout for Thrift clients during login to SparkServer2")
+      .doc("Timeout for Thrift clients during login to SparkThriftServer2")
       .timeConf(TimeUnit.SECONDS)
       .createWithDefault(20)
 
@@ -192,21 +193,21 @@ object ServiceConf {
   val THRIFTSERVER_ASYNC_EXEC_THREADS =
     buildConf("spark.sql.thriftserver.async.exec.threads")
       .internal()
-      .doc("Number of threads in the async thread pool for SparkServer2")
+      .doc("Number of threads in the async thread pool for SparkThriftServer2")
       .intConf
       .createWithDefault(100)
 
   val THRIFTSERVER_ASYNC_EXEC_SHUTDOWN_TIMEOUT =
     buildConf("spark.sql.thriftserver.async.exec.shutdown.timeout")
       .internal()
-      .doc("How long SparkServer2 shutdown will wait for async threads to terminate.")
+      .doc("How long SparkThriftServer2 shutdown will wait for async threads to terminate.")
       .timeConf(TimeUnit.SECONDS)
       .createWithDefault(10)
 
   val THRIFTSERVER_ASYNC_EXEC_WAIT_QUEUE_SIZE =
     buildConf("spark.sql.thriftserver.async.exec.wait.queue.size")
       .internal()
-      .doc("Size of the wait queue for async thread pool in SparkServer2." +
+      .doc("Size of the wait queue for async thread pool in SparkThriftServer2." +
         "After hitting this limit, the async thread pool will reject new requests.")
       .intConf
       .createWithDefault(100)
@@ -214,7 +215,7 @@ object ServiceConf {
   val THRIFTSERVER_ASYNC_EXEC_KEEPALIVE_TIME =
     buildConf("spark.sql.thriftserver.async.exec.keepalive.time")
       .internal()
-      .doc("Time that an idle SparkServer2 async thread (from the thread pool) " +
+      .doc("Time that an idle SparkThriftServer2 async thread (from the thread pool) " +
         "will wait for a new task to arrive before terminating")
       .timeConf(TimeUnit.SECONDS)
       .createWithDefault(10)
@@ -222,7 +223,7 @@ object ServiceConf {
   val THRIFTSERVER_LONG_POLLING_TIMEOUT =
     buildConf("spark.sql.thriftserver.long.polling.timeout")
       .internal()
-      .doc("Time that SparkServer2 will wait before responding to " +
+      .doc("Time that SparkThriftServer2 will wait before responding to " +
         "asynchronous calls that use long polling")
       .timeConf(TimeUnit.MILLISECONDS)
       .createWithDefault(5000)
@@ -244,7 +245,8 @@ object ServiceConf {
   val THRIFTSERVER_ALLOW_USER_SUBSTITUTION =
     buildConf("spark.sql.thriftserver.allow.user.substitution")
       .internal()
-      .doc("Allow alternate user to be specified as part of SparkServer2 open connection request.")
+      .doc("Allow alternate user to be specified " +
+        "as part of SparkThriftServer2 open connection request.")
       .booleanConf
       .createWithDefault(true)
 
@@ -268,7 +270,7 @@ object ServiceConf {
       .internal()
       .doc("keytab file for SPNego principal, optional," +
         "typical value would look like /etc/security/keytabs/spnego.service.keytab," +
-        "This keytab would be used by SparkServer2 when Kerberos security is enabled and " +
+        "This keytab would be used by SparkThriftServer2 when Kerberos security is enabled and " +
         "HTTP transport mode is used. " +
         "This needs to be set only if SPNEGO is to be used in authentication." +
         "SPNego authentication would be honored only " +
@@ -282,8 +284,8 @@ object ServiceConf {
       .internal()
       .doc("SPNego service principal, optional, typical value " +
         "would look like HTTP/_HOST@EXAMPLE.COM" +
-        "SPNego service principal would be used by SparkServer2 when Kerberos security is enabled" +
-        "and HTTP transport mode is used." +
+        "SPNego service principal would be used by SparkThriftServer2" +
+        " when Kerberos security is enabled and HTTP transport mode is used." +
         "This needs to be set only if SPNEGO is to be used in authentication.")
       .stringConf
       .createWithDefault("")
@@ -318,7 +320,7 @@ object ServiceConf {
       .doc("Custom authentication class. Used when property" +
         "'spark.sql.thriftserver.authentication' is set to 'CUSTOM'. Provided class" +
         "must be a proper implementation of the interface" +
-        "org.apache.spark.sql.service.auth.PasswdAuthenticationProvider. SparkServer2" +
+        "org.apache.spark.sql.service.auth.PasswdAuthenticationProvider. SparkThriftServer2" +
         "will call its Authenticate(user, passed) method to authenticate requests." +
         "The implementation may optionally implement Hadoop's" +
         "org.apache.hadoop.conf.Configurable class to grab Spark's Configuration object.")
@@ -336,7 +338,7 @@ object ServiceConf {
   val THRIFTSERVER_ENABLE_DOAS =
     buildConf("spark.sql.thriftserver.enable.doAs")
       .internal()
-      .doc("Setting this property to true will have SparkServer2 execute" +
+      .doc("Setting this property to true will have SparkThriftServer2 execute" +
         "Spark operations as the user making the calls to it.")
       .booleanConf
       .createWithDefault(true)
@@ -351,7 +353,7 @@ object ServiceConf {
   val THRIFTSERVER_USE_SSL =
     buildConf("spark.sql.thriftserver.use.SSL")
       .internal()
-      .doc("Set this to true for using SSL encryption in SparkServer2.")
+      .doc("Set this to true for using SSL encryption in SparkThriftServer2.")
       .booleanConf
       .createWithDefault(false)
 

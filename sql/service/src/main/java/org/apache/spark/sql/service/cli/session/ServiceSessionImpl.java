@@ -74,8 +74,8 @@ public class ServiceSessionImpl implements ServiceSession {
 
   @Override
   /**
-   * Opens a new SparkServer2 session for the client connection.
-   * Creates a new SessionState object that will be associated with this SparkServer2 session.
+   * Opens a new SparkThriftServer2 session for the client connection.
+   * Creates a new SessionState object that will be associated with this SparkThriftServer2 session.
    * When the server executes multiple queries in the same session,
    * this SessionState object is reused across multiple queries.
    * Note that if doAs is true, this call goes through a proxy object,
@@ -93,7 +93,7 @@ public class ServiceSessionImpl implements ServiceSession {
   }
 
   /**
-   * It is used for processing hiverc file from SparkServer2 side.
+   * It is used for processing hiverc file from SparkThriftServer2 side.
    */
   private class GlobalHivercFileProcessor extends SparkFileProcessor {
     @Override

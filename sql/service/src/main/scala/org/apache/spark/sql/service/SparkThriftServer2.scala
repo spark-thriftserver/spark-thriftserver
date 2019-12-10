@@ -17,7 +17,6 @@
 
 package org.apache.spark.sql.service
 
-import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
 
 import scala.collection.mutable
@@ -30,14 +29,16 @@ import org.apache.spark.internal.config.UI.UI_ENABLED
 import org.apache.spark.scheduler.{SparkListener, SparkListenerApplicationEnd, SparkListenerJobStart}
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.internal.SQLConf
+import org.apache.spark.sql.service.cli.CLIService
+import org.apache.spark.sql.service.cli.thrift.{ThriftBinaryCLIService, ThriftCLIService, ThriftHttpCLIService}
 import org.apache.spark.sql.service.internal.ServiceConf
-import org.apache.spark.sql.service.server.SparkServer2
+import org.apache.spark.sql.service.server.ServerStartUpUtil
 import org.apache.spark.sql.service.ui.ThriftServerTab
 import org.apache.spark.util.{ShutdownHookManager, Utils}
 
 /**
- * The main entry point for the Spark SQL port of SparkServer2.  Starts up a `SparkSQLContext` and a
- * `SparkThriftServer2` thrift server.
+ * The main entry point for the Spark SQL port of SparkThriftServer2.
+ * Starts up a `SparkSQLContext` and a `SparkThriftServer2` thrift server.
  */
 object SparkThriftServer2 extends Logging {
   var uiTab: Option[ThriftServerTab] = None
@@ -64,16 +65,28 @@ object SparkThriftServer2 extends Logging {
     server
   }
 
+  def isHTTPTransportMode(sqlConf: SQLConf): Boolean = {
+    var transportMode = System.getenv("THRIFTSERVER_TRANSPORT_MODE")
+    if (transportMode == null) {
+      transportMode = sqlConf.getConf(ServiceConf.THRIFTSERVER_TRANSPORT_MODE)
+    }
+    if (transportMode != null && transportMode.equalsIgnoreCase("http")) {
+      true
+    } else {
+      false
+    }
+  }
+
   def main(args: Array[String]): Unit = {
     // If the arguments contains "-h" or "--help", print out the usage and exit.
     if (args.contains("-h") || args.contains("--help")) {
-      SparkServer2.main(args)
+      ServerStartUpUtil.process(args)
       // The following code should not be reachable. It is added to ensure the main function exits.
       return
     }
 
     Utils.initDaemon(log)
-    val optionsProcessor = new SparkServer2.ServerOptionsProcessor("SparkThriftServer2")
+    val optionsProcessor = new ServerStartUpUtil.ServerOptionsProcessor("SparkThriftServer2")
     optionsProcessor.parse(args)
 
     logInfo("Starting SparkContext")
@@ -100,7 +113,7 @@ object SparkThriftServer2 extends Logging {
       // If application was killed before SparkThriftServer2 start successfully then SparkSubmit
       // process can not exit, so check whether if SparkContext was stopped.
       if (SparkSQLEnv.sparkContext.stopped.get()) {
-        logError("SparkContext has stopped even if SparkServer2 has started, so exit")
+        logError("SparkContext has stopped even if SparkThriftServer2 has started, so exit")
         System.exit(-1)
       }
     } catch {
@@ -157,7 +170,7 @@ object SparkThriftServer2 extends Logging {
    * An inner sparkListener called in sc.stop to clean up the SparkThriftServer2
    */
   class SparkThriftServer2Listener(
-      val server: SparkServer2,
+      val server: SparkThriftServer2,
       val conf: SQLConf) extends SparkListener {
 
     override def onApplicationEnd(applicationEnd: SparkListenerApplicationEnd): Unit = {
@@ -286,12 +299,26 @@ object SparkThriftServer2 extends Logging {
 }
 
 private[spark] class SparkThriftServer2(sqlContext: SQLContext)
-  extends SparkServer2(sqlContext) {
+  extends CompositeService(classOf[SparkThriftServer2].getCanonicalName) with Logging {
+
+  import SparkThriftServer2._
+
   // state is tracked internally so that the server only attempts to shut down if it successfully
   // started, and then once only.
   private val started = new AtomicBoolean(false)
 
+  private var cliService: CLIService = _
+  private var thriftCLIService: ThriftCLIService = _
+
   override def init(sqlConf: SQLConf): Unit = {
+    cliService = new CLIService(this, sqlContext)
+    addService(cliService)
+    if (isHTTPTransportMode(sqlConf)) {
+      thriftCLIService = new ThriftHttpCLIService(cliService, sqlContext)
+    } else {
+      thriftCLIService = new ThriftBinaryCLIService(cliService, sqlContext)
+    }
+    addService(thriftCLIService)
     super.init(sqlConf)
   }
 
@@ -302,7 +329,8 @@ private[spark] class SparkThriftServer2(sqlContext: SQLContext)
 
   override def stop(): Unit = {
     if (started.getAndSet(false)) {
-       super.stop()
+      logInfo("Shutting down SparkThriftServer2")
+      super.stop()
     }
   }
 }

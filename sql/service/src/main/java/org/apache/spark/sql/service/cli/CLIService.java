@@ -33,13 +33,13 @@ import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.CompositeService;
 import org.apache.spark.sql.service.ServiceException;
+import org.apache.spark.sql.service.SparkThriftServer2;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.cli.operation.Operation;
 import org.apache.spark.sql.service.cli.session.ServiceSession;
 import org.apache.spark.sql.service.cli.session.SessionManager;
 import org.apache.spark.sql.service.internal.ServiceConf;
 import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
-import org.apache.spark.sql.service.server.SparkServer2;
 import org.apache.spark.sql.service.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,10 +64,10 @@ public class CLIService extends CompositeService implements ICLIService {
   private SessionManager sessionManager;
   private UserGroupInformation serviceUGI;
   private UserGroupInformation httpUGI;
-  // The SparkServer2 instance running this service
-  private final SparkServer2 sparkServer2;
+  // The SparkThriftServer2 instance running this service
+  private final SparkThriftServer2 sparkServer2;
 
-  public CLIService(SparkServer2 sparkServer2, SQLContext sqlContext) {
+  public CLIService(SparkThriftServer2 sparkServer2, SQLContext sqlContext) {
     super(CLIService.class.getSimpleName());
     this.sparkServer2 = sparkServer2;
     this.sqlContext = sqlContext;
