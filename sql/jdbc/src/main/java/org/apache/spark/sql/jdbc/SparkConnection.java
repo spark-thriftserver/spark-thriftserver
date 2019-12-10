@@ -139,11 +139,11 @@ public class SparkConnection implements java.sql.Connection {
       throw new SQLException(e);
     }
     jdbcUriString = connParams.getJdbcUriString();
-    // JDBC URL: jdbc:spark://<host>:<port>/dbName;sess_var_list?hive_conf_list#hive_var_list
+    // JDBC URL: jdbc:spark://<host>:<port>/dbName;sess_var_list?spark_conf_list#spark_var_list
     // each list: <key1>=<val1>;<key2>=<val2> and so on
     // sess_var_list -> sessConfMap
-    // hive_conf_list -> hiveConfMap
-    // hive_var_list -> hiveVarMap
+    // spark_conf_list -> sparkConfMap
+    // spark_var_list -> sparkVarMap
     host = connParams.getHost();
     port = connParams.getPort();
     sessConfMap = connParams.getSessionVars();
@@ -636,12 +636,12 @@ public class SparkConnection implements java.sql.Connection {
 
     Map<String, String> openConf = new HashMap<String, String>();
     // for remote JDBC client, try to set the conf var using 'set foo=bar'
-    for (Entry<String, String> hiveConf : connParams.getSparkConfs().entrySet()) {
-      openConf.put("set:sparkconf:" + hiveConf.getKey(), hiveConf.getValue());
+    for (Entry<String, String> sparkConf : connParams.getSparkConfs().entrySet()) {
+      openConf.put("set:sparkconf:" + sparkConf.getKey(), sparkConf.getValue());
     }
-    // For remote JDBC client, try to set the hive var using 'set spark:key=value'
-    for (Entry<String, String> hiveVar : connParams.getSparkVars().entrySet()) {
-      openConf.put("set:spark:" + hiveVar.getKey(), hiveVar.getValue());
+    // For remote JDBC client, try to set the spark var using 'set spark:key=value'
+    for (Entry<String, String> sparkVar : connParams.getSparkVars().entrySet()) {
+      openConf.put("set:spark:" + sparkVar.getKey(), sparkVar.getValue());
     }
     // switch the database
     openConf.put("use:database", connParams.getDbName());
@@ -669,7 +669,7 @@ public class SparkConnection implements java.sql.Connection {
       // validate connection
       Utils.verifySuccess(openResp.getStatus());
       if (!supportedProtocols.contains(openResp.getServerProtocolVersion())) {
-        throw new TException("Unsupported Hive2 protocol");
+        throw new TException("Unsupported Spark2 protocol");
       }
       protocol = openResp.getServerProtocolVersion();
       sessHandle = openResp.getSessionHandle();
@@ -1314,8 +1314,8 @@ public class SparkConnection implements java.sql.Connection {
     // The auto-commit mode is always enabled for this connection. Per JDBC spec,
     // if setAutoCommit is called and the auto-commit mode is not changed, the call is a no-op.
     if (!autoCommit) {
-      LOG.warn("Request to set autoCommit to false; Hive does not support autoCommit=false.");
-      SQLWarning warning = new SQLWarning("Hive does not support autoCommit=false");
+      LOG.warn("Request to set autoCommit to false; Spark does not support autoCommit=false.");
+      SQLWarning warning = new SQLWarning("Spark does not support autoCommit=false");
       if (warningChain == null) warningChain = warning;
       else warningChain.setNextWarning(warning);
     }

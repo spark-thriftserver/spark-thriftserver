@@ -46,12 +46,12 @@ public class SparkResultSetMetaData implements java.sql.ResultSetMetaData {
     throw new SQLFeatureNotSupportedException("Method not supported");
   }
 
-  private Type getHiveType(int column) throws SQLException {
-    return JdbcColumn.typeStringToHiveType(columnTypes.get(toZeroIndex(column)));
+  private Type getSparkType(int column) throws SQLException {
+    return JdbcColumn.typeStringToSparkType(columnTypes.get(toZeroIndex(column)));
   }
 
   public String getColumnClassName(int column) throws SQLException {
-    return JdbcColumn.columnClassName(getHiveType(column),
+    return JdbcColumn.columnClassName(getSparkType(column),
         columnAttributes.get(toZeroIndex(column)));
   }
 
@@ -60,7 +60,7 @@ public class SparkResultSetMetaData implements java.sql.ResultSetMetaData {
   }
 
   public int getColumnDisplaySize(int column) throws SQLException {
-    return JdbcColumn.columnDisplaySize(getHiveType(column),
+    return JdbcColumn.columnDisplaySize(getSparkType(column),
         columnAttributes.get(toZeroIndex(column)));
   }
 
@@ -77,7 +77,7 @@ public class SparkResultSetMetaData implements java.sql.ResultSetMetaData {
     String type = columnTypes.get(toZeroIndex(column));
 
     // we need to convert the thrift type to the SQL type
-    return JdbcColumn.hiveTypeToSqlType(type);
+    return JdbcColumn.sparkTypeToSqlType(type);
   }
 
   public String getColumnTypeName(int column) throws SQLException {
@@ -85,12 +85,12 @@ public class SparkResultSetMetaData implements java.sql.ResultSetMetaData {
   }
 
   public int getPrecision(int column) throws SQLException {
-    return JdbcColumn.columnPrecision(getHiveType(column),
+    return JdbcColumn.columnPrecision(getSparkType(column),
         columnAttributes.get(toZeroIndex(column)));
   }
 
   public int getScale(int column) throws SQLException {
-    return JdbcColumn.columnScale(getHiveType(column),
+    return JdbcColumn.columnScale(getSparkType(column),
         columnAttributes.get(toZeroIndex(column)));
   }
 
@@ -103,12 +103,12 @@ public class SparkResultSetMetaData implements java.sql.ResultSetMetaData {
   }
 
   public boolean isAutoIncrement(int column) throws SQLException {
-    // Hive doesn't have an auto-increment concept
+    // Spark doesn't have an auto-increment concept
     return false;
   }
 
   public boolean isCaseSensitive(int column) throws SQLException {
-    // we need to convert the Hive type to the SQL type name
+    // we need to convert the Spark type to the SQL type name
     // TODO: this would be better handled in an enum
     String type = columnTypes.get(toZeroIndex(column));
 
@@ -120,7 +120,7 @@ public class SparkResultSetMetaData implements java.sql.ResultSetMetaData {
   }
 
   public boolean isCurrency(int column) throws SQLException {
-    // Hive doesn't support a currency type
+    // Spark doesn't support a currency type
     return false;
   }
 
@@ -129,7 +129,7 @@ public class SparkResultSetMetaData implements java.sql.ResultSetMetaData {
   }
 
   public int isNullable(int column) throws SQLException {
-    // Hive doesn't have the concept of not-null
+    // Spark doesn't have the concept of not-null
     return ResultSetMetaData.columnNullable;
   }
 

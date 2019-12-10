@@ -285,9 +285,9 @@ public class Utils {
    *
    * As before, if the host/port is not specified, it the driver runs an embedded spark.
    * examples -
-   *  jdbc:spark://ubuntu:11000/db2?hive.cli.conf.printheader=true;
-   *      hive.exec.mode.local.auto.inputbytes.max=9999#stab=salesTable;icol=customerID
-   *  jdbc:spark://?hive.cli.conf.printheader=true;hive.exec.mode.local.auto.inputbytes.max=9999
+   *  jdbc:spark://ubuntu:11000/db2?spark.cli.conf.printheader=true;
+   *      spark.exec.mode.local.auto.inputbytes.max=9999#stab=salesTable;icol=customerID
+   *  jdbc:spark://?spark.cli.conf.printheader=true;spark.exec.mode.local.auto.inputbytes.max=9999
    *      #stab=salesTable;icol=customerID
    *  jdbc:spark://ubuntu:11000/db2;user=foo;password=bar
    *

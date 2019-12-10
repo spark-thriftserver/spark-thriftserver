@@ -63,9 +63,9 @@ public class JdbcColumn {
     return type;
   }
 
-  static String columnClassName(Type hiveType, JdbcColumnAttributes columnAttributes)
+  static String columnClassName(Type sparkType, JdbcColumnAttributes columnAttributes)
       throws SQLException {
-    int columnType = hiveTypeToSqlType(hiveType);
+    int columnType = sparkTypeToSqlType(sparkType);
     switch(columnType) {
       case Types.NULL:
         return "null";
@@ -105,7 +105,7 @@ public class JdbcColumn {
     }
   }
 
-  static Type typeStringToHiveType(String type) throws SQLException {
+  static Type typeStringToSparkType(String type) throws SQLException {
     if ("string".equalsIgnoreCase(type)) {
       return Type.STRING_TYPE;
     } else if ("float".equalsIgnoreCase(type)) {
@@ -142,41 +142,41 @@ public class JdbcColumn {
     throw new SQLException("Unrecognized column type: " + type);
   }
 
-  public static int hiveTypeToSqlType(Type hiveType) throws SQLException {
-    return hiveType.toJavaSQLType();
+  public static int sparkTypeToSqlType(Type sparkType) throws SQLException {
+    return sparkType.toJavaSQLType();
   }
 
-  public static int hiveTypeToSqlType(String type) throws SQLException {
-    return hiveTypeToSqlType(typeStringToHiveType(type));
+  public static int sparkTypeToSqlType(String type) throws SQLException {
+    return sparkTypeToSqlType(typeStringToSparkType(type));
   }
 
   static String getColumnTypeName(String type) throws SQLException {
     return Type.getType(type).getName();
   }
 
-  static int columnDisplaySize(Type hiveType, JdbcColumnAttributes columnAttributes)
+  static int columnDisplaySize(Type sparkType, JdbcColumnAttributes columnAttributes)
       throws SQLException {
-    // according to hiveTypeToSqlType possible options are:
-    int columnType = hiveTypeToSqlType(hiveType);
+    // according to sparkTypeToSqlType possible options are:
+    int columnType = sparkTypeToSqlType(sparkType);
     switch(columnType) {
     case Types.NULL:
       return 4; // "NULL"
     case Types.BOOLEAN:
-      return columnPrecision(hiveType, columnAttributes);
+      return columnPrecision(sparkType, columnAttributes);
     case Types.CHAR:
     case Types.VARCHAR:
-      return columnPrecision(hiveType, columnAttributes);
+      return columnPrecision(sparkType, columnAttributes);
     case Types.BINARY:
-      return Integer.MAX_VALUE; // hive has no max limit for binary
+      return Integer.MAX_VALUE; // spark has no max limit for binary
     case Types.TINYINT:
     case Types.SMALLINT:
     case Types.INTEGER:
     case Types.BIGINT:
-      return columnPrecision(hiveType, columnAttributes) + 1; // allow +/-
+      return columnPrecision(sparkType, columnAttributes) + 1; // allow +/-
     case Types.DATE:
       return 10;
     case Types.TIMESTAMP:
-      return columnPrecision(hiveType, columnAttributes);
+      return columnPrecision(sparkType, columnAttributes);
 
     // see http://download.oracle.com/javase/6/docs/api/constant-values.html#java.lang.Float.MAX_EXPONENT
     case Types.FLOAT:
@@ -185,10 +185,10 @@ public class JdbcColumn {
     case Types.DOUBLE:
       return 25; // e.g. -(17#).e-####
     case Types.DECIMAL:
-      return columnPrecision(hiveType, columnAttributes) + 2;  // '-' sign and '.'
+      return columnPrecision(sparkType, columnAttributes) + 2;  // '-' sign and '.'
     case Types.OTHER:
     case Types.JAVA_OBJECT:
-      return columnPrecision(hiveType, columnAttributes);
+      return columnPrecision(sparkType, columnAttributes);
     case Types.ARRAY:
     case Types.STRUCT:
       return Integer.MAX_VALUE;
@@ -197,10 +197,10 @@ public class JdbcColumn {
     }
   }
 
-  static int columnPrecision(Type hiveType, JdbcColumnAttributes columnAttributes)
+  static int columnPrecision(Type sparkType, JdbcColumnAttributes columnAttributes)
       throws SQLException {
-    int columnType = hiveTypeToSqlType(hiveType);
-    // according to hiveTypeToSqlType possible options are:
+    int columnType = sparkTypeToSqlType(sparkType);
+    // according to sparkTypeToSqlType possible options are:
     switch(columnType) {
     case Types.NULL:
       return 0;
@@ -211,9 +211,9 @@ public class JdbcColumn {
       if (columnAttributes != null) {
         return columnAttributes.precision;
       }
-      return Integer.MAX_VALUE; // hive has no max limit for strings
+      return Integer.MAX_VALUE; // spark has no max limit for strings
     case Types.BINARY:
-      return Integer.MAX_VALUE; // hive has no max limit for binary
+      return Integer.MAX_VALUE; // spark has no max limit for binary
     case Types.TINYINT:
       return 3;
     case Types.SMALLINT:
@@ -243,10 +243,10 @@ public class JdbcColumn {
     }
   }
 
-  static int columnScale(Type hiveType, JdbcColumnAttributes columnAttributes)
+  static int columnScale(Type sparkType, JdbcColumnAttributes columnAttributes)
       throws SQLException {
-    int columnType = hiveTypeToSqlType(hiveType);
-    // according to hiveTypeToSqlType possible options are:
+    int columnType = sparkTypeToSqlType(sparkType);
+    // according to sparkTypeToSqlType possible options are:
     switch(columnType) {
     case Types.NULL:
     case Types.BOOLEAN:
