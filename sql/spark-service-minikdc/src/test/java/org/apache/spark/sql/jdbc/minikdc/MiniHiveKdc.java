@@ -35,7 +35,7 @@ import java.util.*;
  * Has functions to manager users and their keytabs. This includes a hive service principal,
  * a superuser principal for testing proxy user privilegs.
  * Has a set of default users that it initializes.
- * See hive-minikdc/src/test/resources/core-site.xml for users granted proxy user privileges.
+ * See service-minikdc/src/test/resources/core-site.xml for users granted proxy user privileges.
  */
 public class MiniHiveKdc {
   public static String HIVE_SERVICE_PRINCIPAL = "hive";
