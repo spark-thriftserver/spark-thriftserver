@@ -32,6 +32,7 @@ import org.apache.spark.sql.service.AbstractService
 import org.apache.spark.sql.service.cli._
 import org.apache.spark.sql.service.cli.session.ServiceSession
 import org.apache.spark.sql.service.internal.ServiceConf
+import org.apache.spark.sql.types.{StringType, StructField, StructType}
 
 class OperationManager
   extends AbstractService(classOf[OperationManager].getSimpleName)
@@ -272,23 +273,13 @@ class OperationManager
         throw new ServiceSQLException(e.getMessage, e.getCause)
     }
     // convert logs to RowSet
-    // convert logs to RowSet
-    val tableSchema: TableSchema = new TableSchema(getLogSchema)
+    val tableSchema = new TableSchema(StructType(StructField("operation_log", StringType) :: Nil))
     val rowSet: RowSet =
       RowSetFactory.create(tableSchema, getOperation(opHandle).getProtocolVersion, false)
     for (log <- logs.asScala) {
       rowSet.addRow(Array[AnyRef](log))
     }
     rowSet
-  }
-
-  private def getLogSchema = {
-    val schema = new Schema
-    val fieldSchema = new FieldSchema
-    fieldSchema.setName("operation_log")
-    fieldSchema.setType("string")
-    schema.addToFieldSchemas(fieldSchema)
-    schema
   }
 
   private def isFetchFirst(fetchOrientation: FetchOrientation): Boolean = {

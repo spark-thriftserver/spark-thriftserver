@@ -23,6 +23,8 @@ import java.util.List;
 
 import org.apache.spark.sql.service.rpc.thrift.TColumnDesc;
 import org.apache.spark.sql.service.rpc.thrift.TTableSchema;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
 
 /**
  * TableSchema.
@@ -44,16 +46,16 @@ public class TableSchema {
     }
   }
 
-  public TableSchema(List<FieldSchema> fieldSchemas) {
+  public TableSchema(StructField[] fieldSchemas) {
     int pos = 1;
-    for (FieldSchema field : fieldSchemas) {
-      columns.add(new ColumnDescriptor(field.getName(), field.getComment(),
-          new TypeDescriptor(field.getType()), pos++));
+    for (StructField field : fieldSchemas) {
+      columns.add(new ColumnDescriptor(field.name(), field.getComment().getOrElse(() -> ""),
+          new TypeDescriptor(field.dataType().sql()), pos++));
     }
   }
 
-  public TableSchema(Schema schema) {
-    this(schema.getFieldSchemas());
+  public TableSchema(StructType schema) {
+    this(schema.fields());
   }
 
   public List<ColumnDescriptor> getColumnDescriptors() {
