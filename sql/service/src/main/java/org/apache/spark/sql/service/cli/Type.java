@@ -66,7 +66,7 @@ public enum Type {
   INTERVAL_TYPE(CalendarIntervalType$.MODULE$.sql(),
           java.sql.Types.VARCHAR,
           TTypeId.STRING_TYPE),
-  BINARY_TYPE(NullType$.MODULE$.sql(),
+  BINARY_TYPE(BinaryType$.MODULE$.sql(),
           java.sql.Types.BINARY,
           TTypeId.BINARY_TYPE),
   DECIMAL_TYPE(DecimalType$.MODULE$.sql(),
