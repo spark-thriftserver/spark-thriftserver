@@ -29,7 +29,7 @@ fi
 
 # NOTE: This exact class name is matched downstream by SparkSubmit.
 # Any changes need to be reflected there.
-CLASS="org.apache.spark.sql.service.SparkThriftServer2"
+CLASS="org.apache.spark.sql.service.SparkThriftServer"
 
 function usage {
   echo "Usage: ./sbin/start-spark-thriftserver [options] [thrift server options]"

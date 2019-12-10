@@ -35,7 +35,7 @@ class UISeleniumSuite
   with WebBrowser with Matchers with BeforeAndAfterAll {
 
   implicit var webDriver: WebDriver = _
-  var server: SparkThriftServer2 = _
+  var server: SparkThriftServer = _
   val uiPort = 20000 + Random.nextInt(10000)
   override def mode: ServerMode.Value = ServerMode.binary
 

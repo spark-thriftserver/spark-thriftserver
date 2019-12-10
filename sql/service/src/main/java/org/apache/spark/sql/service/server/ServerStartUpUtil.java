@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,15 +20,6 @@ package org.apache.spark.sql.service.server;
 
 import java.util.Properties;
 
-import org.apache.spark.sql.SQLContext;
-import org.apache.spark.sql.internal.SQLConf;
-import org.apache.spark.sql.service.CompositeService;
-import org.apache.spark.sql.service.cli.CLIService;
-import org.apache.spark.sql.service.cli.thrift.ThriftBinaryCLIService;
-import org.apache.spark.sql.service.cli.thrift.ThriftCLIService;
-import org.apache.spark.sql.service.cli.thrift.ThriftHttpCLIService;
-import org.apache.spark.sql.service.internal.ServiceConf;
-
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
@@ -39,59 +30,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * SparkServer2.
+ * ServerStartUpUtil.
  *
  */
-public class SparkServer2 extends CompositeService {
-  private static final Logger LOG = LoggerFactory.getLogger(SparkServer2.class);
+public class ServerStartUpUtil {
+  private static final Logger LOG = LoggerFactory.getLogger(ServerStartUpUtil.class);
 
-  private CLIService cliService;
-  private ThriftCLIService thriftCLIService;
-  private SQLContext sqlContext;
 
-  public SparkServer2(SQLContext sqlContext) {
-    super(SparkServer2.class.getSimpleName());
-    this.sqlContext = sqlContext;
-  }
-
-  @Override
-  public synchronized void init(SQLConf sqlConf) {
-    cliService = new CLIService(this, sqlContext);
-    addService(cliService);
-    if (isHTTPTransportMode(sqlConf)) {
-      thriftCLIService = new ThriftHttpCLIService(cliService, sqlContext);
-    } else {
-      thriftCLIService = new ThriftBinaryCLIService(cliService, sqlContext);
-    }
-    addService(thriftCLIService);
-    super.init(sqlConf);
-  }
-
-  public static boolean isHTTPTransportMode(SQLConf sqlConf) {
-    String transportMode = System.getenv("THRIFTSERVER_TRANSPORT_MODE");
-    if (transportMode == null) {
-      transportMode = sqlConf.getConf(ServiceConf.THRIFTSERVER_TRANSPORT_MODE());
-    }
-    if (transportMode != null && (transportMode.equalsIgnoreCase("http"))) {
-      return true;
-    }
-    return false;
-  }
-
-  @Override
-  public synchronized void start() {
-    super.start();
-  }
-
-  @Override
-  public synchronized void stop() {
-    LOG.info("Shutting down SparkServer2");
-    super.stop();
-  }
-
-  public static void main(String[] args) {
+  public static void process(String[] args) {
     try {
-      ServerOptionsProcessor oproc = new ServerOptionsProcessor("sparkserver2");
+      ServerOptionsProcessor oproc = new ServerOptionsProcessor("sparkserver");
       ServerOptionsProcessorResponse oprocResponse = oproc.parse(args);
 
       // Log debug message from "oproc" after log4j initialize properly
@@ -107,7 +55,7 @@ public class SparkServer2 extends CompositeService {
 
   /**
    * ServerOptionsProcessor.
-   * Process arguments given to SparkServer2 (-sparkconf property=value)
+   * Process arguments given to SparkThriftServer (-sparkconf property=value)
    * Set properties in System properties
    * Create an appropriate response object,
    * which has executor to execute the appropriate command based on the parsed options.
@@ -150,7 +98,7 @@ public class SparkServer2 extends CompositeService {
         }
       } catch (ParseException e) {
         // Error out & exit - we were not able to parse the args successfully
-        System.err.println("Error starting SparkServer2 with given arguments: ");
+        System.err.println("Error starting SparkThriftServer with given arguments: ");
         System.err.println(e.getMessage());
         System.exit(-1);
       }
@@ -179,7 +127,8 @@ public class SparkServer2 extends CompositeService {
   }
 
   /**
-   * The executor interface for running the appropriate SparkServer2 command based on parsed options
+   * The executor interface for running the appropriate
+   * SparkThriftServer command based on parsed options
    */
   interface ServerOptionsExecutor {
     void execute();
@@ -205,18 +154,14 @@ public class SparkServer2 extends CompositeService {
   }
 
   /**
-   * StartOptionExecutor: starts SparkServer2.
+   * StartOptionExecutor: starts SparkThriftServer.
    * This is the default executor, when no option is specified.
    */
   static class StartOptionExecutor implements ServerOptionsExecutor {
     @Override
     public void execute() {
-      try {
-        LOG.error("Don't support starting SparkServer2 here");
-      } catch (Throwable t) {
-        LOG.error("Error starting SparkServer2", t);
-        System.exit(-1);
-      }
+      LOG.error("Don't support starting SparkThriftServer here");
+      System.exit(-1);
     }
   }
 }
