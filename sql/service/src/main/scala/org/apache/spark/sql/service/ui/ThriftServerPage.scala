@@ -28,7 +28,7 @@ import scala.xml.{Node, Unparsed}
 import org.apache.commons.text.StringEscapeUtils
 
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.service.SparkThriftServer2.{ExecutionInfo, SessionInfo}
+import org.apache.spark.sql.service.SparkThriftServer.{ExecutionInfo, SessionInfo}
 import org.apache.spark.sql.service.ui.ToolTips._
 import org.apache.spark.ui._
 import org.apache.spark.ui.UIUtils._

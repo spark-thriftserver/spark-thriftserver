@@ -855,7 +855,7 @@ object ServerMode extends Enumeration {
   val binary, http = Value
 }
 
-abstract class SparkThriftJdbcTest extends SparkThriftServer2Test with JdbcTestHelper {
+abstract class SparkThriftJdbcTest extends SparkThriftServerTest with JdbcTestHelper {
   SparkUtils.classForName(jdbcDriver)
 
   private def jdbcUri = if (mode == ServerMode.http) {
@@ -913,10 +913,10 @@ abstract class SparkThriftJdbcTest extends SparkThriftServer2Test with JdbcTestH
   }
 }
 
-abstract class SparkThriftServer2Test extends SparkFunSuite with BeforeAndAfterAll with Logging {
+abstract class SparkThriftServerTest extends SparkFunSuite with BeforeAndAfterAll with Logging {
   def mode: ServerMode.Value
 
-  private val CLASS_NAME = SparkThriftServer2.getClass.getCanonicalName.stripSuffix("$")
+  private val CLASS_NAME = SparkThriftServer.getClass.getCanonicalName.stripSuffix("$")
   private val LOG_FILE_MARK = s"starting $CLASS_NAME, logging to "
 
   protected val startScript =
@@ -1014,12 +1014,12 @@ abstract class SparkThriftServer2Test extends SparkFunSuite with BeforeAndAfterA
     diagnosisBuffer ++=
       s"""
          |### Attempt $attempt ###
-         |SparkThriftServer2 command line: $command
+         |SparkThriftServer command line: $command
          |Listening port: $port
          |System user: $user
        """.stripMargin.split("\n")
 
-    logWarning(s"Trying to start SparkThriftServer2: port=$port, mode=$mode, attempt=$attempt")
+    logWarning(s"Trying to start SparkThriftServer: port=$port, mode=$mode, attempt=$attempt")
 
     logPath = {
       val lines = SparkUtils.executeAndGetOutput(
@@ -1039,7 +1039,7 @@ abstract class SparkThriftServer2Test extends SparkFunSuite with BeforeAndAfterA
       lines.split("\n").collectFirst {
         case line if line.contains(LOG_FILE_MARK) => new File(line.drop(LOG_FILE_MARK.length))
       }.getOrElse {
-        throw new RuntimeException("Failed to find SparkThriftServer2 log file.")
+        throw new RuntimeException("Failed to find SparkThriftServer log file.")
       }
     }
 
@@ -1103,11 +1103,11 @@ abstract class SparkThriftServer2Test extends SparkFunSuite with BeforeAndAfterA
     logError(
       s"""
          |=====================================
-         |SparkThriftServer2Suite failure output
+         |SparkThriftServerSuite failure output
          |=====================================
          |${diagnosisBuffer.mkString("\n")}
          |=========================================
-         |End SparkThriftServer2Suite failure output
+         |End SparkThriftServerSuite failure output
          |=========================================
        """.stripMargin)
   }
@@ -1131,13 +1131,13 @@ abstract class SparkThriftServer2Test extends SparkFunSuite with BeforeAndAfterA
         throw cause
     }.get
 
-    logInfo(s"SparkThriftServer2 started successfully")
+    logInfo(s"SparkThriftServer started successfully")
   }
 
   override protected def afterAll(): Unit = {
     try {
       stopThriftServer()
-      logInfo("SparkThriftServer2 stopped")
+      logInfo("SparkThriftServer stopped")
     } finally {
       super.afterAll()
     }

@@ -22,7 +22,7 @@ import org.apache.spark.sql.internal.SQLConf;
 
 /**
  * ServiceSessionHookContext.
- * Interface passed to the SparkServer2 session hook execution. This enables
+ * Interface passed to the SparkThriftServer session hook execution. This enables
  * the hook implementation to access session config, user and session handle
  */
 public interface ServiceSessionHookContext {

@@ -30,13 +30,13 @@ import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.AbstractService;
 import org.apache.spark.sql.service.ServiceException;
 import org.apache.spark.sql.service.ServiceUtils;
+import org.apache.spark.sql.service.SparkThriftServer;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.auth.TSetIpAddressProcessor;
 import org.apache.spark.sql.service.cli.*;
 import org.apache.spark.sql.service.cli.session.SessionManager;
 import org.apache.spark.sql.service.internal.ServiceConf;
 import org.apache.spark.sql.service.rpc.thrift.*;
-import org.apache.spark.sql.service.server.SparkServer2;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.server.ServerContext;
@@ -147,7 +147,7 @@ public abstract class ThriftCLIService extends AbstractService
     } catch (UnknownHostException e) {
       throw new ServiceException(e);
     }
-    if (SparkServer2.isHTTPTransportMode(sqlConf)) {
+    if (SparkThriftServer.isHTTPTransportMode(sqlConf)) {
       // HTTP mode
       workerKeepAliveTime =
           (long) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_WORKER_KEEPALIVE_TIME());

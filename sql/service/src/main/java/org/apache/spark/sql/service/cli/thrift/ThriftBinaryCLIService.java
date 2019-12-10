@@ -49,7 +49,7 @@ public class ThriftBinaryCLIService extends ThriftCLIService {
   public void run() {
     try {
       // Server thread pool
-      String threadPoolName = "SparkServer2-Handler-Pool";
+      String threadPoolName = "SparkThriftServer-Handler-Pool";
       ExecutorService executorService = new ThreadPoolExecutor(minWorkerThreads, maxWorkerThreads,
           workerKeepAliveTime, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
           new ThreadFactoryWithName(threadPoolName));
@@ -108,7 +108,7 @@ public class ThriftBinaryCLIService extends ThriftCLIService {
       server.serve();
     } catch (Throwable t) {
       LOG.error(
-          "Error starting SparkServer2: could not start "
+          "Error starting SparkThriftServer: could not start "
               + ThriftBinaryCLIService.class.getSimpleName(), t);
       System.exit(-1);
     }

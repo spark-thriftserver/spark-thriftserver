@@ -22,7 +22,7 @@ import javax.security.sasl.AuthenticationException;
 public interface PasswdAuthenticationProvider {
 
   /**
-   * The authenticate method is called by the SparkServer2 authentication layer
+   * The authenticate method is called by the SparkThriftServer authentication layer
    * to authenticate users for their requests.
    * If a user is to be granted, return nothing/throw nothing.
    * When a user is to be disallowed, throw an appropriate {@link AuthenticationException}.
