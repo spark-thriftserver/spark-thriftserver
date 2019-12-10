@@ -29,7 +29,7 @@ import org.apache.spark.sql.types.DecimalType;
  *
  */
 public enum Type {
-  NULL_TYPE("VOID",
+  NULL_TYPE("NULL",
           java.sql.Types.NULL,
           TTypeId.NULL_TYPE),
   BOOLEAN_TYPE("BOOLEAN",
@@ -62,6 +62,10 @@ public enum Type {
   TIMESTAMP_TYPE("TIMESTAMP",
           java.sql.Types.TIMESTAMP,
           TTypeId.TIMESTAMP_TYPE),
+  // TODO: Map INTERVAL_TYPE to CalendarIntervalType
+  INTERVAL_TYPE("INTERVAL",
+          java.sql.Types.VARCHAR,
+          TTypeId.STRING_TYPE),
   BINARY_TYPE("BINARY",
           java.sql.Types.BINARY,
           TTypeId.BINARY_TYPE),

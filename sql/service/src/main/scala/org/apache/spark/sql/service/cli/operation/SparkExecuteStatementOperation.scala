@@ -66,7 +66,7 @@ private[service] class SparkExecuteStatementOperation(
 
   private lazy val resultSchema: TableSchema = {
     if (result == null || result.schema.isEmpty) {
-      new TableSchema(Arrays.asList(new FieldSchema("Result", "string", "")))
+      new TableSchema(StructType(StructField("Result", StringType) :: Nil))
     } else {
       logInfo(s"Result Schema: ${result.schema}")
       SparkExecuteStatementOperation.getTableSchema(result.schema)
@@ -376,14 +376,6 @@ private[service] class SparkExecuteStatementOperation(
 
 object SparkExecuteStatementOperation {
   def getTableSchema(structType: StructType): TableSchema = {
-    val schema = structType.map { field =>
-      val attrTypeString = field.dataType match {
-        case NullType => "void"
-        case CalendarIntervalType => StringType.catalogString
-        case other => other.catalogString
-      }
-      new FieldSchema(field.name, attrTypeString, field.getComment.getOrElse(""))
-    }
-    new TableSchema(schema.asJava)
+    new TableSchema(structType)
   }
 }
