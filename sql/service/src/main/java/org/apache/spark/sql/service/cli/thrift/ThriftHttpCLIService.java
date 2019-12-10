@@ -64,7 +64,7 @@ public class ThriftHttpCLIService extends ThriftCLIService {
     try {
       // Server thread pool
       // Start with minWorkerThreads, expand till maxWorkerThreads and reject subsequent requests
-      String threadPoolName = "SparkThriftServer2-HttpHandler-Pool";
+      String threadPoolName = "SparkThriftServer-HttpHandler-Pool";
       ThreadPoolExecutor executorService =
           new ThreadPoolExecutor(minWorkerThreads, maxWorkerThreads,
               workerKeepAliveTime, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
@@ -112,7 +112,7 @@ public class ThriftHttpCLIService extends ThriftCLIService {
           httpServer,
           null,
           // Call this full constructor to set this, which forces daemon threads:
-          new ScheduledExecutorScheduler("SparkThriftServer2-HttpHandler-JettyScheduler", true),
+          new ScheduledExecutorScheduler("SparkThriftServer-HttpHandler-JettyScheduler", true),
           null,
           -1,
           -1,
@@ -132,7 +132,7 @@ public class ThriftHttpCLIService extends ThriftCLIService {
       sparkAuthFactory = new SparkAuthFactory(sqlContext);
       TProcessor processor = new TCLIService.Processor<Iface>(this);
       TProtocolFactory protocolFactory = new TBinaryProtocol.Factory();
-      // Set during the init phase of SparkThriftServer2 if auth mode is kerberos
+      // Set during the init phase of SparkThriftServer if auth mode is kerberos
       // UGI for the hive/_HOST (kerberos) principal
       UserGroupInformation serviceUGI = cliService.getServiceUGI();
       // UGI for the http/_HOST (SPNego) principal
@@ -159,7 +159,7 @@ public class ThriftHttpCLIService extends ThriftCLIService {
       httpServer.join();
     } catch (Throwable t) {
       LOG.error(
-          "Error starting SparkThriftServer2: could not start "
+          "Error starting SparkThriftServer: could not start "
               + ThriftHttpCLIService.class.getSimpleName(), t);
       System.exit(-1);
     }

@@ -39,7 +39,7 @@ public class ServerStartUpUtil {
 
   public static void process(String[] args) {
     try {
-      ServerOptionsProcessor oproc = new ServerOptionsProcessor("sparkserver2");
+      ServerOptionsProcessor oproc = new ServerOptionsProcessor("sparkserver");
       ServerOptionsProcessorResponse oprocResponse = oproc.parse(args);
 
       // Log debug message from "oproc" after log4j initialize properly
@@ -55,7 +55,7 @@ public class ServerStartUpUtil {
 
   /**
    * ServerOptionsProcessor.
-   * Process arguments given to SparkThriftServer2 (-sparkconf property=value)
+   * Process arguments given to SparkThriftServer (-sparkconf property=value)
    * Set properties in System properties
    * Create an appropriate response object,
    * which has executor to execute the appropriate command based on the parsed options.
@@ -98,7 +98,7 @@ public class ServerStartUpUtil {
         }
       } catch (ParseException e) {
         // Error out & exit - we were not able to parse the args successfully
-        System.err.println("Error starting SparkThriftServer2 with given arguments: ");
+        System.err.println("Error starting SparkThriftServer with given arguments: ");
         System.err.println(e.getMessage());
         System.exit(-1);
       }
@@ -128,7 +128,7 @@ public class ServerStartUpUtil {
 
   /**
    * The executor interface for running the appropriate
-   * SparkThriftServer2 command based on parsed options
+   * SparkThriftServer command based on parsed options
    */
   interface ServerOptionsExecutor {
     void execute();
@@ -154,13 +154,13 @@ public class ServerStartUpUtil {
   }
 
   /**
-   * StartOptionExecutor: starts SparkThriftServer2.
+   * StartOptionExecutor: starts SparkThriftServer.
    * This is the default executor, when no option is specified.
    */
   static class StartOptionExecutor implements ServerOptionsExecutor {
     @Override
     public void execute() {
-      LOG.error("Don't support starting SparkThriftServer2 here");
+      LOG.error("Don't support starting SparkThriftServer here");
       System.exit(-1);
     }
   }

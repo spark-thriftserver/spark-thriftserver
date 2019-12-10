@@ -37,25 +37,25 @@ import org.apache.spark.sql.service.ui.ThriftServerTab
 import org.apache.spark.util.{ShutdownHookManager, Utils}
 
 /**
- * The main entry point for the Spark SQL port of SparkThriftServer2.
- * Starts up a `SparkSQLContext` and a `SparkThriftServer2` thrift server.
+ * The main entry point for the Spark SQL port of SparkThriftServer.
+ * Starts up a `SparkSQLContext` and a `SparkThriftServer` thrift server.
  */
-object SparkThriftServer2 extends Logging {
+object SparkThriftServer extends Logging {
   var uiTab: Option[ThriftServerTab] = None
-  var listener: SparkThriftServer2Listener = _
+  var listener: SparkThriftServerListener = _
 
   /**
    * :: DeveloperApi ::
    * Starts a new thrift server with the given context.
    */
   @DeveloperApi
-  def startWithContext(sqlContext: SQLContext): SparkThriftServer2 = {
+  def startWithContext(sqlContext: SQLContext): SparkThriftServer = {
     SparkSQLEnv.setSQLContext(sqlContext)
-    val server = new SparkThriftServer2(sqlContext)
+    val server = new SparkThriftServer(sqlContext)
 
     server.init(sqlContext.conf)
     server.start()
-    listener = new SparkThriftServer2Listener(server, sqlContext.conf)
+    listener = new SparkThriftServerListener(server, sqlContext.conf)
     sqlContext.sparkContext.addSparkListener(listener)
     uiTab = if (sqlContext.sparkContext.getConf.get(UI_ENABLED)) {
       Some(new ThriftServerTab(sqlContext.sparkContext))
@@ -86,7 +86,7 @@ object SparkThriftServer2 extends Logging {
     }
 
     Utils.initDaemon(log)
-    val optionsProcessor = new ServerStartUpUtil.ServerOptionsProcessor("SparkThriftServer2")
+    val optionsProcessor = new ServerStartUpUtil.ServerOptionsProcessor("SparkThriftServer")
     optionsProcessor.parse(args)
 
     logInfo("Starting SparkContext")
@@ -99,26 +99,26 @@ object SparkThriftServer2 extends Logging {
     }
 
     try {
-      val server = new SparkThriftServer2(SparkSQLEnv.sqlContext)
+      val server = new SparkThriftServer(SparkSQLEnv.sqlContext)
       server.init(SparkSQLEnv.sqlContext.conf)
       server.start()
-      logInfo("SparkThriftServer2 started")
-      listener = new SparkThriftServer2Listener(server, SparkSQLEnv.sqlContext.conf)
+      logInfo("SparkThriftServer started")
+      listener = new SparkThriftServerListener(server, SparkSQLEnv.sqlContext.conf)
       SparkSQLEnv.sparkContext.addSparkListener(listener)
       uiTab = if (SparkSQLEnv.sparkContext.getConf.get(UI_ENABLED)) {
         Some(new ThriftServerTab(SparkSQLEnv.sparkContext))
       } else {
         None
       }
-      // If application was killed before SparkThriftServer2 start successfully then SparkSubmit
+      // If application was killed before SparkThriftServer start successfully then SparkSubmit
       // process can not exit, so check whether if SparkContext was stopped.
       if (SparkSQLEnv.sparkContext.stopped.get()) {
-        logError("SparkContext has stopped even if SparkThriftServer2 has started, so exit")
+        logError("SparkContext has stopped even if SparkThriftServer has started, so exit")
         System.exit(-1)
       }
     } catch {
       case e: Exception =>
-        logError("Error starting SparkThriftServer2", e)
+        logError("Error starting SparkThriftServer", e)
         System.exit(-1)
     }
   }
@@ -167,10 +167,10 @@ object SparkThriftServer2 extends Logging {
 
 
   /**
-   * An inner sparkListener called in sc.stop to clean up the SparkThriftServer2
+   * An inner sparkListener called in sc.stop to clean up the SparkThriftServer
    */
-  class SparkThriftServer2Listener(
-      val server: SparkThriftServer2,
+  class SparkThriftServerListener(
+      val server: SparkThriftServer,
       val conf: SQLConf) extends SparkListener {
 
     override def onApplicationEnd(applicationEnd: SparkListenerApplicationEnd): Unit = {
@@ -298,10 +298,10 @@ object SparkThriftServer2 extends Logging {
   }
 }
 
-private[spark] class SparkThriftServer2(sqlContext: SQLContext)
-  extends CompositeService(classOf[SparkThriftServer2].getCanonicalName) with Logging {
+private[spark] class SparkThriftServer(sqlContext: SQLContext)
+  extends CompositeService(classOf[SparkThriftServer].getCanonicalName) with Logging {
 
-  import SparkThriftServer2._
+  import SparkThriftServer._
 
   // state is tracked internally so that the server only attempts to shut down if it successfully
   // started, and then once only.
@@ -329,7 +329,7 @@ private[spark] class SparkThriftServer2(sqlContext: SQLContext)
 
   override def stop(): Unit = {
     if (started.getAndSet(false)) {
-      logInfo("Shutting down SparkThriftServer2")
+      logInfo("Shutting down SparkThriftServer")
       super.stop()
     }
   }

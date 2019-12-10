@@ -561,7 +561,7 @@ struct TOperationHandle {
 // Open a session (connection) on the server against
 // which operations may be executed.
 struct TOpenSessionReq {
-  // The version of the SparkThriftServer2 protocol that the client is using.
+  // The version of the SparkThriftServer protocol that the client is using.
   1: required TProtocolVersion client_protocol = TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V10
 
   // Username and password for authentication.

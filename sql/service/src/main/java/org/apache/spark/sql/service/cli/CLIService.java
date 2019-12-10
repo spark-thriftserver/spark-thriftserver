@@ -33,7 +33,7 @@ import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.CompositeService;
 import org.apache.spark.sql.service.ServiceException;
-import org.apache.spark.sql.service.SparkThriftServer2;
+import org.apache.spark.sql.service.SparkThriftServer;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.cli.operation.Operation;
 import org.apache.spark.sql.service.cli.session.ServiceSession;
@@ -64,19 +64,19 @@ public class CLIService extends CompositeService implements ICLIService {
   private SessionManager sessionManager;
   private UserGroupInformation serviceUGI;
   private UserGroupInformation httpUGI;
-  // The SparkThriftServer2 instance running this service
-  private final SparkThriftServer2 sparkServer2;
+  // The SparkThriftServer instance running this service
+  private final SparkThriftServer sparkServer;
 
-  public CLIService(SparkThriftServer2 sparkServer2, SQLContext sqlContext) {
+  public CLIService(SparkThriftServer sparkServer, SQLContext sqlContext) {
     super(CLIService.class.getSimpleName());
-    this.sparkServer2 = sparkServer2;
+    this.sparkServer = sparkServer;
     this.sqlContext = sqlContext;
   }
 
   @Override
   public synchronized void init(SQLConf sqlConf) {
     this.sqlConf = sqlConf;
-    sessionManager = new SessionManager(sparkServer2, sqlContext);
+    sessionManager = new SessionManager(sparkServer, sqlContext);
     addService(sessionManager);
     //  If the hadoop cluster is secure, do a kerberos login for the service from the keytab
     if (UserGroupInformation.isSecurityEnabled()) {

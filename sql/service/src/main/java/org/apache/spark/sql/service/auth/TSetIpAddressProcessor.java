@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * This class is responsible for setting the ipAddress for operations
- * executed via SparkThriftServer2.
+ * executed via SparkThriftServer.
  *
  * - IP address is only set for operations that calls listeners with hookContext
  * - IP address is only set if the underlying transport mechanism is socket

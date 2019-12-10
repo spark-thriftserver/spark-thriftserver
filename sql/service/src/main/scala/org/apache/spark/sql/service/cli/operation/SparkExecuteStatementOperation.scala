@@ -34,7 +34,7 @@ import org.apache.spark.sql.{DataFrame, Row => SparkRow, SQLContext}
 import org.apache.spark.sql.execution.HiveResult
 import org.apache.spark.sql.execution.command.SetCommand
 import org.apache.spark.sql.internal.SQLConf
-import org.apache.spark.sql.service.SparkThriftServer2
+import org.apache.spark.sql.service.SparkThriftServer
 import org.apache.spark.sql.service.cli._
 import org.apache.spark.sql.service.cli.session.ServiceSession
 import org.apache.spark.sql.service.utils.Utils
@@ -77,7 +77,7 @@ private[service] class SparkExecuteStatementOperation(
     // RDDs will be cleaned automatically upon garbage collection.
     logInfo(s"Close statement with $statementId")
     cleanup(OperationState.CLOSED)
-    SparkThriftServer2.listener.onOperationClosed(statementId)
+    SparkThriftServer.listener.onOperationClosed(statementId)
   }
 
   def addNonNullColumnValue(from: SparkRow, to: ArrayBuffer[Any], ordinal: Int): Unit = {
@@ -195,7 +195,7 @@ private[service] class SparkExecuteStatementOperation(
     setState(OperationState.PENDING)
     statementId = UUID.randomUUID().toString
     logInfo(s"Submitting query '$statement' with $statementId")
-    SparkThriftServer2.listener.onStatementStart(
+    SparkThriftServer.listener.onStatementStart(
       statementId,
       parentSession.getSessionHandle.getSessionId.toString,
       statement,
@@ -245,14 +245,14 @@ private[service] class SparkExecuteStatementOperation(
         case rejected: RejectedExecutionException =>
           logError("Error submitting query in background, query rejected", rejected)
           setState(OperationState.ERROR)
-          SparkThriftServer2.listener.onStatementError(
+          SparkThriftServer.listener.onStatementError(
             statementId, rejected.getMessage, SparkUtils.exceptionString(rejected))
           throw new ServiceSQLException("The background threadpool cannot accept" +
             " new task for execution, please retry the operation", rejected)
         case NonFatal(e) =>
           logError(s"Error executing query in background", e)
           setState(OperationState.ERROR)
-          SparkThriftServer2.listener.onStatementError(
+          SparkThriftServer.listener.onStatementError(
             statementId, e.getMessage, SparkUtils.exceptionString(e))
           throw new ServiceSQLException(e)
       }
@@ -284,7 +284,7 @@ private[service] class SparkExecuteStatementOperation(
             "in this session.")
         case _ =>
       }
-      SparkThriftServer2.listener.onStatementParsed(statementId, result.queryExecution.toString())
+      SparkThriftServer.listener.onStatementParsed(statementId, result.queryExecution.toString())
       iter = {
         if (sqlContext.getConf(SQLConf.THRIFTSERVER_INCREMENTAL_COLLECT.key).toBoolean) {
           resultList = None
@@ -315,12 +315,12 @@ private[service] class SparkExecuteStatementOperation(
           setState(OperationState.ERROR)
           e match {
             case hiveException: ServiceSQLException =>
-              SparkThriftServer2.listener.onStatementError(
+              SparkThriftServer.listener.onStatementError(
                 statementId, hiveException.getMessage, SparkUtils.exceptionString(hiveException))
               throw hiveException
             case _ =>
               val root = ExceptionUtils.getRootCause(e)
-              SparkThriftServer2.listener.onStatementError(
+              SparkThriftServer.listener.onStatementError(
                 statementId, root.getMessage, SparkUtils.exceptionString(root))
               throw new ServiceSQLException("Error running query: " + root.toString, root)
           }
@@ -329,7 +329,7 @@ private[service] class SparkExecuteStatementOperation(
       synchronized {
         if (!getStatus.getState.isTerminal) {
           setState(OperationState.FINISHED)
-          SparkThriftServer2.listener.onStatementFinish(statementId)
+          SparkThriftServer.listener.onStatementFinish(statementId)
         }
       }
       sqlContext.sparkContext.clearJobGroup()
@@ -341,7 +341,7 @@ private[service] class SparkExecuteStatementOperation(
       if (!getStatus.getState.isTerminal) {
         logInfo(s"Cancel query with $statementId")
         cleanup(OperationState.CANCELED)
-        SparkThriftServer2.listener.onStatementCanceled(statementId)
+        SparkThriftServer.listener.onStatementCanceled(statementId)
       }
     }
   }

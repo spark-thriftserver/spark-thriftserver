@@ -81,7 +81,7 @@ public class SparkAuthFactory {
   private SparkDelegationTokenManager delegationTokenManager = null;
 
   public static final String SS2_PROXY_USER = "spark.sql.thriftserver.proxy.user";
-  public static final String SS2_CLIENT_TOKEN = "sparkserver2ClientToken";
+  public static final String SS2_CLIENT_TOKEN = "sparkserverClientToken";
 
   private static Field keytabFile = null;
   private static Method getKeytab = null;
@@ -174,7 +174,7 @@ public class SparkAuthFactory {
   }
 
   /**
-   * Returns the thrift processor factory for SparkThriftServer2 running in binary mode
+   * Returns the thrift processor factory for SparkThriftServer running in binary mode
    * @param service
    * @return
    * @throws LoginException
@@ -204,7 +204,7 @@ public class SparkAuthFactory {
     String principal = sqlConf.getConf(ServiceConf.THRIFTSERVER_KERBEROS_PRINCIPAL());
     String keyTabFile = sqlConf.getConf(ServiceConf.THRIFTSERVER_KERBEROS_KEYTAB());
     if (principal.isEmpty() || keyTabFile.isEmpty()) {
-      throw new IOException("SparkThriftServer2 Kerberos principal or keytab " +
+      throw new IOException("SparkThriftServer Kerberos principal or keytab " +
           "is not correctly configured");
     } else {
       UserGroupInformation.loginUserFromKeytab(
@@ -218,7 +218,7 @@ public class SparkAuthFactory {
     String principal = sqlConf.getConf(ServiceConf.THRIFTSERVER_SPNEGO_PRINCIPAL());
     String keyTabFile = sqlConf.getConf(ServiceConf.THRIFTSERVER_SPNEGO_KEYTAB());
     if (principal.isEmpty() || keyTabFile.isEmpty()) {
-      throw new IOException("SparkThriftServer2 SPNEGO" +
+      throw new IOException("SparkThriftServer SPNEGO" +
           " principal or keytab is not correctly configured");
     } else {
       return UserGroupInformation.loginUserFromKeytabAndReturnUGI(
