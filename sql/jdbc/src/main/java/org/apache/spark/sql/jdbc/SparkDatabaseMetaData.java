@@ -541,7 +541,7 @@ public class SparkDatabaseMetaData implements DatabaseMetaData {
   public ResultSet getProcedureColumns(String catalog, String schemaPattern,
       String procedureNamePattern, String columnNamePattern)
       throws SQLException {
-    // Hive doesn't support primary keys
+    // Spark doesn't support primary keys
     // using local schema with empty resultset
     return new SparkQueryResultSet.Builder(connection).setClient(client).setEmptyResultSet(true)
         .setSchema(
@@ -562,7 +562,7 @@ public class SparkDatabaseMetaData implements DatabaseMetaData {
 
   public ResultSet getProcedures(String catalog, String schemaPattern,
       String procedureNamePattern) throws SQLException {
-    // Hive doesn't support primary keys
+    // Spark doesn't support primary keys
     // using local schema with empty resultset
     return new SparkQueryResultSet.Builder(connection).setClient(client).setEmptyResultSet(true)
         .setSchema(
@@ -717,21 +717,21 @@ public class SparkDatabaseMetaData implements DatabaseMetaData {
   }
 
   /**
-   * Translate hive table types into jdbc table types.
-   * @param hivetabletype
+   * Translate spark table types into jdbc table types.
+   * @param sparktabletype
    * @return the type of the table
    */
-  public static String toJdbcTableType(String hivetabletype) {
-    if (hivetabletype==null) {
+  public static String toJdbcTableType(String sparktabletype) {
+    if (sparktabletype==null) {
       return null;
-    } else if (hivetabletype.equals(CatalogTableType.MANAGED().name())) {
+    } else if (sparktabletype.equals(CatalogTableType.MANAGED().name())) {
       return "TABLE";
-    } else if (hivetabletype.equals(CatalogTableType.VIEW().name())) {
+    } else if (sparktabletype.equals(CatalogTableType.VIEW().name())) {
       return "VIEW";
-    } else if (hivetabletype.equals(CatalogTableType.EXTERNAL().name())) {
+    } else if (sparktabletype.equals(CatalogTableType.EXTERNAL().name())) {
       return "EXTERNAL TABLE";
     } else {
-      return hivetabletype;
+      return sparktabletype;
     }
   }
 

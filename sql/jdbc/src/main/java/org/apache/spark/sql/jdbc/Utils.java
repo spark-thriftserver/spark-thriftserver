@@ -50,19 +50,19 @@ public class Utils {
   static final String DEFAULT_PORT = "10000";
 
   /**
-   * Hive's default database name
+   * Spark's default database name
    */
   static final String DEFAULT_DATABASE = "default";
 
   private static final String URI_JDBC_PREFIX = "jdbc:";
 
-  private static final String URI_HIVE_PREFIX = "hive2:";
+  private static final String URI_SPARK_PREFIX = "spark:";
 
   // This value is set to true by the setServiceUnavailableRetryStrategy()
   // when the server returns 401
-  static final String HIVE_SERVER2_RETRY_KEY = "spark.sql.thriftserver.retryserver";
-  static final String HIVE_SERVER2_RETRY_TRUE = "true";
-  static final String HIVE_SERVER2_RETRY_FALSE = "false";
+  static final String SPARK_SERVER2_RETRY_KEY = "spark.sql.thriftserver.retryserver";
+  static final String SPARK_SERVER2_RETRY_TRUE = "true";
+  static final String SPARK_SERVER2_RETRY_FALSE = "false";
 
   public static class JdbcConnectionParams {
     // Note on client side parameter naming convention:
@@ -93,12 +93,12 @@ public class Utils {
     public static final String USE_SSL = "ssl";
     public static final String SSL_TRUST_STORE = "sslTrustStore";
     public static final String SSL_TRUST_STORE_PASSWORD = "trustStorePassword";
-    // We're deprecating the name and placement of this in the parsed map (from hive conf vars to
-    // hive session vars).
+    // We're deprecating the name and placement of this in the parsed map (from spark conf vars to
+    // spark session vars).
     static final String TRANSPORT_MODE_DEPRECATED = "spark.sql.thriftserver.transport.mode";
     public static final String TRANSPORT_MODE = "transportMode";
-    // We're deprecating the name and placement of this in the parsed map (from hive conf vars to
-    // hive session vars).
+    // We're deprecating the name and placement of this in the parsed map (from spark conf vars to
+    // spark session vars).
     static final String HTTP_PATH_DEPRECATED = "spark.sql.thriftserver.thrift.http.path";
     public static final String HTTP_PATH = "httpPath";
     public static final String SERVICE_DISCOVERY_MODE = "serviceDiscoveryMode";
@@ -111,7 +111,7 @@ public class Utils {
     static final String ZOOKEEPER_NAMESPACE = "zooKeeperNamespace";
     // Default namespace value on ZooKeeper.
     // This value is used if the param "zooKeeperNamespace" is not specified in the JDBC Uri.
-    static final String ZOOKEEPER_DEFAULT_NAMESPACE = "hiveserver2";
+    static final String ZOOKEEPER_DEFAULT_NAMESPACE = "sparkserver2";
     static final String COOKIE_AUTH = "cookieAuth";
     static final String COOKIE_AUTH_FALSE = "false";
     static final String COOKIE_NAME = "cookieName";
@@ -138,14 +138,14 @@ public class Utils {
     // Currently supports JKS keystore format
     static final String SSL_TRUST_STORE_TYPE = "JKS";
 
-    private static final String SPARK_VAR_PREFIX = "sparkvar:";
+    private static final String SPARK_VAR_PREFIX = "spark:";
     private static final String SPARK_CONF_PREFIX = "sparkconf:";
     private String host = null;
     private int port = 0;
     private String jdbcUriString;
     private String dbName = DEFAULT_DATABASE;
-    private Map<String,String> hiveConfs = new LinkedHashMap<String,String>();
-    private Map<String,String> hiveVars = new LinkedHashMap<String,String>();
+    private Map<String,String> sparkConfs = new LinkedHashMap<String,String>();
+    private Map<String,String> sparkVars = new LinkedHashMap<String,String>();
     private Map<String,String> sessionVars = new LinkedHashMap<String,String>();
     private boolean isEmbeddedMode = false;
     private String[] authorityList;
@@ -172,12 +172,12 @@ public class Utils {
       return dbName;
     }
 
-    public Map<String, String> getHiveConfs() {
-      return hiveConfs;
+    public Map<String, String> getSparkConfs() {
+      return sparkConfs;
     }
 
-    public Map<String, String> getHiveVars() {
-      return hiveVars;
+    public Map<String, String> getSparkVars() {
+      return sparkVars;
     }
 
     public boolean isEmbeddedMode() {
@@ -220,12 +220,12 @@ public class Utils {
       this.dbName = dbName;
     }
 
-    public void setHiveConfs(Map<String, String> hiveConfs) {
-      this.hiveConfs = hiveConfs;
+    public void setSparkConfs(Map<String, String> sparkConfs) {
+      this.sparkConfs = sparkConfs;
     }
 
-    public void setHiveVars(Map<String, String> hiveVars) {
-      this.hiveVars = hiveVars;
+    public void setSparkVars(Map<String, String> sparkVars) {
+      this.sparkVars = sparkVars;
     }
 
     public void setEmbeddedMode(boolean embeddedMode) {
@@ -275,7 +275,7 @@ public class Utils {
   /**
    * Parse JDBC connection URL
    * The new format of the URL is:
-   * jdbc:spark://<host1>:<port1>,<host2>:<port2>/dbName;sess_var_list?hive_conf_list#hive_var_list
+   * jdbc:spark://<host1>:<port1>,<host2>:<port2>/dbName;sess_var_list?conf_list#var_list
    * where the optional sess, conf and var lists are semicolon separated <key>=<val> pairs.
    * For utilizing dynamic service discovery with SparkThriftServer multiple comma separated
    * host:port pairs can be specified as shown above.
@@ -283,11 +283,11 @@ public class Utils {
    * Currently, dynamic service discovery using ZooKeeper is supported, in which case the host:port
    * pairs represent a ZooKeeper ensemble.
    *
-   * As before, if the host/port is not specified, it the driver runs an embedded hive.
+   * As before, if the host/port is not specified, it the driver runs an embedded spark.
    * examples -
-   *  jdbc:spark://ubuntu:11000/db2?hive.cli.conf.printheader=true;
-   *      hive.exec.mode.local.auto.inputbytes.max=9999#stab=salesTable;icol=customerID
-   *  jdbc:spark://?hive.cli.conf.printheader=true;hive.exec.mode.local.auto.inputbytes.max=9999
+   *  jdbc:spark://ubuntu:11000/db2?spark.cli.conf.printheader=true;
+   *      spark.exec.mode.local.auto.inputbytes.max=9999#stab=salesTable;icol=customerID
+   *  jdbc:spark://?spark.cli.conf.printheader=true;spark.exec.mode.local.auto.inputbytes.max=9999
    *      #stab=salesTable;icol=customerID
    *  jdbc:spark://ubuntu:11000/db2;user=foo;password=bar
    *
@@ -324,7 +324,7 @@ public class Utils {
     String suppliedAuthorities = getAuthorities(uri, connParams);
     if ((suppliedAuthorities == null) || (suppliedAuthorities.isEmpty())) {
       // Given uri of the form:
-      // jdbc:spark:///dbName;sess_var_list?hive_conf_list#hive_var_list
+      // jdbc:spark:///dbName;sess_var_list?spark_conf_list#spark_var_list
       connParams.setEmbeddedMode(true);
     } else {
       LOG.info("Supplied authorities: " + suppliedAuthorities);
@@ -368,21 +368,21 @@ public class Utils {
       }
     }
 
-    // parse hive conf settings
+    // parse spark conf settings
     String confStr = jdbcURI.getQuery();
     if (confStr != null) {
       Matcher confMatcher = pattern.matcher(confStr);
       while (confMatcher.find()) {
-        connParams.getHiveConfs().put(confMatcher.group(1), confMatcher.group(2));
+        connParams.getSparkConfs().put(confMatcher.group(1), confMatcher.group(2));
       }
     }
 
-    // parse hive var settings
+    // parse spark var settings
     String varStr = jdbcURI.getFragment();
     if (varStr != null) {
       Matcher varMatcher = pattern.matcher(varStr);
       while (varMatcher.find()) {
-        connParams.getHiveVars().put(varMatcher.group(1), varMatcher.group(2));
+        connParams.getSparkVars().put(varMatcher.group(1), varMatcher.group(2));
       }
     }
 
@@ -391,10 +391,10 @@ public class Utils {
       if ((kv.getKey() instanceof String)) {
         String key = (String) kv.getKey();
         if (key.startsWith(JdbcConnectionParams.SPARK_VAR_PREFIX)) {
-          connParams.getHiveVars().put(
+          connParams.getSparkVars().put(
               key.substring(JdbcConnectionParams.SPARK_VAR_PREFIX.length()), info.getProperty(key));
         } else if (key.startsWith(JdbcConnectionParams.SPARK_CONF_PREFIX)) {
-          connParams.getHiveConfs().put(
+          connParams.getSparkConfs().put(
               key.substring(JdbcConnectionParams.SPARK_CONF_PREFIX.length()),
                   info.getProperty(key));
         }
@@ -428,13 +428,13 @@ public class Utils {
 
     // Handle deprecation of TRANSPORT_MODE_DEPRECATED
     newUsage = usageUrlBase + JdbcConnectionParams.TRANSPORT_MODE + "=<transport_mode_value>";
-    handleParamDeprecation(connParams.getHiveConfs(), connParams.getSessionVars(),
+    handleParamDeprecation(connParams.getSparkConfs(), connParams.getSessionVars(),
         JdbcConnectionParams.TRANSPORT_MODE_DEPRECATED, JdbcConnectionParams.TRANSPORT_MODE,
         newUsage);
 
     // Handle deprecation of HTTP_PATH_DEPRECATED
     newUsage = usageUrlBase + JdbcConnectionParams.HTTP_PATH + "=<http_path_value>";
-    handleParamDeprecation(connParams.getHiveConfs(), connParams.getSessionVars(),
+    handleParamDeprecation(connParams.getSparkConfs(), connParams.getSessionVars(),
         JdbcConnectionParams.HTTP_PATH_DEPRECATED, JdbcConnectionParams.HTTP_PATH, newUsage);
     // Extract host, port
     if (connParams.isEmbeddedMode()) {
@@ -520,11 +520,11 @@ public class Utils {
     String serviceDiscoveryMode =
         connParams.getSessionVars().get(JdbcConnectionParams.SERVICE_DISCOVERY_MODE);
     String authority = connParams.getAuthorityList()[0];
-    URI jdbcURI = URI.create(URI_HIVE_PREFIX + "//" + authority);
+    URI jdbcURI = URI.create(URI_SPARK_PREFIX + "//" + authority);
     // Check to prevent unintentional use of embedded mode. A missing "/"
     // to separate the 'path' portion of URI can result in this.
     // The missing "/" common typo while using secure mode, eg of such url -
-    // jdbc:spark://localhost:10000;principal=hive/HiveServer2Host@YOUR-REALM.COM
+    // jdbc:spark://localhost:10000;principal=spark/SparkServer2Host@YOUR-REALM.COM
     if (jdbcURI.getAuthority() != null) {
       String host = jdbcURI.getHost();
       int port = jdbcURI.getPort();
