@@ -376,6 +376,12 @@ private[service] class SparkExecuteStatementOperation(
 
 object SparkExecuteStatementOperation {
   def getTableSchema(structType: StructType): TableSchema = {
-    new TableSchema(structType)
+    val schema = structType.map { field =>
+      field.dataType match {
+        case CalendarIntervalType => field.copy(dataType = StringType)
+        case _ => field
+      }
+    }
+    new TableSchema(StructType(schema))
   }
 }
