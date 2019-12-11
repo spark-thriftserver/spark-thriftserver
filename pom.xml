@@ -2983,7 +2983,6 @@
       <modules>
         <module>sql/service</module>
         <module>sql/jdbc</module>
-        <module>sql/spark-service-minikdc</module>
       </modules>
     </profile>
 
