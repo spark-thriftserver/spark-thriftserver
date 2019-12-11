@@ -37,7 +37,16 @@ import org.apache.spark.sql.types._
 
 /**
  * Re-run all the tests in SQLQueryTestSuite via Thrift Server.
- * Note that this TestSuite does not support maven.
+ *
+ * To run the entire test suite:
+ * {{{
+ *   build/sbt "hive-thriftserver/test-only *ThriftServerQueryTestSuite" -Phive-thriftserver
+ * }}}
+ *
+ * This test suite won't generate golden files. To re-generate golden files for entire suite, run:
+ * {{{
+ *   SPARK_GENERATE_GOLDEN_FILES=1 build/sbt "sql/test-only *SQLQueryTestSuite"
+ * }}}
  *
  * TODO:
  *   1. Support UDF testing.
@@ -46,7 +55,7 @@ import org.apache.spark.sql.types._
  */
 class ThriftServerQueryTestSuite extends SQLQueryTestSuite with JdbcTestHelper {
 
-  private var sparkServer2: SparkThriftServer2 = _
+  private var sparkServer: SparkThriftServer = _
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -63,17 +72,18 @@ class ThriftServerQueryTestSuite extends SQLQueryTestSuite with JdbcTestHelper {
       case cause: Throwable =>
         throw cause
     }.get
-    logInfo("SparkThriftServer2 started successfully")
+    logInfo("SparkThriftServer started successfully")
   }
 
   override def afterAll(): Unit = {
     try {
-      sparkServer2.stop()
+      sparkServer.stop()
     } finally {
       super.afterAll()
     }
   }
 
+  // We only test this test suite with the default configuration to reduce test time.
   override val isTestWithConfigSets = false
 
   /** List of test cases to ignore, in lower cases. */
@@ -282,16 +292,16 @@ class ThriftServerQueryTestSuite extends SQLQueryTestSuite with JdbcTestHelper {
   }
 
   private def startThriftServer(port: Int, attempt: Int): Unit = {
-    logInfo(s"Trying to start SparkThriftServer2: port=$port, attempt=$attempt")
+    logInfo(s"Trying to start SparkThriftServer: port=$port, attempt=$attempt")
     val sqlContext = spark.newSession().sqlContext
     sqlContext.setConf(ServiceConf.THRIFTSERVER_THRIFT_PORT, port)
-    sparkServer2 = SparkThriftServer2.startWithContext(sqlContext)
+    sparkServer = SparkThriftServer.startWithContext(sqlContext)
   }
 
   private def withJdbcStatement(fs: (Statement => Unit)*): Unit = {
     val user = System.getProperty("user.name")
 
-    val serverPort = sparkServer2.getSqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_PORT)
+    val serverPort = sparkServer.getSqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_PORT)
     val connections = fs.map { _ =>
       DriverManager.getConnection(s"${jdbcUrlPrefix}localhost:$serverPort", user, "") }
     val statements = connections.map(_.createStatement())

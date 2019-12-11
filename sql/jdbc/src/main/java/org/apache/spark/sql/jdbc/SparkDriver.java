@@ -59,12 +59,12 @@ public class SparkDriver implements Driver {
   private static final String DBNAME_PROPERTY_KEY = "DBNAME";
 
   /**
-   * Property key for the Hive Server2 host.
+   * Property key for the Spark Server2 host.
    */
   private static final String HOST_PROPERTY_KEY = "HOST";
 
   /**
-   * Property key for the Hive Server2 port.
+   * Property key for the Spark Server2 port.
    */
   private static final String PORT_PROPERTY_KEY = "PORT";
 
@@ -83,10 +83,10 @@ public class SparkDriver implements Driver {
   /**
    * Checks whether a given url is in a valid format.
    *
-   * The current uri format is: jdbc:hive://[host[:port]]
+   * The current uri format is: jdbc:spark://[host[:port]]
    *
-   * jdbc:hive:// - run in embedded mode jdbc:hive://localhost - connect to
-   * localhost default port (10000) jdbc:hive://localhost:5050 - connect to
+   * jdbc:spark:// - run in embedded mode jdbc:spark://localhost - connect to
+   * localhost default port (10000) jdbc:spark://localhost:5050 - connect to
    * localhost port 5050
    *
    * TODO: - write a better regex. - decide on uri format
@@ -189,12 +189,12 @@ public class SparkDriver implements Driver {
     DriverPropertyInfo hostProp = new DriverPropertyInfo(HOST_PROPERTY_KEY,
         info.getProperty(HOST_PROPERTY_KEY, ""));
     hostProp.required = false;
-    hostProp.description = "Hostname of Hive Server2";
+    hostProp.description = "Hostname of Spark Server2";
 
     DriverPropertyInfo portProp = new DriverPropertyInfo(PORT_PROPERTY_KEY,
         info.getProperty(PORT_PROPERTY_KEY, ""));
     portProp.required = false;
-    portProp.description = "Port number of Hive Server2";
+    portProp.description = "Port number of Spark Server2";
 
     DriverPropertyInfo dbProp = new DriverPropertyInfo(DBNAME_PROPERTY_KEY,
         info.getProperty(DBNAME_PROPERTY_KEY, "default"));
@@ -219,8 +219,8 @@ public class SparkDriver implements Driver {
   }
 
   /**
-   * Takes a url in the form of jdbc:hive://[hostname]:[port]/[db_name] and
-   * parses it. Everything after jdbc:hive// is optional.
+   * Takes a url in the form of jdbc:spark://[hostname]:[port]/[db_name] and
+   * parses it. Everything after jdbc:spark// is optional.
    *
    * The output from Utils.parseUrl() is massaged for the needs of getPropertyInfo
    * @param url

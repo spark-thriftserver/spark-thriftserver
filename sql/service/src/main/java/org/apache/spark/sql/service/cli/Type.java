@@ -62,10 +62,6 @@ public enum Type {
   TIMESTAMP_TYPE(TimestampType$.MODULE$.sql(),
           java.sql.Types.TIMESTAMP,
           TTypeId.TIMESTAMP_TYPE),
-  // TODO: Map INTERVAL_TYPE to CalendarIntervalType
-  INTERVAL_TYPE(CalendarIntervalType$.MODULE$.sql(),
-          java.sql.Types.VARCHAR,
-          TTypeId.STRING_TYPE),
   BINARY_TYPE(BinaryType$.MODULE$.sql(),
           java.sql.Types.BINARY,
           TTypeId.BINARY_TYPE),

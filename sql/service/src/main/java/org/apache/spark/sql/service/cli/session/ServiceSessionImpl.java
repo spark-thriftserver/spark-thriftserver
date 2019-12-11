@@ -40,13 +40,20 @@ import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.spark.sql.service.utils.SystemVariables.*;
-
 /**
  * ServiceSession
  *
  */
 public class ServiceSessionImpl implements ServiceSession {
+
+  public static final String ENV_PREFIX = "env:";
+  public static final String SYSTEM_PREFIX = "system:";
+  public static final String SPARKCONF_PREFIX = "sparkconf:";
+  public static final String SPARKVAR_PREFIX = "spark:";
+  public static final String HIVECONF_PREFIX = "hiveconf:";
+  public static final String HIVEVAR_PREFIX = "hivevar:";
+  public static final String SET_COLUMN_NAME = "set:";
+
   private final SessionHandle sessionHandle;
   private String username;
   private final String password;
@@ -74,8 +81,8 @@ public class ServiceSessionImpl implements ServiceSession {
 
   @Override
   /**
-   * Opens a new SparkServer2 session for the client connection.
-   * Creates a new SessionState object that will be associated with this SparkServer2 session.
+   * Opens a new SparkThriftServer session for the client connection.
+   * Creates a new SessionState object that will be associated with this SparkThriftServer session.
    * When the server executes multiple queries in the same session,
    * this SessionState object is reused across multiple queries.
    * Note that if doAs is true, this call goes through a proxy object,
@@ -93,7 +100,7 @@ public class ServiceSessionImpl implements ServiceSession {
   }
 
   /**
-   * It is used for processing hiverc file from SparkServer2 side.
+   * It is used for processing hiverc file from SparkThriftServer side.
    */
   private class GlobalHivercFileProcessor extends SparkFileProcessor {
     @Override
@@ -147,7 +154,7 @@ public class ServiceSessionImpl implements ServiceSession {
   private void configureSession(Map<String, String> sessionConfMap) throws ServiceSQLException {
     for (Map.Entry<String, String> entry : sessionConfMap.entrySet()) {
       String key = entry.getKey();
-      if (key.startsWith("set:")) {
+      if (key.startsWith(SET_COLUMN_NAME)) {
         try {
           setVariable(key.substring(4), entry.getValue());
         } catch (Exception e) {

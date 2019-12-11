@@ -30,13 +30,13 @@ import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.AbstractService;
 import org.apache.spark.sql.service.ServiceException;
 import org.apache.spark.sql.service.ServiceUtils;
+import org.apache.spark.sql.service.SparkThriftServer;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.auth.TSetIpAddressProcessor;
 import org.apache.spark.sql.service.cli.*;
 import org.apache.spark.sql.service.cli.session.SessionManager;
 import org.apache.spark.sql.service.internal.ServiceConf;
 import org.apache.spark.sql.service.rpc.thrift.*;
-import org.apache.spark.sql.service.server.SparkServer2;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.server.ServerContext;
@@ -147,7 +147,7 @@ public abstract class ThriftCLIService extends AbstractService
     } catch (UnknownHostException e) {
       throw new ServiceException(e);
     }
-    if (SparkServer2.isHTTPTransportMode(sqlConf)) {
+    if (SparkThriftServer.isHTTPTransportMode(sqlConf)) {
       // HTTP mode
       workerKeepAliveTime =
           (long) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_WORKER_KEEPALIVE_TIME());
@@ -214,7 +214,23 @@ public abstract class ThriftCLIService extends AbstractService
   public TGetDelegationTokenResp GetDelegationToken(TGetDelegationTokenReq req)
       throws TException {
     TGetDelegationTokenResp resp = new TGetDelegationTokenResp();
-    resp.setStatus(notSupportTokenErrorStatus());
+
+    if (sparkAuthFactory == null || !sparkAuthFactory.isSASLKerberosUser()) {
+      resp.setStatus(unsecureTokenErrorStatus());
+    } else {
+      try {
+        String token = cliService.getDelegationToken(
+            new SessionHandle(req.getSessionHandle()),
+            sparkAuthFactory, req.getOwner(), req.getRenewer());
+        resp.setDelegationToken(token);
+        resp.setStatus(OK_STATUS);
+      } catch (ServiceSQLException e) {
+        LOG.error("Error obtaining delegation token", e);
+        TStatus tokenErrorStatus = ServiceSQLException.toTStatus(e);
+        tokenErrorStatus.setSqlState("42000");
+        resp.setStatus(tokenErrorStatus);
+      }
+    }
     return resp;
   }
 
@@ -222,7 +238,19 @@ public abstract class ThriftCLIService extends AbstractService
   public TCancelDelegationTokenResp CancelDelegationToken(TCancelDelegationTokenReq req)
       throws TException {
     TCancelDelegationTokenResp resp = new TCancelDelegationTokenResp();
-    resp.setStatus(notSupportTokenErrorStatus());
+
+    if (sparkAuthFactory == null || !sparkAuthFactory.isSASLKerberosUser()) {
+      resp.setStatus(unsecureTokenErrorStatus());
+    } else {
+      try {
+        cliService.cancelDelegationToken(new SessionHandle(req.getSessionHandle()),
+            sparkAuthFactory, req.getDelegationToken());
+        resp.setStatus(OK_STATUS);
+      } catch (ServiceSQLException e) {
+        LOG.error("Error canceling delegation token", e);
+        resp.setStatus(ServiceSQLException.toTStatus(e));
+      }
+    }
     return resp;
   }
 
@@ -230,8 +258,26 @@ public abstract class ThriftCLIService extends AbstractService
   public TRenewDelegationTokenResp RenewDelegationToken(TRenewDelegationTokenReq req)
       throws TException {
     TRenewDelegationTokenResp resp = new TRenewDelegationTokenResp();
-    resp.setStatus(notSupportTokenErrorStatus());
+    if (sparkAuthFactory == null || !sparkAuthFactory.isSASLKerberosUser()) {
+      resp.setStatus(unsecureTokenErrorStatus());
+    } else {
+      try {
+        cliService.renewDelegationToken(new SessionHandle(req.getSessionHandle()),
+            sparkAuthFactory, req.getDelegationToken());
+        resp.setStatus(OK_STATUS);
+      } catch (ServiceSQLException e) {
+        LOG.error("Error obtaining renewing token", e);
+        resp.setStatus(ServiceSQLException.toTStatus(e));
+      }
+    }
     return resp;
+  }
+
+  private TStatus unsecureTokenErrorStatus() {
+    TStatus errorStatus = new TStatus(TStatusCode.ERROR_STATUS);
+    errorStatus.setErrorMessage("Delegation token only supported over remote " +
+        "client with kerberos authentication");
+    return errorStatus;
   }
 
   private TStatus notSupportTokenErrorStatus() {
