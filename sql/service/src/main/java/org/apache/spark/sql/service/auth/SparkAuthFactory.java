@@ -21,8 +21,6 @@ import org.apache.hadoop.security.SaslRpcServer;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.ProxyUsers;
-import org.apache.spark.SparkConf;
-import org.apache.spark.deploy.SparkHadoopUtil;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.SparkSQLEnv;
 import org.apache.spark.sql.service.auth.shims.HadoopShims.KerberosNameShim;
@@ -134,14 +132,8 @@ public class SparkAuthFactory {
 
         // start delegation token manager
         delegationTokenManager = new SparkDelegationTokenManager();
-        SparkConf sparkConf = null;
-        if (SparkSQLEnv.sparkContext() != null) {
-          sparkConf = SparkSQLEnv.sparkContext().conf();
-        } else {
-          sparkConf = new SparkConf();
-        }
         delegationTokenManager.startDelegationTokenSecretManager(
-            SparkHadoopUtil.get().newConfiguration(sparkConf), ServerMode.HIVESERVER2);
+            SparkSQLEnv.sparkContext().hadoopConfiguration(), ServerMode.HIVESERVER2);
         saslServer.setSecretManager(delegationTokenManager.getSecretManager());
       }
     }
