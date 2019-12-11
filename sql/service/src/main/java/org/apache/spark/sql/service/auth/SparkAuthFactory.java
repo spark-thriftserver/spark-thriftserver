@@ -134,6 +134,7 @@ public class SparkAuthFactory {
 
         // start delegation token manager
         delegationTokenManager = new SparkDelegationTokenManager();
+        // Todo Support for UT about SparkAuthFactory, need changed for better way
         SparkConf sparkConf = null;
         if (SparkSQLEnv.sparkContext() != null) {
           sparkConf = SparkSQLEnv.sparkContext().conf();
