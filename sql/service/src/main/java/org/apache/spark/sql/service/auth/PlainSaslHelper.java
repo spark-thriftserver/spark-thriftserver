@@ -30,15 +30,16 @@ import javax.security.sasl.AuthenticationException;
 import javax.security.sasl.AuthorizeCallback;
 import javax.security.sasl.SaslException;
 
-import org.apache.spark.sql.service.auth.AuthenticationProviderFactory.AuthMethods;
-import org.apache.spark.sql.service.cli.thrift.ThriftCLIService;
-import org.apache.spark.sql.service.rpc.thrift.TCLIService.Iface;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.TProcessorFactory;
 import org.apache.thrift.transport.TSaslClientTransport;
 import org.apache.thrift.transport.TSaslServerTransport;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportFactory;
+
+import org.apache.spark.sql.service.auth.AuthenticationProviderFactory.AuthMethods;
+import org.apache.spark.sql.service.cli.thrift.ThriftCLIService;
+import org.apache.spark.sql.service.rpc.thrift.TCLIService.Iface;
 
 public final class PlainSaslHelper {
 

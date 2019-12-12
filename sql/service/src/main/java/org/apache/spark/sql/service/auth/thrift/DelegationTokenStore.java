@@ -17,12 +17,13 @@
 
 package org.apache.spark.sql.service.auth.thrift;
 
-import org.apache.hadoop.conf.Configurable;
-import org.apache.hadoop.security.token.delegation.AbstractDelegationTokenSecretManager.DelegationTokenInformation;
-import org.apache.spark.sql.service.auth.thrift.HadoopThriftAuthBridge.Server.ServerMode;
-
 import java.io.Closeable;
 import java.util.List;
+
+import org.apache.hadoop.conf.Configurable;
+import org.apache.hadoop.security.token.delegation.AbstractDelegationTokenSecretManager.DelegationTokenInformation;
+
+import org.apache.spark.sql.service.auth.thrift.HadoopThriftAuthBridge.Server.ServerMode;
 
 /**
  * Interface for pluggable token store that can be implemented with shared external

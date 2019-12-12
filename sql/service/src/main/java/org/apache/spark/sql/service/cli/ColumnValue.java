@@ -29,7 +29,6 @@ import org.apache.spark.sql.service.rpc.thrift.TI16Value;
 import org.apache.spark.sql.service.rpc.thrift.TI32Value;
 import org.apache.spark.sql.service.rpc.thrift.TI64Value;
 import org.apache.spark.sql.service.rpc.thrift.TStringValue;
-
 import org.apache.spark.unsafe.types.UTF8String;
 
 /**

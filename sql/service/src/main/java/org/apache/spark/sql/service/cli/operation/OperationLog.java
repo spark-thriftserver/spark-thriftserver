@@ -1,3 +1,4 @@
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -17,17 +18,18 @@
 
 package org.apache.spark.sql.service.cli.operation;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.hadoop.io.IOUtils;
-import org.apache.spark.sql.internal.SQLConf;
-import org.apache.spark.sql.service.internal.ServiceConf;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.*;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.apache.spark.sql.internal.SQLConf;
+import org.apache.spark.sql.service.internal.ServiceConf;
 
 /**
  * OperationLog wraps the actual operation log file, and provides interface

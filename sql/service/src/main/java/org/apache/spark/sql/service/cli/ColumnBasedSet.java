@@ -22,15 +22,16 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.spark.sql.service.rpc.thrift.TColumn;
-import org.apache.spark.sql.service.rpc.thrift.TRow;
-import org.apache.spark.sql.service.rpc.thrift.TRowSet;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TCompactProtocol;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TIOStreamTransport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.spark.sql.service.rpc.thrift.TColumn;
+import org.apache.spark.sql.service.rpc.thrift.TRow;
+import org.apache.spark.sql.service.rpc.thrift.TRowSet;
 
 /**
  * ColumnBasedSet.

@@ -17,11 +17,23 @@
 
 package org.apache.spark.sql.service.auth;
 
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.*;
+import javax.security.auth.login.LoginException;
+import javax.security.sasl.Sasl;
+
 import org.apache.hadoop.security.SaslRpcServer;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.apache.hadoop.security.authorize.ProxyUsers;
+import org.apache.thrift.TProcessorFactory;
+import org.apache.thrift.transport.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.spark.SparkConf;
 import org.apache.spark.deploy.SparkHadoopUtil;
 import org.apache.spark.sql.internal.SQLConf;
@@ -32,17 +44,6 @@ import org.apache.spark.sql.service.auth.thrift.SparkDelegationTokenManager;
 import org.apache.spark.sql.service.cli.ServiceSQLException;
 import org.apache.spark.sql.service.cli.thrift.ThriftCLIService;
 import org.apache.spark.sql.service.internal.ServiceConf;
-import org.apache.thrift.TProcessorFactory;
-import org.apache.thrift.transport.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.security.auth.login.LoginException;
-import javax.security.sasl.Sasl;
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.*;
 
 /**
  * This class helps in some aspects of authentication. It creates the proper Thrift classes for the

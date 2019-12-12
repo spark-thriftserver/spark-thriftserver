@@ -21,8 +21,7 @@ import java.io.CharArrayWriter;
 import java.util.Enumeration;
 import java.util.regex.Pattern;
 
-import org.apache.spark.sql.service.cli.CLIServiceUtils;
-import org.apache.spark.sql.service.cli.operation.OperationLog.LoggingLevel;
+import com.google.common.base.Joiner;
 import org.apache.log4j.Appender;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Layout;
@@ -31,7 +30,8 @@ import org.apache.log4j.WriterAppender;
 import org.apache.log4j.spi.Filter;
 import org.apache.log4j.spi.LoggingEvent;
 
-import com.google.common.base.Joiner;
+import org.apache.spark.sql.service.cli.CLIServiceUtils;
+import org.apache.spark.sql.service.cli.operation.OperationLog.LoggingLevel;
 
 /**
  * An Appender to divert logs from individual threads to the LogObject they belong to.

@@ -17,18 +17,19 @@
 
 package org.apache.spark.sql.service.utils;
 
+import java.io.IOException;
+import javax.security.auth.login.LoginException;
+
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenIdentifier;
 import org.apache.hadoop.security.token.TokenSelector;
-import org.apache.spark.sql.service.auth.thrift.DelegationTokenIdentifier;
-import org.apache.spark.sql.service.auth.thrift.DelegationTokenSelector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.security.auth.login.LoginException;
-import java.io.IOException;
+import org.apache.spark.sql.service.auth.thrift.DelegationTokenIdentifier;
+import org.apache.spark.sql.service.auth.thrift.DelegationTokenSelector;
 
 public class Utils {
 

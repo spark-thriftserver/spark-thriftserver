@@ -17,11 +17,16 @@
 
 package org.apache.spark.sql.service.auth;
 
+import java.security.AccessControlContext;
+import java.security.AccessController;
+import java.security.PrivilegedExceptionAction;
+import java.util.*;
+import javax.security.auth.Subject;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
-import org.apache.spark.sql.service.auth.thrift.HadoopThriftAuthBridge;
 import org.ietf.jgss.GSSContext;
 import org.ietf.jgss.GSSManager;
 import org.ietf.jgss.GSSName;
@@ -29,11 +34,7 @@ import org.ietf.jgss.Oid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.security.auth.Subject;
-import java.security.AccessControlContext;
-import java.security.AccessController;
-import java.security.PrivilegedExceptionAction;
-import java.util.*;
+import org.apache.spark.sql.service.auth.thrift.HadoopThriftAuthBridge;
 
 /**
  * Utility functions for HTTP mode authentication.

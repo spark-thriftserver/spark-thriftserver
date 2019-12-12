@@ -17,13 +17,13 @@
 
 package org.apache.spark.sql.service.cli.session;
 
+import java.io.File;
+
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.cli.SessionHandle;
-import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
 import org.apache.spark.sql.service.cli.operation.OperationManager;
-
-import java.io.File;
+import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
 
 /**
  * Methods that don't need to be executed under a doAs

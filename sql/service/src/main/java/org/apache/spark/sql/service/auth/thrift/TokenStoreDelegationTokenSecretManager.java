@@ -17,6 +17,10 @@
 
 package org.apache.spark.sql.service.auth.thrift;
 
+import java.io.*;
+import java.lang.reflect.Method;
+import java.util.*;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.security.token.Token;
@@ -27,10 +31,6 @@ import org.apache.hadoop.util.Daemon;
 import org.apache.hadoop.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.*;
-import java.lang.reflect.Method;
-import java.util.*;
 
 /**
  * Extension of {@link DelegationTokenSecretManager} to support alternative to default in-memory

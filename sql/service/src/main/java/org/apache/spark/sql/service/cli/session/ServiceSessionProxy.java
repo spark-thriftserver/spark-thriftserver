@@ -30,6 +30,7 @@ import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 
 import org.apache.hadoop.security.UserGroupInformation;
+
 import org.apache.spark.sql.service.cli.ServiceSQLException;
 
 public class ServiceSessionProxy implements InvocationHandler {

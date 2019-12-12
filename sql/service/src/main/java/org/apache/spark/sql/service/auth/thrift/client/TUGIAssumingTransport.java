@@ -17,13 +17,14 @@
 
 package org.apache.spark.sql.service.auth.thrift.client;
 
+import java.io.IOException;
+import java.security.PrivilegedExceptionAction;
+
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
-import org.apache.spark.sql.service.auth.thrift.TFilterTransport;
 
-import java.io.IOException;
-import java.security.PrivilegedExceptionAction;
+import org.apache.spark.sql.service.auth.thrift.TFilterTransport;
 
 /**
  * The Thrift SASL transports call Sasl.createSaslServer and Sasl.createSaslClient

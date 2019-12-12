@@ -17,18 +17,6 @@
 
 package org.apache.spark.sql.service.cli.thrift;
 
-import org.apache.spark.sql.SQLContext;
-import org.apache.spark.sql.service.auth.SparkAuthFactory;
-import org.apache.spark.sql.service.auth.SparkAuthUtils;
-import org.apache.spark.sql.service.cli.CLIService;
-import org.apache.spark.sql.service.internal.ServiceConf;
-import org.apache.spark.sql.service.server.ThreadFactoryWithName;
-import org.apache.thrift.TProcessorFactory;
-import org.apache.thrift.protocol.TBinaryProtocol;
-import org.apache.thrift.server.TThreadPoolServer;
-import org.apache.thrift.transport.TServerSocket;
-import org.apache.thrift.transport.TTransportFactory;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -36,6 +24,18 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.thrift.TProcessorFactory;
+import org.apache.thrift.protocol.TBinaryProtocol;
+import org.apache.thrift.server.TThreadPoolServer;
+import org.apache.thrift.transport.TServerSocket;
+import org.apache.thrift.transport.TTransportFactory;
+
+import org.apache.spark.sql.SQLContext;
+import org.apache.spark.sql.service.auth.SparkAuthFactory;
+import org.apache.spark.sql.service.auth.SparkAuthUtils;
+import org.apache.spark.sql.service.cli.CLIService;
+import org.apache.spark.sql.service.internal.ServiceConf;
+import org.apache.spark.sql.service.server.ThreadFactoryWithName;
 
 public class ThriftBinaryCLIService extends ThriftCLIService {
 

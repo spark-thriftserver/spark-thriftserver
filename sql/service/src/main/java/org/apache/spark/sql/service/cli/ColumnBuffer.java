@@ -31,6 +31,7 @@ import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import com.google.common.primitives.Shorts;
+
 import org.apache.spark.sql.service.rpc.thrift.*;
 
 /**
