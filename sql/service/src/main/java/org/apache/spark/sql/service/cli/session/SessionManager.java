@@ -65,12 +65,9 @@ public class SessionManager extends CompositeService {
   private boolean checkOperation;
 
   private volatile boolean shutdown;
-  // The SparkThriftServer instance running this service
-  private final SparkThriftServer sparkServer;
 
-  public SessionManager(SparkThriftServer sparkServer, SQLContext sqlContext) {
+  public SessionManager(SQLContext sqlContext) {
     super(SessionManager.class.getSimpleName());
-    this.sparkServer = sparkServer;
     this.sqlContext = sqlContext;
   }
 

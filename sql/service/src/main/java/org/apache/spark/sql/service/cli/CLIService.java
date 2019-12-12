@@ -76,7 +76,7 @@ public class CLIService extends CompositeService implements ICLIService {
   @Override
   public synchronized void init(SQLConf sqlConf) {
     this.sqlConf = sqlConf;
-    sessionManager = new SessionManager(sparkServer, sqlContext);
+    sessionManager = new SessionManager(sqlContext);
     addService(sessionManager);
     //  If the hadoop cluster is secure, do a kerberos login for the service from the keytab
     if (UserGroupInformation.isSecurityEnabled()) {
