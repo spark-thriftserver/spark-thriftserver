@@ -19,7 +19,7 @@ package org.apache.spark.sql.service.cli.operation
 
 import java.security.PrivilegedExceptionAction
 import java.sql.{Date, Timestamp}
-import java.util.{Arrays, Map => JMap, UUID}
+import java.util.{Map => JMap, UUID}
 import java.util.concurrent.RejectedExecutionException
 
 import scala.collection.JavaConverters._

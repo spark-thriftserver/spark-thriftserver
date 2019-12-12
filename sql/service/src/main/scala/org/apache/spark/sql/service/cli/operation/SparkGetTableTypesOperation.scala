@@ -31,7 +31,6 @@ import org.apache.spark.util.{Utils => SparkUtils}
 /**
  * Spark's own GetTableTypesOperation
  *
- * @param sqlContext SQLContext to use
  * @param parentSession a ServiceSession from SessionManager
  */
 private[service] class SparkGetTableTypesOperation(
