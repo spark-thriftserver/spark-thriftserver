@@ -21,6 +21,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.security.SaslPropertiesResolver;
 import org.apache.hadoop.security.SaslRpcServer;
 import org.apache.hadoop.security.SaslRpcServer.AuthMethod;
 import org.apache.hadoop.security.SecurityUtil;
@@ -50,12 +51,25 @@ import java.util.Map;
 /**
  * Functions that bridge Thrift's SASL transports to Hadoop's
  * SASL callback handlers and authentication classes.
- * HIVE-11378 This class is not directly used anymore.  It now exists only as a shell to be
- * extended by HadoopThriftAuthBridge23 in 0.23 shims.  I have made it abstract
- * to avoid maintenance errors.
  */
-public abstract class HadoopThriftAuthBridge {
+public class HadoopThriftAuthBridge {
   private static final Logger LOG = LoggerFactory.getLogger(HadoopThriftAuthBridge.class);
+
+  private static HadoopThriftAuthBridge instance;
+
+  private HadoopThriftAuthBridge() {
+  }
+
+  public static HadoopThriftAuthBridge getInstance() {
+    if (instance == null) {
+      synchronized (HadoopThriftAuthBridge.class) {
+        if (instance == null) {
+          instance = new HadoopThriftAuthBridge();
+        }
+      }
+    }
+    return instance;
+  }
 
   public Client createClient() {
     return new Client();
@@ -147,7 +161,11 @@ public abstract class HadoopThriftAuthBridge {
    * @return Hadoop SASL configuration
    */
 
-  public abstract Map<String, String> getHadoopSaslProperties(Configuration conf);
+  public Map<String, String> getHadoopSaslProperties(Configuration conf) {
+    SaslPropertiesResolver saslPropertiesResolver = SaslPropertiesResolver.getInstance(conf);
+    saslPropertiesResolver.setConf(conf);
+    return saslPropertiesResolver.getDefaultProperties();
+  }
 
   public static class Client {
     /**
