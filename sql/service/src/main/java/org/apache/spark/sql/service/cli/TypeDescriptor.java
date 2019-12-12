@@ -121,7 +121,6 @@ public class TypeDescriptor {
   /**
    * The column size for this type.
    * For numeric data this is the maximum precision.
-   * For character data this is the length in characters.
    * For datetime types this is the length in characters of the String representation
    * (assuming the maximum allowed precision of the fractional seconds component).
    * For binary data this is the length in bytes.

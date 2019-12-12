@@ -27,7 +27,7 @@ import org.apache.spark.sql.service.rpc.thrift.TTypeQualifiers;
 
 /**
  * This class holds type qualifier information for a primitive type,
- * such as char/varchar length or decimal precision/scale.
+ * such as decimal precision/scale.
  */
 public class TypeQualifiers {
   private Integer characterMaximumLength;

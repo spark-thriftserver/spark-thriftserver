@@ -49,8 +49,7 @@ public interface Service {
    * The transition must be from {@link STATE#NOTINITED} to {@link STATE#INITED} unless the
    * operation failed and an exception was raised.
    *
-   * @param conf
-   *          the configuration of the service
+   * @param conf the configuration of the service
    */
   void init(SQLConf conf);
 
@@ -82,8 +81,7 @@ public interface Service {
   /**
    * Unregister a previously instance of the service state change events.
    *
-   * @param listener
-   *          the listener to unregister.
+   * @param listener the listener to unregister.
    */
   void unregister(ServiceStateChangeListener listener);
 
