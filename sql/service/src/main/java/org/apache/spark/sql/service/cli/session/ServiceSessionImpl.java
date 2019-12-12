@@ -549,6 +549,16 @@ public class ServiceSessionImpl implements ServiceSession {
   }
 
   @Override
+  public Boolean isImpersonation() {
+    return false;
+  }
+
+  @Override
+  public List<String> getImpersonationTokens() {
+    return null;
+  }
+
+  @Override
   public void closeExpiredOperations() {
     OperationHandle[] handles = opHandleSet.toArray(new OperationHandle[opHandleSet.size()]);
     if (handles.length > 0) {

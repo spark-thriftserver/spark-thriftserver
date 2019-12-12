@@ -19,6 +19,7 @@
 package org.apache.spark.sql.service.cli.session;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -37,12 +38,12 @@ import org.slf4j.LoggerFactory;
 public class ServiceSessionImplwithUGI extends ServiceSessionImpl {
 
   private UserGroupInformation sessionUgi = null;
-  private String delegationTokenStr = null;
+  private List<String> delegationTokens = null;
   private ServiceSession proxySession = null;
   static final Logger LOG = LoggerFactory.getLogger(ServiceSessionImplwithUGI.class);
 
   public ServiceSessionImplwithUGI(TProtocolVersion protocol, String username, String password,
-                                   SQLContext sqlContext, String ipAddress, String delegationToken)
+                                   SQLContext sqlContext, String ipAddress)
       throws ServiceSQLException {
     super(protocol, username, password, sqlContext, ipAddress);
     setSessionUGI(username);
@@ -69,8 +70,18 @@ public class ServiceSessionImplwithUGI extends ServiceSessionImpl {
     return this.sessionUgi;
   }
 
-  public String getDelegationToken() {
-    return this.delegationTokenStr;
+  @Override
+  public Boolean isImpersonation() {
+    return true;
+  }
+
+  public void setImpersonationTokens(List<String> token) {
+    this.delegationTokens = token;
+  }
+
+  @Override
+  public List<String> getImpersonationTokens() {
+    return this.delegationTokens;
   }
 
   @Override

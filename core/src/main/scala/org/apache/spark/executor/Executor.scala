@@ -22,6 +22,7 @@ import java.lang.Thread.UncaughtExceptionHandler
 import java.lang.management.ManagementFactory
 import java.net.{URI, URL}
 import java.nio.ByteBuffer
+import java.security.PrivilegedAction
 import java.util.Properties
 import java.util.concurrent._
 import javax.annotation.concurrent.GuardedBy
@@ -32,6 +33,9 @@ import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
+import org.apache.hadoop.io.Text
+import org.apache.hadoop.security.{Credentials, UserGroupInformation}
+import org.apache.hadoop.security.token.Token
 
 import org.apache.spark._
 import org.apache.spark.deploy.SparkHadoopUtil
@@ -397,6 +401,30 @@ private[spark] class Executor(
     }
 
     override def run(): Unit = {
+      val currentUser =
+        taskDescription.properties.getProperty(SparkContext.SPARK_JOB_PROXY_USER, null)
+      val tokens =
+        taskDescription.properties.getProperty(SparkContext.SPARK_JOB_PROXY_TOKEN, null)
+
+      if (currentUser != null && currentUser.nonEmpty && tokens != null && tokens.nonEmpty) {
+        val ugi = UserGroupInformation.createRemoteUser(currentUser)
+        val creds = new Credentials()
+        tokens.split(SparkContext.SPARK_JOB_PROXY_TOKEN_DELIMITER)
+          .foreach(tokenStr => {
+            val delegationToken = new Token()
+            delegationToken.decodeFromUrlString(tokenStr)
+            creds.addToken(new Text(delegationToken.getService), delegationToken)
+          })
+        ugi.addCredentials(creds)
+        ugi.doAs[Unit](new PrivilegedAction[Unit] {
+          override def run(): Unit = runWithProxy()
+        })
+      } else {
+        runWithProxy()
+      }
+    }
+
+    def runWithProxy(): Unit = {
       threadId = Thread.currentThread.getId
       Thread.currentThread.setName(threadName)
       val threadMXBean = ManagementFactory.getThreadMXBean

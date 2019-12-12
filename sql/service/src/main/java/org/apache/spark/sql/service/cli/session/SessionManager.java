@@ -20,16 +20,17 @@ package org.apache.spark.sql.service.cli.session;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.security.Credentials;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.CompositeService;
@@ -45,7 +46,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * SessionManager.
- *
  */
 public class SessionManager extends CompositeService {
 
@@ -59,6 +59,7 @@ public class SessionManager extends CompositeService {
   private ThreadPoolExecutor backgroundOperationPool;
   private boolean isOperationLogEnabled;
   private File operationLogRootDir;
+  private ProxyPlugin proxyPlugin;
 
   private long checkInterval;
   private long sessionTimeout;
@@ -69,6 +70,8 @@ public class SessionManager extends CompositeService {
   public SessionManager(SQLContext sqlContext) {
     super(SessionManager.class.getSimpleName());
     this.sqlContext = sqlContext;
+    this.proxyPlugin = new ProxyPlugin(sqlContext.sparkContext().conf(),
+        sqlContext.sparkContext().hadoopConfiguration());
   }
 
   @Override
@@ -90,7 +93,7 @@ public class SessionManager extends CompositeService {
         (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_WAIT_QUEUE_SIZE());
     LOG.info("SparkThriftServer: Background operation thread wait queue size: " + poolQueueSize);
     long keepAliveTime =
-       (long) sqlConf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_KEEPALIVE_TIME());
+        (long) sqlConf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_KEEPALIVE_TIME());
     LOG.info("SparkThriftServer: Background operation thread keepalive time: "
         + keepAliveTime + " seconds");
 
@@ -214,7 +217,7 @@ public class SessionManager extends CompositeService {
 
   public SessionHandle openSession(TProtocolVersion protocol, String username, String password,
       String ipAddress, Map<String, String> sessionConf) throws ServiceSQLException {
-    return openSession(protocol, username, password, ipAddress, sessionConf, false, null);
+    return openSession(protocol, username, password, ipAddress, sessionConf, false);
   }
 
   /**
@@ -232,16 +235,15 @@ public class SessionManager extends CompositeService {
    * @param ipAddress
    * @param sessionConf
    * @param withImpersonation
-   * @param delegationToken
    * @return
    * @throws ServiceSQLException
    */
   public SessionHandle openSession(TProtocolVersion protocol, String username, String password,
-      String ipAddress, Map<String, String> sessionConf, boolean withImpersonation,
-      String delegationToken) throws ServiceSQLException {
+      String ipAddress, Map<String, String> sessionConf, boolean withImpersonation)
+      throws ServiceSQLException {
     ServiceSession session;
     SQLContext ctx = null;
-    if(sqlContext.conf().hiveThriftServerSingleSession()) {
+    if (sqlContext.conf().hiveThriftServerSingleSession()) {
       ctx = sqlContext;
     } else {
       ctx = sqlContext.newSession();
@@ -251,7 +253,19 @@ public class SessionManager extends CompositeService {
     // Within the proxy object, we wrap the method call in a UserGroupInformation#doAs
     if (withImpersonation) {
       ServiceSessionImplwithUGI sessionWithUGI = new ServiceSessionImplwithUGI(protocol, username,
-          password, ctx, ipAddress, delegationToken);
+          password, ctx, ipAddress);
+      UserGroupInformation ugi = sessionWithUGI.getSessionUgi();
+      proxyPlugin.obtainTokenForProxyUGI(sessionWithUGI.getSessionHandle().getSessionId(), ugi);
+      Credentials creds = ugi.getCredentials();
+      List<String> tokens = creds.getAllTokens().stream().map(token -> {
+        try {
+          return token.encodeToUrlString();
+        } catch (IOException e) {
+          e.printStackTrace();
+          return null;
+        }
+      }).filter(Objects::nonNull).collect(Collectors.toList());
+      sessionWithUGI.setImpersonationTokens(tokens);
       session = ServiceSessionProxy.getProxy(sessionWithUGI, sessionWithUGI.getSessionUgi());
       sessionWithUGI.setProxySession(session);
     } else {
@@ -285,6 +299,7 @@ public class SessionManager extends CompositeService {
 
   public void closeSession(SessionHandle sessionHandle) throws ServiceSQLException {
     SparkThriftServer.listener().onSessionClosed(sessionHandle.getSessionId().toString());
+    proxyPlugin.removeProxyUGI(sessionHandle.getSessionId());
     ServiceSession session = handleToSession.remove(sessionHandle);
     if (session == null) {
       throw new ServiceSQLException("Session does not exist!");
@@ -324,7 +339,7 @@ public class SessionManager extends CompositeService {
     return threadLocalIpAddress.get();
   }
 
-  private static ThreadLocal<String> threadLocalUserName = new ThreadLocal<String>(){
+  private static ThreadLocal<String> threadLocalUserName = new ThreadLocal<String>() {
     @Override
     protected synchronized String initialValue() {
       return null;
@@ -343,7 +358,7 @@ public class SessionManager extends CompositeService {
     return threadLocalUserName.get();
   }
 
-  private static ThreadLocal<String> threadLocalProxyUserName = new ThreadLocal<String>(){
+  private static ThreadLocal<String> threadLocalProxyUserName = new ThreadLocal<String>() {
     @Override
     protected synchronized String initialValue() {
       return null;

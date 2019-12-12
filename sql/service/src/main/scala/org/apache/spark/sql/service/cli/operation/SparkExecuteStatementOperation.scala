@@ -270,6 +270,16 @@ private[service] class SparkExecuteStatementOperation(
           setState(OperationState.RUNNING)
         }
       }
+
+      // Always set current username to local properties
+      if (parentSession.isImpersonation) {
+        sqlContext.sparkContext.setLocalProperty(SparkContext.SPARK_JOB_PROXY_USER,
+          parentSession.getUserName)
+        sqlContext.sparkContext.setLocalProperty(SparkContext.SPARK_JOB_PROXY_TOKEN,
+          parentSession.getImpersonationTokens.asScala
+            .mkString(SparkContext.SPARK_JOB_PROXY_TOKEN_DELIMITER))
+      }
+
       // Always use the latest class loader provided by executionHive's state.
       val executionHiveClassLoader = sqlContext.sharedState.jarClassLoader
       Thread.currentThread().setContextClassLoader(executionHiveClassLoader)
@@ -331,6 +341,10 @@ private[service] class SparkExecuteStatementOperation(
           setState(OperationState.FINISHED)
           SparkThriftServer.listener.onStatementFinish(statementId)
         }
+      }
+      if (parentSession.isImpersonation) {
+        sqlContext.sparkContext.setLocalProperty(SparkContext.SPARK_JOB_PROXY_USER, null)
+        sqlContext.sparkContext.setLocalProperty(SparkContext.SPARK_JOB_PROXY_TOKEN, null)
       }
       sqlContext.sparkContext.clearJobGroup()
     }

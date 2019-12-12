@@ -25,6 +25,7 @@ import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
 import org.apache.spark.sql.service.cli.operation.OperationManager;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * Methods that don't need to be executed under a doAs
@@ -87,4 +88,8 @@ public interface ServiceSessionBase {
   void setIpAddress(String ipAddress);
 
   long getLastAccessTime();
+
+  Boolean isImpersonation();
+
+  List<String> getImpersonationTokens();
 }
