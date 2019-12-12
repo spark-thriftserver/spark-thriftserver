@@ -21,7 +21,6 @@ package org.apache.spark.sql.service.cli.thrift;
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.auth.SparkAuthUtils;
-import org.apache.spark.sql.service.auth.shims.ShimLoader;
 import org.apache.spark.sql.service.cli.CLIService;
 import org.apache.spark.sql.service.internal.ServiceConf;
 import org.apache.spark.sql.service.server.ThreadFactoryWithName;
@@ -74,9 +73,10 @@ public class ThriftBinaryCLIService extends ThriftCLIService {
         }
         org.apache.hadoop.conf.Configuration hadoopConf =
             sqlContext.sparkContext().hadoopConfiguration();
-        String keyStorePassword = ShimLoader.getHadoopShims().getPassword(hadoopConf,
+        char[] pass = hadoopConf.getPassword(
             ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PASSWORD().key()
                 .substring("spark.hadoop.".length()));
+        String keyStorePassword = new String(pass);
         serverSocket = SparkAuthUtils.getServerSSLSocket(sparkHost, portNum, keyStorePath,
             keyStorePassword, sslVersionBlacklist);
       }
