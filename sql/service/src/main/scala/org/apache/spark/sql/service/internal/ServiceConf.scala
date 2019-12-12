@@ -487,8 +487,8 @@ object ServiceConf {
   val THRIFTSERVER_GLOABLE_INIT_FILE_LOCATION =
     buildConf("spark.sql.thriftserver.global.init.file.location")
       .internal()
-      .doc("Either the location of a SS2 global init file or a directory containing" +
-        " a .hiverc file. If the property is set, the value must be a valid path " +
+      .doc("Either the location of a SparkThriftServer global init file or a directory" +
+        " containing a .sparkrc file. If the property is set, the value must be a valid path " +
         "to an init file or directory where the init file is located.")
       .stringConf
       .createWithDefault("${env:SPARK_CONF_DIR}")

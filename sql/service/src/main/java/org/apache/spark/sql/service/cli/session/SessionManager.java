@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
 public class SessionManager extends CompositeService {
 
   private static final Logger LOG = LoggerFactory.getLogger(SessionManager.class);
-  public static final String HIVERCFILE = ".hiverc";
+  public static final String SPARKRCFILE = ".sparkrc";
   private SQLConf sqlConf;
   private SQLContext sqlContext;
   private final Map<SessionHandle, ServiceSession> handleToSession =
