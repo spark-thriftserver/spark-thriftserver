@@ -17,13 +17,14 @@
 
 package org.apache.spark.sql.service.auth;
 
+import javax.security.sasl.AuthenticationException;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ReflectionUtils;
+
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.SparkSQLEnv;
 import org.apache.spark.sql.service.internal.ServiceConf;
-
-import javax.security.sasl.AuthenticationException;
 
 /**
  * This authentication provider implements the {@code CUSTOM} authentication. It allows a {@link

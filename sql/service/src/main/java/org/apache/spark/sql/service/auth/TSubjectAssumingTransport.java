@@ -23,9 +23,10 @@ import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import javax.security.auth.Subject;
 
-import org.apache.spark.sql.service.auth.thrift.TFilterTransport;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
+
+import org.apache.spark.sql.service.auth.thrift.TFilterTransport;
 
 /**
  * This is used on the client side, where the API explicitly opens a transport to

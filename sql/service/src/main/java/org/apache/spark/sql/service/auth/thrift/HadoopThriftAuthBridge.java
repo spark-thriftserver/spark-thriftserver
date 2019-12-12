@@ -17,6 +17,16 @@
 
 package org.apache.spark.sql.service.auth.thrift;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
+import java.util.Locale;
+import java.util.Map;
+import javax.security.auth.callback.*;
+import javax.security.sasl.*;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
@@ -30,7 +40,6 @@ import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
 import org.apache.hadoop.security.token.SecretManager.InvalidToken;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenIdentifier;
-import org.apache.spark.sql.service.auth.thrift.client.TUGIAssumingTransport;
 import org.apache.thrift.TException;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TProtocol;
@@ -38,15 +47,7 @@ import org.apache.thrift.transport.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.security.auth.callback.*;
-import javax.security.sasl.*;
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.security.PrivilegedAction;
-import java.security.PrivilegedExceptionAction;
-import java.util.Locale;
-import java.util.Map;
+import org.apache.spark.sql.service.auth.thrift.client.TUGIAssumingTransport;
 
 /**
  * Functions that bridge Thrift's SASL transports to Hadoop's

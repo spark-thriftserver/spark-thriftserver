@@ -17,15 +17,13 @@
 
 package org.apache.spark.sql.service.cli.thrift;
 
+import java.util.Arrays;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Shell;
-import org.apache.spark.sql.SQLContext;
-import org.apache.spark.sql.service.auth.SparkAuthFactory;
-import org.apache.spark.sql.service.cli.CLIService;
-import org.apache.spark.sql.service.internal.ServiceConf;
-import org.apache.spark.sql.service.rpc.thrift.TCLIService;
-import org.apache.spark.sql.service.rpc.thrift.TCLIService.Iface;
-import org.apache.spark.sql.service.server.ThreadFactoryWithName;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocolFactory;
@@ -40,11 +38,13 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.ExecutorThreadPool;
 import org.eclipse.jetty.util.thread.ScheduledExecutorScheduler;
 
-import java.util.Arrays;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
+import org.apache.spark.sql.SQLContext;
+import org.apache.spark.sql.service.auth.SparkAuthFactory;
+import org.apache.spark.sql.service.cli.CLIService;
+import org.apache.spark.sql.service.internal.ServiceConf;
+import org.apache.spark.sql.service.rpc.thrift.TCLIService;
+import org.apache.spark.sql.service.rpc.thrift.TCLIService.Iface;
+import org.apache.spark.sql.service.server.ThreadFactoryWithName;
 
 public class ThriftHttpCLIService extends ThriftCLIService {
 

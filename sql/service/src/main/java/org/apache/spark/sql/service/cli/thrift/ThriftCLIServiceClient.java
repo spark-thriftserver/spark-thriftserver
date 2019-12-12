@@ -20,10 +20,11 @@ package org.apache.spark.sql.service.cli.thrift;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.thrift.TException;
+
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.cli.*;
 import org.apache.spark.sql.service.rpc.thrift.*;
-import org.apache.thrift.TException;
 
 /**
  * ThriftCLIServiceClient.

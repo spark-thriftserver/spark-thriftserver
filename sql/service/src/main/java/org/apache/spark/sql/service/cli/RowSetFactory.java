@@ -17,9 +17,10 @@
 
 package org.apache.spark.sql.service.cli;
 
+import org.apache.thrift.TException;
+
 import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
 import org.apache.spark.sql.service.rpc.thrift.TRowSet;
-import org.apache.thrift.TException;
 
 import static org.apache.spark.sql.service.rpc.thrift.TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V6;
 

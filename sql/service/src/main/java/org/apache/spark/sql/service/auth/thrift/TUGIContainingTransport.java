@@ -17,14 +17,14 @@
 
 package org.apache.spark.sql.service.auth.thrift;
 
+import java.net.Socket;
+import java.util.concurrent.ConcurrentMap;
+
 import com.google.common.collect.MapMaker;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportFactory;
-
-import java.net.Socket;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * TUGIContainingTransport associates ugi information with connection (transport).

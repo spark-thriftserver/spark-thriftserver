@@ -17,8 +17,6 @@
 
 package org.apache.spark.sql.service.auth;
 
-import org.apache.spark.sql.service.rpc.thrift.TCLIService;
-import org.apache.spark.sql.service.rpc.thrift.TCLIService.Iface;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TSaslClientTransport;
@@ -27,6 +25,9 @@ import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.spark.sql.service.rpc.thrift.TCLIService;
+import org.apache.spark.sql.service.rpc.thrift.TCLIService.Iface;
 
 /**
  * This class is responsible for setting the ipAddress for operations

@@ -21,15 +21,16 @@ import java.io.IOException;
 import java.util.Map;
 import javax.security.sasl.SaslException;
 
+import org.apache.thrift.TProcessor;
+import org.apache.thrift.TProcessorFactory;
+import org.apache.thrift.transport.TSaslClientTransport;
+import org.apache.thrift.transport.TTransport;
+
 import org.apache.spark.sql.service.auth.thrift.HadoopThriftAuthBridge;
 import org.apache.spark.sql.service.auth.thrift.HadoopThriftAuthBridge.Server;
 import org.apache.spark.sql.service.cli.thrift.ThriftCLIService;
 import org.apache.spark.sql.service.rpc.thrift.TCLIService;
 import org.apache.spark.sql.service.rpc.thrift.TCLIService.Iface;
-import org.apache.thrift.TProcessor;
-import org.apache.thrift.TProcessorFactory;
-import org.apache.thrift.transport.TSaslClientTransport;
-import org.apache.thrift.transport.TTransport;
 
 public final class KerberosSaslHelper {
 

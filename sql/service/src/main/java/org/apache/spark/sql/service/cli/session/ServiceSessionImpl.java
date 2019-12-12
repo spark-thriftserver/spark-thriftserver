@@ -25,6 +25,9 @@ import java.io.InputStreamReader;
 import java.util.*;
 
 import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.internal.VariableSubstitution;
@@ -36,8 +39,6 @@ import org.apache.spark.sql.service.cli.file.SparkFileProcessor;
 import org.apache.spark.sql.service.cli.operation.*;
 import org.apache.spark.sql.service.internal.ServiceConf;
 import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * ServiceSession

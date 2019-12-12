@@ -20,6 +20,7 @@ package org.apache.spark.sql.service.auth;
 import javax.security.sasl.AuthenticationException;
 
 import net.sf.jpam.Pam;
+
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.internal.ServiceConf;
 
