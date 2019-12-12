@@ -31,7 +31,7 @@ import org.apache.http.protocol.HttpContext;
  */
 public class HttpTokenAuthInterceptor extends HttpRequestInterceptorBase {
   private String tokenStr;
-  private static final String HIVE_DELEGATION_TOKEN_HEADER = "X-Hive-Delegation-Token";
+  private static final String SPARK_DELEGATION_TOKEN_HEADER = "X-Spark-Delegation-Token";
 
   public HttpTokenAuthInterceptor(String tokenStr, CookieStore cookieStore, String cn,
       boolean isSSL, Map<String, String> additionalHeaders) {
@@ -42,6 +42,6 @@ public class HttpTokenAuthInterceptor extends HttpRequestInterceptorBase {
   @Override
   protected void addHttpAuthHeader(HttpRequest httpRequest, HttpContext httpContext)
     throws Exception {
-    httpRequest.addHeader(HIVE_DELEGATION_TOKEN_HEADER, tokenStr);
+    httpRequest.addHeader(SPARK_DELEGATION_TOKEN_HEADER, tokenStr);
   }
 }

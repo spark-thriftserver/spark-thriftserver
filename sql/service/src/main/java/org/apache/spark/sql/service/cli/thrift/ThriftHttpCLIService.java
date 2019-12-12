@@ -63,7 +63,7 @@ public class ThriftHttpCLIService extends ThriftCLIService {
     try {
       // Server thread pool
       // Start with minWorkerThreads, expand till maxWorkerThreads and reject subsequent requests
-      String threadPoolName = "SparkServer2-HttpHandler-Pool";
+      String threadPoolName = "SparkThriftServer-HttpHandler-Pool";
       ThreadPoolExecutor executorService =
           new ThreadPoolExecutor(minWorkerThreads, maxWorkerThreads,
               workerKeepAliveTime, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
@@ -110,7 +110,7 @@ public class ThriftHttpCLIService extends ThriftCLIService {
           httpServer,
           null,
           // Call this full constructor to set this, which forces daemon threads:
-          new ScheduledExecutorScheduler("SparkServer2-HttpHandler-JettyScheduler", true),
+          new ScheduledExecutorScheduler("SparkThriftServer-HttpHandler-JettyScheduler", true),
           null,
           -1,
           -1,
@@ -127,10 +127,10 @@ public class ThriftHttpCLIService extends ThriftCLIService {
       httpServer.addConnector(connector);
 
       // Thrift configs
-      sparkAuthFactory = new SparkAuthFactory(sqlContext);
+      sparkAuthFactory = new SparkAuthFactory(sqlConf);
       TProcessor processor = new TCLIService.Processor<Iface>(this);
       TProtocolFactory protocolFactory = new TBinaryProtocol.Factory();
-      // Set during the init phase of SparkServer2 if auth mode is kerberos
+      // Set during the init phase of SparkThriftServer if auth mode is kerberos
       // UGI for the hive/_HOST (kerberos) principal
       UserGroupInformation serviceUGI = cliService.getServiceUGI();
       // UGI for the http/_HOST (SPNego) principal
@@ -157,7 +157,7 @@ public class ThriftHttpCLIService extends ThriftCLIService {
       httpServer.join();
     } catch (Throwable t) {
       LOG.error(
-          "Error starting SparkServer2: could not start "
+          "Error starting SparkThriftServer: could not start "
               + ThriftHttpCLIService.class.getSimpleName(), t);
       System.exit(-1);
     }

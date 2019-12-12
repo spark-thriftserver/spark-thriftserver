@@ -21,7 +21,7 @@ import java.sql.DriverManager
 
 import org.apache.spark.util.{Utils => SparkUtils}
 
-class JdbcConnectionUriSuite extends SparkThriftServer2Test with JdbcTestHelper {
+class JdbcConnectionUriSuite extends SparkThriftServerTest with JdbcTestHelper {
   SparkUtils.classForName(jdbcDriver)
 
   override def mode: ServerMode.Value = ServerMode.binary

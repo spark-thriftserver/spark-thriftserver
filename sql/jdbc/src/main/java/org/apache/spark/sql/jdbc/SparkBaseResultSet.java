@@ -50,7 +50,7 @@ import org.apache.spark.sql.service.cli.TableSchema;
 
 /**
  * Data independent base class which implements the common part of
- * all Hive result sets.
+ * all Spark result sets.
  */
 public abstract class SparkBaseResultSet implements ResultSet {
 

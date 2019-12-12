@@ -33,12 +33,11 @@ import org.apache.commons.io.FileUtils;
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.CompositeService;
-import org.apache.spark.sql.service.SparkThriftServer2;
+import org.apache.spark.sql.service.SparkThriftServer;
 import org.apache.spark.sql.service.cli.ServiceSQLException;
 import org.apache.spark.sql.service.cli.SessionHandle;
 import org.apache.spark.sql.service.internal.ServiceConf;
 import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
-import org.apache.spark.sql.service.server.SparkServer2;
 import org.apache.spark.sql.service.server.ThreadFactoryWithName;
 import org.apache.spark.sql.service.cli.operation.OperationManager;
 import org.slf4j.Logger;
@@ -51,7 +50,7 @@ import org.slf4j.LoggerFactory;
 public class SessionManager extends CompositeService {
 
   private static final Logger LOG = LoggerFactory.getLogger(SessionManager.class);
-  public static final String HIVERCFILE = ".hiverc";
+  public static final String SPARKRCFILE = ".sparkrc";
   private SQLConf sqlConf;
   private SQLContext sqlContext;
   private final Map<SessionHandle, ServiceSession> handleToSession =
@@ -66,12 +65,9 @@ public class SessionManager extends CompositeService {
   private boolean checkOperation;
 
   private volatile boolean shutdown;
-  // The SparkServer2 instance running this service
-  private final SparkServer2 sparkServer2;
 
-  public SessionManager(SparkServer2 sparkServer2, SQLContext sqlContext) {
+  public SessionManager(SQLContext sqlContext) {
     super(SessionManager.class.getSimpleName());
-    this.sparkServer2 = sparkServer2;
     this.sqlContext = sqlContext;
   }
 
@@ -89,19 +85,19 @@ public class SessionManager extends CompositeService {
 
   private void createBackgroundOperationPool() {
     int poolSize = (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_THREADS());
-    LOG.info("SparkServer2: Background operation thread pool size: " + poolSize);
+    LOG.info("SparkThriftServer: Background operation thread pool size: " + poolSize);
     int poolQueueSize =
         (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_WAIT_QUEUE_SIZE());
-    LOG.info("SparkServer2: Background operation thread wait queue size: " + poolQueueSize);
+    LOG.info("SparkThriftServer: Background operation thread wait queue size: " + poolQueueSize);
     long keepAliveTime =
        (long) sqlConf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_KEEPALIVE_TIME());
-    LOG.info(
-        "SparkServer2: Background operation thread keepalive time: " + keepAliveTime + " seconds");
+    LOG.info("SparkThriftServer: Background operation thread keepalive time: "
+        + keepAliveTime + " seconds");
 
     // Create a thread pool with #poolSize threads
     // Threads terminate when they are idle for more than the keepAliveTime
     // A bounded blocking queue is used to queue incoming operations, if #operations > poolSize
-    String threadPoolName = "SparkServer2-Background-Pool";
+    String threadPoolName = "SparkThriftServer-Background-Pool";
     backgroundOperationPool = new ThreadPoolExecutor(poolSize, poolSize,
         keepAliveTime, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(poolQueueSize),
         new ThreadFactoryWithName(threadPoolName));
@@ -250,7 +246,8 @@ public class SessionManager extends CompositeService {
     } else {
       ctx = sqlContext.newSession();
     }
-    // If doAs is set to true for SparkServer2, we will create a proxy object for the session impl.
+    // If doAs is set to true for SparkThriftServer,
+    // we will create a proxy object for the session impl.
     // Within the proxy object, we wrap the method call in a UserGroupInformation#doAs
     if (withImpersonation) {
       ServiceSessionImplwithUGI sessionWithUGI = new ServiceSessionImplwithUGI(protocol, username,
@@ -276,7 +273,7 @@ public class SessionManager extends CompositeService {
     if (isOperationLogEnabled) {
       session.setOperationLogSessionDir(operationLogRootDir);
     }
-    SparkThriftServer2.listener().onSessionCreated(session.getIpAddress(),
+    SparkThriftServer.listener().onSessionCreated(session.getIpAddress(),
         session.getSessionHandle().getSessionId().toString(),
         session.getUserName());
     if (sessionConf != null && sessionConf.containsKey("use:database")) {
@@ -287,7 +284,7 @@ public class SessionManager extends CompositeService {
   }
 
   public void closeSession(SessionHandle sessionHandle) throws ServiceSQLException {
-    SparkThriftServer2.listener().onSessionClosed(sessionHandle.getSessionId().toString());
+    SparkThriftServer.listener().onSessionClosed(sessionHandle.getSessionId().toString());
     ServiceSession session = handleToSession.remove(sessionHandle);
     if (session == null) {
       throw new ServiceSQLException("Session does not exist!");

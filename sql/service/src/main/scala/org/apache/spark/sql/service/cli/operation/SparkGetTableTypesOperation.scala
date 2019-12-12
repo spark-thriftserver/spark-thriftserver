@@ -23,7 +23,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils
 
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.catalog.CatalogTableType
-import org.apache.spark.sql.service.SparkThriftServer2
+import org.apache.spark.sql.service.SparkThriftServer
 import org.apache.spark.sql.service.cli._
 import org.apache.spark.sql.service.cli.session.ServiceSession
 import org.apache.spark.util.{Utils => SparkUtils}
@@ -31,7 +31,6 @@ import org.apache.spark.util.{Utils => SparkUtils}
 /**
  * Spark's own GetTableTypesOperation
  *
- * @param sqlContext SQLContext to use
  * @param parentSession a ServiceSession from SessionManager
  */
 private[service] class SparkGetTableTypesOperation(
@@ -48,7 +47,7 @@ private[service] class SparkGetTableTypesOperation(
 
   override def close(): Unit = {
     super.close()
-    SparkThriftServer2.listener.onOperationClosed(statementId)
+    SparkThriftServer.listener.onOperationClosed(statementId)
   }
 
   override def runInternal(): Unit = {
@@ -60,7 +59,7 @@ private[service] class SparkGetTableTypesOperation(
     val executionHiveClassLoader = sqlContext.sharedState.jarClassLoader
     Thread.currentThread().setContextClassLoader(executionHiveClassLoader)
 
-    SparkThriftServer2.listener.onStatementStart(
+    SparkThriftServer.listener.onStatementStart(
       statementId,
       parentSession.getSessionHandle.getSessionId.toString,
       logMsg,
@@ -79,17 +78,17 @@ private[service] class SparkGetTableTypesOperation(
         setState(OperationState.ERROR)
         e match {
           case hiveException: ServiceSQLException =>
-            SparkThriftServer2.listener.onStatementError(
+            SparkThriftServer.listener.onStatementError(
               statementId, hiveException.getMessage, SparkUtils.exceptionString(hiveException))
             throw hiveException
           case _ =>
             val root = ExceptionUtils.getRootCause(e)
-            SparkThriftServer2.listener.onStatementError(
+            SparkThriftServer.listener.onStatementError(
               statementId, root.getMessage, SparkUtils.exceptionString(root))
             throw new ServiceSQLException("Error getting table types: " + root.toString, root)
         }
     }
-    SparkThriftServer2.listener.onStatementFinish(statementId)
+    SparkThriftServer.listener.onStatementFinish(statementId)
   }
 
   override def getResultSetSchema: TableSchema = {

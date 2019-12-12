@@ -23,7 +23,7 @@ import java.util.regex.Pattern
 import org.apache.commons.lang3.exception.ExceptionUtils
 
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.service.SparkThriftServer2
+import org.apache.spark.sql.service.SparkThriftServer
 import org.apache.spark.sql.service.cli._
 import org.apache.spark.sql.service.cli.session.ServiceSession
 import org.apache.spark.util.{Utils => SparkUtils}
@@ -31,7 +31,6 @@ import org.apache.spark.util.{Utils => SparkUtils}
 /**
  * Spark's own GetSchemasOperation
  *
- * @param sqlContext SQLContext to use
  * @param parentSession a ServiceSession from SessionManager
  * @param catalogName catalog name. null if not applicable.
  * @param schemaName database name, null or a concrete database name
@@ -54,7 +53,7 @@ private[service] class SparkGetSchemasOperation(
 
   override def close(): Unit = {
     super.close()
-    SparkThriftServer2.listener.onOperationClosed(statementId)
+    SparkThriftServer.listener.onOperationClosed(statementId)
   }
 
   override def runInternal(): Unit = {
@@ -68,7 +67,7 @@ private[service] class SparkGetSchemasOperation(
     val executionHiveClassLoader = sqlContext.sharedState.jarClassLoader
     Thread.currentThread().setContextClassLoader(executionHiveClassLoader)
 
-    SparkThriftServer2.listener.onStatementStart(
+    SparkThriftServer.listener.onStatementStart(
       statementId,
       parentSession.getSessionHandle.getSessionId.toString,
       logMsg,
@@ -93,17 +92,17 @@ private[service] class SparkGetSchemasOperation(
         setState(OperationState.ERROR)
         e match {
           case hiveException: ServiceSQLException =>
-            SparkThriftServer2.listener.onStatementError(
+            SparkThriftServer.listener.onStatementError(
               statementId, hiveException.getMessage, SparkUtils.exceptionString(hiveException))
             throw hiveException
           case _ =>
             val root = ExceptionUtils.getRootCause(e)
-            SparkThriftServer2.listener.onStatementError(
+            SparkThriftServer.listener.onStatementError(
               statementId, root.getMessage, SparkUtils.exceptionString(root))
             throw new ServiceSQLException("Error getting schemas: " + root.toString, root)
         }
     }
-    SparkThriftServer2.listener.onStatementFinish(statementId)
+    SparkThriftServer.listener.onStatementFinish(statementId)
   }
 
   override def getResultSetSchema: TableSchema = {

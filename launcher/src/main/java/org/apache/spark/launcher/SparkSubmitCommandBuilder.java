@@ -88,7 +88,7 @@ class SparkSubmitCommandBuilder extends AbstractCommandBuilder {
       SparkLauncher.NO_RESOURCE);
     specialClasses.put("org.apache.spark.sql.hive.thriftserver.HiveThriftServer2",
       SparkLauncher.NO_RESOURCE);
-    specialClasses.put("org.apache.spark.sql.service.SparkThriftServer2",
+    specialClasses.put("org.apache.spark.sql.service.SparkThriftServer",
       SparkLauncher.NO_RESOURCE);
   }
 
@@ -403,7 +403,7 @@ class SparkSubmitCommandBuilder extends AbstractCommandBuilder {
   private boolean isThriftServer(String mainClass) {
     return (mainClass != null && (
       mainClass.equals("org.apache.spark.sql.hive.thriftserver.HiveThriftServer2") ||
-        mainClass.equals("org.apache.spark.sql.service.SparkThriftServer2")));
+        mainClass.equals("org.apache.spark.sql.service.SparkThriftServer")));
   }
 
   private List<String> findExamplesJars() {

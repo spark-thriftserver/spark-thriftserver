@@ -208,7 +208,7 @@ public class ThriftHttpServlet extends TServlet {
 
     // Following is the main loop which iterates through all the cookies send by the client.
     // The HS2 generated cookies are of the format spark.sql.thriftserver.auth=<value>
-    // A cookie which is identified as a sparkserver2 generated cookie is validated
+    // A cookie which is identified as a SparkThriftServer generated cookie is validated
     // by calling signer.verifyAndExtract(). If the validation passes, send the
     // username for which the cookie is validated to the caller. If no client side
     // cookie passes the validation, return null to the caller.

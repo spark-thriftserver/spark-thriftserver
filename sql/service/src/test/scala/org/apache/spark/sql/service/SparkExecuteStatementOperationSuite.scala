@@ -28,8 +28,8 @@ class SparkExecuteStatementOperationSuite extends SparkFunSuite {
     val tableSchema = StructType(Seq(field1, field2))
     val columns = SparkExecuteStatementOperation.getTableSchema(tableSchema).getColumnDescriptors()
     assert(columns.size() == 2)
-    assert(columns.get(0).getType().getName == "VOID")
-    assert(columns.get(1).getType().getName == "VOID")
+    assert(columns.get(0).getType().getName == "NULL")
+    assert(columns.get(1).getType().getName == "NULL")
   }
 
   test("SPARK-20146 Comment should be preserved") {
