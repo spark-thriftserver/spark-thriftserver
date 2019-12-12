@@ -55,12 +55,19 @@ import java.util.Map;
 public class HadoopThriftAuthBridge {
   private static final Logger LOG = LoggerFactory.getLogger(HadoopThriftAuthBridge.class);
 
-  private static HadoopThriftAuthBridge instance = new HadoopThriftAuthBridge();
+  private static HadoopThriftAuthBridge instance;
 
   private HadoopThriftAuthBridge() {
   }
 
   public static HadoopThriftAuthBridge getInstance() {
+    if (instance == null) {
+      synchronized (HadoopThriftAuthBridge.class) {
+        if (instance == null) {
+          instance = new HadoopThriftAuthBridge();
+        }
+      }
+    }
     return instance;
   }
 
