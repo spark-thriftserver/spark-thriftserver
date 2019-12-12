@@ -29,11 +29,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * ServerStartUpUtil.
+ * ServerStartupUtil.
  *
  */
-public class ServerStartUpUtil {
-  private static final Logger LOG = LoggerFactory.getLogger(ServerStartUpUtil.class);
+public class ServerStartupUtil {
+  private static final Logger LOG = LoggerFactory.getLogger(ServerStartupUtil.class);
 
 
   public static void process(String[] args) {

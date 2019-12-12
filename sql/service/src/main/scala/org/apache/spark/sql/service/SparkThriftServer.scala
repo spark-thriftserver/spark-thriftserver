@@ -32,7 +32,7 @@ import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.service.cli.CLIService
 import org.apache.spark.sql.service.cli.thrift.{ThriftBinaryCLIService, ThriftCLIService, ThriftHttpCLIService}
 import org.apache.spark.sql.service.internal.ServiceConf
-import org.apache.spark.sql.service.server.ServerStartUpUtil
+import org.apache.spark.sql.service.server.ServerStartupUtil
 import org.apache.spark.sql.service.ui.ThriftServerTab
 import org.apache.spark.util.{ShutdownHookManager, Utils}
 
@@ -80,13 +80,13 @@ object SparkThriftServer extends Logging {
   def main(args: Array[String]): Unit = {
     // If the arguments contains "-h" or "--help", print out the usage and exit.
     if (args.contains("-h") || args.contains("--help")) {
-      ServerStartUpUtil.process(args)
+      ServerStartupUtil.process(args)
       // The following code should not be reachable. It is added to ensure the main function exits.
       return
     }
 
     Utils.initDaemon(log)
-    val optionsProcessor = new ServerStartUpUtil.ServerOptionsProcessor("SparkThriftServer")
+    val optionsProcessor = new ServerStartupUtil.ServerOptionsProcessor("SparkThriftServer")
     optionsProcessor.parse(args)
 
     logInfo("Starting SparkContext")
