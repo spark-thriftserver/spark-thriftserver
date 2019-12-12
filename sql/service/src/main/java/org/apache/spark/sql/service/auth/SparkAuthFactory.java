@@ -38,14 +38,11 @@ import org.apache.thrift.transport.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.SSLServerSocket;
 import javax.security.auth.login.LoginException;
 import javax.security.sasl.Sasl;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.util.*;
 
 /**
@@ -240,72 +237,6 @@ public class SparkAuthFactory {
       return UserGroupInformation.loginUserFromKeytabAndReturnUGI(
           SecurityUtil.getServerPrincipal(principal, "0.0.0.0"), keyTabFile);
     }
-  }
-
-  public static TTransport getSocketTransport(String host, int port, int loginTimeout) {
-    return new TSocket(host, port, loginTimeout);
-  }
-
-  public static TTransport getSSLSocket(String host, int port, int loginTimeout)
-    throws TTransportException {
-    return TSSLTransportFactory.getClientSocket(host, port, loginTimeout);
-  }
-
-  public static TTransport getSSLSocket(String host, int port, int loginTimeout,
-    String trustStorePath, String trustStorePassWord) throws TTransportException {
-    TSSLTransportFactory.TSSLTransportParameters params =
-      new TSSLTransportFactory.TSSLTransportParameters();
-    params.setTrustStore(trustStorePath, trustStorePassWord);
-    params.requireClientAuth(true);
-    return TSSLTransportFactory.getClientSocket(host, port, loginTimeout, params);
-  }
-
-  public static TServerSocket getServerSocket(String hiveHost, int portNum)
-    throws TTransportException {
-    InetSocketAddress serverAddress;
-    if (hiveHost == null || hiveHost.isEmpty()) {
-      // Wildcard bind
-      serverAddress = new InetSocketAddress(portNum);
-    } else {
-      serverAddress = new InetSocketAddress(hiveHost, portNum);
-    }
-    return new TServerSocket(serverAddress);
-  }
-
-  public static TServerSocket getServerSSLSocket(String hiveHost, int portNum, String keyStorePath,
-      String keyStorePassWord, List<String> sslVersionBlacklist) throws TTransportException,
-      UnknownHostException {
-    TSSLTransportFactory.TSSLTransportParameters params =
-        new TSSLTransportFactory.TSSLTransportParameters();
-    params.setKeyStore(keyStorePath, keyStorePassWord);
-    InetSocketAddress serverAddress;
-    if (hiveHost == null || hiveHost.isEmpty()) {
-      // Wildcard bind
-      serverAddress = new InetSocketAddress(portNum);
-    } else {
-      serverAddress = new InetSocketAddress(hiveHost, portNum);
-    }
-    TServerSocket thriftServerSocket =
-        TSSLTransportFactory.getServerSocket(portNum, 0, serverAddress.getAddress(), params);
-    if (thriftServerSocket.getServerSocket() instanceof SSLServerSocket) {
-      List<String> sslVersionBlacklistLocal = new ArrayList<String>();
-      for (String sslVersion : sslVersionBlacklist) {
-        sslVersionBlacklistLocal.add(sslVersion.trim().toLowerCase(Locale.ROOT));
-      }
-      SSLServerSocket sslServerSocket = (SSLServerSocket) thriftServerSocket.getServerSocket();
-      List<String> enabledProtocols = new ArrayList<String>();
-      for (String protocol : sslServerSocket.getEnabledProtocols()) {
-        if (sslVersionBlacklistLocal.contains(protocol.toLowerCase(Locale.ROOT))) {
-          LOG.debug("Disabling SSL Protocol: " + protocol);
-        } else {
-          enabledProtocols.add(protocol);
-        }
-      }
-      sslServerSocket.setEnabledProtocols(enabledProtocols.toArray(new String[0]));
-      LOG.info("SSL Server Socket Enabled Protocols: "
-          + Arrays.toString(sslServerSocket.getEnabledProtocols()));
-    }
-    return thriftServerSocket;
   }
 
   // retrieve delegation token for the given user
