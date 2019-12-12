@@ -17,12 +17,14 @@
  */
 package org.apache.spark.sql.service.auth;
 
+import org.apache.hadoop.security.SaslRpcServer;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.ProxyUsers;
-import org.apache.spark.sql.SQLContext;
+import org.apache.spark.SparkConf;
+import org.apache.spark.deploy.SparkHadoopUtil;
 import org.apache.spark.sql.internal.SQLConf;
-import org.apache.spark.sql.service.ReflectionUtils;
+import org.apache.spark.sql.service.SparkSQLEnv;
 import org.apache.spark.sql.service.auth.shims.HadoopShims.KerberosNameShim;
 import org.apache.spark.sql.service.auth.shims.ShimLoader;
 import org.apache.spark.sql.service.auth.thrift.HadoopThriftAuthBridge;
@@ -77,11 +79,10 @@ public class SparkAuthFactory {
   private String authTypeStr;
   private final String transportMode;
   private final SQLConf conf;
-  private SQLContext sqlContext;
   private SparkDelegationTokenManager delegationTokenManager = null;
 
   public static final String SS2_PROXY_USER = "spark.sql.thriftserver.proxy.user";
-  public static final String SS2_CLIENT_TOKEN = "sparkserver2ClientToken";
+  public static final String SS2_CLIENT_TOKEN = "sparkserverClientToken";
 
   private static Field keytabFile = null;
   private static Method getKeytab = null;
@@ -106,9 +107,8 @@ public class SparkAuthFactory {
     }
   }
 
-  public SparkAuthFactory(SQLContext sqlContext) throws TTransportException, IOException {
-    this.conf = sqlContext.conf();
-    this.sqlContext = sqlContext;
+  public SparkAuthFactory(SQLConf sqlConf) throws TTransportException, IOException {
+    this.conf = sqlConf;
     transportMode = conf.getConf(ServiceConf.THRIFTSERVER_TRANSPORT_MODE());
     authTypeStr = conf.getConf(ServiceConf.THRIFTSERVER_AUTHENTICATION());
 
@@ -125,7 +125,7 @@ public class SparkAuthFactory {
         String principal = conf.getConf(ServiceConf.THRIFTSERVER_KERBEROS_PRINCIPAL());
         String keytab = conf.getConf(ServiceConf.THRIFTSERVER_KERBEROS_KEYTAB());
         if (needUgiLogin(UserGroupInformation.getCurrentUser(),
-          SecurityUtil.getServerPrincipal(principal, "0.0.0.0"), keytab)) {
+            SecurityUtil.getServerPrincipal(principal, "0.0.0.0"), keytab)) {
           saslServer = ShimLoader.getHadoopThriftAuthBridge().createServer(keytab, principal);
         } else {
           // Using the default constructor to avoid unnecessary UGI login.
@@ -134,9 +134,16 @@ public class SparkAuthFactory {
 
         // start delegation token manager
         delegationTokenManager = new SparkDelegationTokenManager();
-          delegationTokenManager.startDelegationTokenSecretManager(
-                  sqlContext.sparkContext().hadoopConfiguration(), ServerMode.HIVESERVER2);
-          ReflectionUtils.setSuperField(saslServer, "secretManager", delegationTokenManager);
+        // Todo Support for UT about SparkAuthFactory, need changed for better way
+        SparkConf sparkConf = null;
+        if (SparkSQLEnv.sparkContext() != null) {
+          sparkConf = SparkSQLEnv.sparkContext().conf();
+        } else {
+          sparkConf = new SparkConf();
+        }
+        delegationTokenManager.startDelegationTokenSecretManager(
+            SparkHadoopUtil.get().newConfiguration(sparkConf), ServerMode.HIVESERVER2);
+        saslServer.setSecretManager(delegationTokenManager.getSecretManager());
       }
     }
   }
@@ -174,7 +181,7 @@ public class SparkAuthFactory {
   }
 
   /**
-   * Returns the thrift processor factory for SparkServer2 running in binary mode
+   * Returns the thrift processor factory for SparkThriftServer running in binary mode
    * @param service
    * @return
    * @throws LoginException
@@ -199,12 +206,21 @@ public class SparkAuthFactory {
     }
   }
 
+  public String getUserAuthMechanism() {
+    return saslServer == null ? null : saslServer.getUserAuthMechanism();
+  }
+
+  public boolean isSASLKerberosUser() {
+    return SaslRpcServer.AuthMethod.KERBEROS.getMechanismName().equals(getUserAuthMechanism())
+        || SaslRpcServer.AuthMethod.TOKEN.getMechanismName().equals(getUserAuthMechanism());
+  }
+
   // Perform kerberos login using the hadoop shim API if the configuration is available
   public static void loginFromKeytab(SQLConf sqlConf) throws IOException {
     String principal = sqlConf.getConf(ServiceConf.THRIFTSERVER_KERBEROS_PRINCIPAL());
     String keyTabFile = sqlConf.getConf(ServiceConf.THRIFTSERVER_KERBEROS_KEYTAB());
     if (principal.isEmpty() || keyTabFile.isEmpty()) {
-      throw new IOException("SparkServer2 Kerberos principal or keytab " +
+      throw new IOException("SparkThriftServer Kerberos principal or keytab " +
           "is not correctly configured");
     } else {
       UserGroupInformation.loginUserFromKeytab(
@@ -218,7 +234,8 @@ public class SparkAuthFactory {
     String principal = sqlConf.getConf(ServiceConf.THRIFTSERVER_SPNEGO_PRINCIPAL());
     String keyTabFile = sqlConf.getConf(ServiceConf.THRIFTSERVER_SPNEGO_KEYTAB());
     if (principal.isEmpty() || keyTabFile.isEmpty()) {
-      throw new IOException("SparkServer2 SPNEGO principal or keytab is not correctly configured");
+      throw new IOException("SparkThriftServer SPNEGO" +
+          " principal or keytab is not correctly configured");
     } else {
       return UserGroupInformation.loginUserFromKeytabAndReturnUGI(
           SecurityUtil.getServerPrincipal(principal, "0.0.0.0"), keyTabFile);

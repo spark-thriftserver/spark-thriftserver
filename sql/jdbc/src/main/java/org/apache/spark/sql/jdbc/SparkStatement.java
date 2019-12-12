@@ -273,7 +273,7 @@ public class SparkStatement implements java.sql.Statement {
    * query returns results) to ensure that query completes successfully. Calling another execute*
    * method, or close before query completion would result in the async query getting killed if it
    * is not already finished.
-   * Note: This method is an API for limited usage outside of Hive by applications like
+   * Note: This method is an API for limited usage outside of Spark by applications like
    * Apache Ambari, although it is not part of the interface java.sql.Statement.
    *
    * @param sql
@@ -364,7 +364,7 @@ public class SparkStatement implements java.sql.Statement {
       try {
         /**
          * For an async SQLOperation, GetOperationStatus will use the long polling approach It will
-         * essentially return after the HIVE_SERVER2_LONG_POLLING_TIMEOUT (a server config) expires
+         * essentially return after the THRIFTSERVER_LONG_POLLING_TIMEOUT (a server config) expires
          */
         statusResp = client.GetOperationStatus(statusReq);
         inPlaceUpdateStream.update(statusResp.getProgressUpdateResponse());
@@ -403,7 +403,7 @@ public class SparkStatement implements java.sql.Statement {
     }
 
     /*
-      we set progress bar to be completed when hive query execution has completed
+      we set progress bar to be completed when spark query execution has completed
     */
     inPlaceUpdateStream.getEventNotifier().progressBarCompleted();
     return statusResp;
@@ -863,7 +863,7 @@ public class SparkStatement implements java.sql.Statement {
 
   /**
    * Check whether query execution might be producing more logs to be fetched.
-   * This method is a public API for usage outside of Hive, although it is not part of the
+   * This method is a public API for usage outside of Spark, although it is not part of the
    * interface java.sql.Statement.
    * @return true if query execution might be producing more logs. It does not indicate if last
    *         log lines have been fetched by getQueryLog.
@@ -874,7 +874,7 @@ public class SparkStatement implements java.sql.Statement {
 
   /**
    * Get the execution logs of the given SQL statement.
-   * This method is a public API for usage outside of Hive, although it is not part of the
+   * This method is a public API for usage outside of Spark, although it is not part of the
    * interface java.sql.Statement.
    * This method gets the incremental logs during SQL execution, and uses fetchSize holden by
    * SparkStatement object.
@@ -888,7 +888,7 @@ public class SparkStatement implements java.sql.Statement {
 
   /**
    * Get the execution logs of the given SQL statement.
-   * This method is a public API for usage outside of Hive, although it is not part of the
+   * This method is a public API for usage outside of Spark, although it is not part of the
    * interface java.sql.Statement.
    * @param incremental indicate getting logs either incrementally or from the beginning,
    *                    when it is true or false.
@@ -953,7 +953,7 @@ public class SparkStatement implements java.sql.Statement {
 
   /**
    * Returns the Yarn ATS GUID.
-   * This method is a public API for usage outside of Hive, although it is not part of the
+   * This method is a public API for usage outside of Spark, although it is not part of the
    * interface java.sql.Statement.
    * @return Yarn ATS GUID or null if it hasn't been created yet.
    */

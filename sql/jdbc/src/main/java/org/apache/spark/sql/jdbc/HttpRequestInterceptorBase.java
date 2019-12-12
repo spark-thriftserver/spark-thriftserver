@@ -64,16 +64,16 @@ public abstract class HttpRequestInterceptorBase implements HttpRequestIntercept
       // 2. The first time when the request is sent OR
       // 3. The server returns a 401, which sometimes means the cookie has expired
       // 4. The cookie is secured where as the client connect does not use SSL
-      if (!isCookieEnabled || ((httpContext.getAttribute(Utils.HIVE_SERVER2_RETRY_KEY) == null &&
+      if (!isCookieEnabled || ((httpContext.getAttribute(Utils.SPARK_SERVER2_RETRY_KEY) == null &&
           (cookieStore == null || (cookieStore != null &&
           Utils.needToSendCredentials(cookieStore, cookieName, isSSL)))) ||
-          (httpContext.getAttribute(Utils.HIVE_SERVER2_RETRY_KEY) != null &&
-          httpContext.getAttribute(Utils.HIVE_SERVER2_RETRY_KEY)
-              .equals(Utils.HIVE_SERVER2_RETRY_TRUE)))) {
+          (httpContext.getAttribute(Utils.SPARK_SERVER2_RETRY_KEY) != null &&
+          httpContext.getAttribute(Utils.SPARK_SERVER2_RETRY_KEY)
+              .equals(Utils.SPARK_SERVER2_RETRY_TRUE)))) {
         addHttpAuthHeader(httpRequest, httpContext);
       }
       if (isCookieEnabled) {
-        httpContext.setAttribute(Utils.HIVE_SERVER2_RETRY_KEY, Utils.HIVE_SERVER2_RETRY_FALSE);
+        httpContext.setAttribute(Utils.SPARK_SERVER2_RETRY_KEY, Utils.SPARK_SERVER2_RETRY_FALSE);
       }
       // Insert the additional http headers
       if (additionalHeaders != null) {

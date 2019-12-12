@@ -19,7 +19,7 @@ package org.apache.spark.sql.service.ui
 
 import org.apache.spark.{SparkContext, SparkException}
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.service.SparkThriftServer2
+import org.apache.spark.sql.service.SparkThriftServer
 import org.apache.spark.sql.service.ui.ThriftServerTab._
 import org.apache.spark.ui.{SparkUI, SparkUITab}
 
@@ -33,7 +33,7 @@ private[service] class ThriftServerTab(sparkContext: SparkContext)
   override val name = "JDBC/ODBC Server"
 
   val parent = getSparkUI(sparkContext)
-  val listener = SparkThriftServer2.listener
+  val listener = SparkThriftServer.listener
 
   attachPage(new ThriftServerPage(this))
   attachPage(new ThriftServerSessionPage(this))
