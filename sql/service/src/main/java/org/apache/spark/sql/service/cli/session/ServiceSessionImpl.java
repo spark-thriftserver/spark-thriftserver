@@ -90,7 +90,7 @@ public class ServiceSessionImpl implements ServiceSession {
    * That's why it is important to create SessionState here rather than in the constructor.
    */
   public void open(Map<String, String> sessionConfMap) throws ServiceSQLException {
-    // Process global init file: .hiverc
+    // Process global init file: .sparkrc
     processGlobalInitFile();
     if (sessionConfMap != null) {
       configureSession(sessionConfMap);
@@ -100,9 +100,9 @@ public class ServiceSessionImpl implements ServiceSession {
   }
 
   /**
-   * It is used for processing hiverc file from SparkThriftServer side.
+   * It is used for processing sparkrc file from SparkThriftServer side.
    */
-  private class GlobalHivercFileProcessor extends SparkFileProcessor {
+  private class GlobalSparkrcFileProcessor extends SparkFileProcessor {
     @Override
     protected BufferedReader loadFile(String fileName) throws IOException {
       FileInputStream initStream = null;
@@ -120,21 +120,21 @@ public class ServiceSessionImpl implements ServiceSession {
         executeStatementInternal(cmd_trimed, null, false, 0);
       } catch (ServiceSQLException e) {
         rc = -1;
-        LOG.warn("Failed to execute HQL command in global .hiverc file.", e);
+        LOG.warn("Failed to execute HQL command in global .sparkrc file.", e);
       }
       return rc;
     }
   }
 
   private void processGlobalInitFile() {
-    ISparkFileProcessor processor = new GlobalHivercFileProcessor();
+    ISparkFileProcessor processor = new GlobalSparkrcFileProcessor();
 
     try {
       String sparkrc = sqlConf.getConf(ServiceConf.THRIFTSERVER_GLOABLE_INIT_FILE_LOCATION());
       if (sparkrc != null) {
         File sparkrcFile = new File(sparkrc);
         if (sparkrcFile.isDirectory()) {
-          sparkrcFile = new File(sparkrcFile, SessionManager.HIVERCFILE);
+          sparkrcFile = new File(sparkrcFile, SessionManager.SPARKRCFILE);
         }
         if (sparkrcFile.isFile()) {
           LOG.info("Running global init file: " + sparkrcFile);
