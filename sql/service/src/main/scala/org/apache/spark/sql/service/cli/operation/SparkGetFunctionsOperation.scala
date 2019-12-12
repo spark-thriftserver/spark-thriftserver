@@ -31,7 +31,6 @@ import org.apache.spark.util.{Utils => SparkUtils}
 /**
  * Spark's own GetFunctionsOperation
  *
- * @param sqlContext SQLContext to use
  * @param parentSession a ServiceSession from SessionManager
  * @param catalogName catalog name. null if not applicable
  * @param schemaName database name, null or a concrete database name

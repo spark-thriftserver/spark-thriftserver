@@ -30,7 +30,6 @@ import org.apache.spark.util.{Utils => SparkUtils}
 /**
  * Spark's own GetTypeInfoOperation
  *
- * @param sqlContext    SQLContext to use
  * @param parentSession a ServiceSession from SessionManager
  */
 private[service] class SparkGetTypeInfoOperation(

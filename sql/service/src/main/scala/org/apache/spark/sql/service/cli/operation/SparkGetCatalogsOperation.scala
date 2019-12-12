@@ -30,7 +30,6 @@ import org.apache.spark.util.{Utils => SparkUtils}
 /**
  * Spark's own GetCatalogsOperation
  *
- * @param sqlContext SQLContext to use
  * @param parentSession a ServiceSession from SessionManager
  */
 private[service] class SparkGetCatalogsOperation(
