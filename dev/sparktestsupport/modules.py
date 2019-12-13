@@ -185,7 +185,7 @@ service = Module(
     ]
 )
 
-service = Module(
+jdbc = Module(
     name="jdbc",
     dependencies=[service],
     source_file_regexes=[
