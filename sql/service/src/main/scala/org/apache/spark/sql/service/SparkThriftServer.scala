@@ -19,8 +19,12 @@ package org.apache.spark.sql.service
 
 import java.util.concurrent.atomic.AtomicBoolean
 
+import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+
+import org.apache.commons.cli.{CommandLine, GnuParser, HelpFormatter, Option => CLIOption,
+  OptionBuilder, Options, ParseException}
 
 import org.apache.spark.SparkContext
 import org.apache.spark.annotation.DeveloperApi
@@ -32,7 +36,6 @@ import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.service.cli.CLIService
 import org.apache.spark.sql.service.cli.thrift.{ThriftBinaryCLIService, ThriftCLIService, ThriftHttpCLIService}
 import org.apache.spark.sql.service.internal.ServiceConf
-import org.apache.spark.sql.service.server.ServerStartUpUtil
 import org.apache.spark.sql.service.ui.ThriftServerTab
 import org.apache.spark.util.{ShutdownHookManager, Utils}
 
@@ -77,48 +80,140 @@ object SparkThriftServer extends Logging {
     }
   }
 
+  def process(args: Array[String]): Unit = {
+
+  }
+
+
+  /**
+   * ServerOptionsProcessor.
+   * Process arguments given to SparkThriftServer (-sparkconf property=value)
+   * Set properties in System properties
+   * Create an appropriate response object,
+   * which has executor to execute the appropriate command based on the parsed options.
+   */
+  @SuppressWarnings(Array("static-access"))
+  class ServerOptionsProcessor(val serverName: String) {
+    // -sparkconf x=y
+    final private val options = new Options
+    private var commandLine: CommandLine = null
+    final private val debugMessage = new StringBuilder
+
+    OptionBuilder.withValueSeparator
+    OptionBuilder.hasArgs(2)
+    OptionBuilder.withArgName("property=value")
+    OptionBuilder.withLongOpt("sparkconf")
+    OptionBuilder.withDescription("Use value for given property")
+    options.addOption(OptionBuilder.create)
+    options.addOption(new CLIOption("H", "help", false, "Print help information"))
+
+    def parse(argv: Array[String]): SparkThriftServer.ServerOptionsProcessorResponse = {
+      try {
+        commandLine = new GnuParser().parse(options, argv)
+        // Process --sparkconf
+        // Get sparkconf param values and set the System property values
+        val confProps = commandLine.getOptionProperties("sparkconf")
+        confProps.stringPropertyNames().asScala.foreach(propKey => {
+          // save logging message for log4j output latter after log4j initialize properly
+          debugMessage.append("Setting " + propKey + "=" + confProps.getProperty(propKey) + ";\n")
+          System.setProperty(propKey, confProps.getProperty(propKey))
+        })
+        // Process --help
+        if (commandLine.hasOption('H')) {
+          return new ServerOptionsProcessorResponse(new HelpOptionExecutor(serverName, options))
+        }
+      } catch {
+        case e: ParseException =>
+          // Error out & exit - we were not able to parse the args successfully
+          logError("Error starting SparkThriftServer with given arguments: ")
+          logError(e.getMessage)
+          System.exit(-1)
+      }
+      // Default executor, when no option is specified
+      new ServerOptionsProcessorResponse(new SparkThriftServer.StartOptionExecutor)
+    }
+
+    def getDebugMessage: StringBuilder = debugMessage
+  }
+
+  /**
+   * The response sent back from {@link ServerOptionsProcessor#parse(String[])}
+   */
+  class ServerOptionsProcessorResponse(val serverOptionsExecutor: ServerOptionsExecutor) {
+    def getServerOptionsExecutor: SparkThriftServer.ServerOptionsExecutor = serverOptionsExecutor
+  }
+
+  /**
+   * The executor interface for running the appropriate
+   * SparkThriftServer command based on parsed options
+   */
+  trait ServerOptionsExecutor {
+    def execute(): Unit
+  }
+
+  /**
+   * HelpOptionExecutor: executes the --help option by printing out the usage
+   */
+  class HelpOptionExecutor(val serverName: String, val options: Options)
+    extends ServerOptionsExecutor {
+    override def execute(): Unit = {
+      new HelpFormatter().printHelp(serverName, options)
+      System.exit(0)
+    }
+  }
+
+  /**
+   * StartOptionExecutor: starts SparkThriftServer.
+   * This is the default executor, when no option is specified.
+   */
+  class StartOptionExecutor extends SparkThriftServer.ServerOptionsExecutor {
+    override def execute(): Unit = {
+      logInfo("Starting SparkContext")
+      SparkSQLEnv.init()
+
+      ShutdownHookManager.addShutdownHook { () =>
+        SparkSQLEnv.stop()
+        uiTab.foreach(_.detach())
+      }
+
+      try {
+        val server = new SparkThriftServer(SparkSQLEnv.sqlContext)
+        server.init(SparkSQLEnv.sqlContext.conf)
+        server.start()
+        logInfo("SparkThriftServer started")
+        listener = new SparkThriftServerListener(server, SparkSQLEnv.sqlContext.conf)
+        SparkSQLEnv.sparkContext.addSparkListener(listener)
+        uiTab = if (SparkSQLEnv.sparkContext.getConf.get(UI_ENABLED)) {
+          Some(new ThriftServerTab(SparkSQLEnv.sparkContext))
+        } else {
+          None
+        }
+        // If application was killed before SparkThriftServer start successfully then SparkSubmit
+        // process can not exit, so check whether if SparkContext was stopped.
+        if (SparkSQLEnv.sparkContext.stopped.get()) {
+          logError("SparkContext has stopped even if SparkThriftServer has started, so exit")
+          System.exit(-1)
+        }
+      } catch {
+        case e: Exception =>
+          logError("Error starting SparkThriftServer", e)
+          System.exit(-1)
+      }
+    }
+  }
+
   def main(args: Array[String]): Unit = {
-    // If the arguments contains "-h" or "--help", print out the usage and exit.
-    if (args.contains("-h") || args.contains("--help")) {
-      ServerStartUpUtil.process(args)
-      // The following code should not be reachable. It is added to ensure the main function exits.
-      return
-    }
-
     Utils.initDaemon(log)
-    val optionsProcessor = new ServerStartUpUtil.ServerOptionsProcessor("SparkThriftServer")
-    optionsProcessor.parse(args)
-
-    logInfo("Starting SparkContext")
-    SparkSQLEnv.init()
-
-
-    ShutdownHookManager.addShutdownHook { () =>
-      SparkSQLEnv.stop()
-      uiTab.foreach(_.detach())
-    }
-
     try {
-      val server = new SparkThriftServer(SparkSQLEnv.sqlContext)
-      server.init(SparkSQLEnv.sqlContext.conf)
-      server.start()
-      logInfo("SparkThriftServer started")
-      listener = new SparkThriftServerListener(server, SparkSQLEnv.sqlContext.conf)
-      SparkSQLEnv.sparkContext.addSparkListener(listener)
-      uiTab = if (SparkSQLEnv.sparkContext.getConf.get(UI_ENABLED)) {
-        Some(new ThriftServerTab(SparkSQLEnv.sparkContext))
-      } else {
-        None
-      }
-      // If application was killed before SparkThriftServer start successfully then SparkSubmit
-      // process can not exit, so check whether if SparkContext was stopped.
-      if (SparkSQLEnv.sparkContext.stopped.get()) {
-        logError("SparkContext has stopped even if SparkThriftServer has started, so exit")
-        System.exit(-1)
-      }
+      val oproc = new ServerOptionsProcessor("sparkserver")
+      val oprocResponse = oproc.parse(args)
+      // Log debug message from "oproc" after log4j initialize properly
+      logDebug(oproc.getDebugMessage.toString)
+      // Call the executor which will execute the appropriate command based on the parsed options
+      oprocResponse.getServerOptionsExecutor.execute()
     } catch {
       case e: Exception =>
-        logError("Error starting SparkThriftServer", e)
+        logError("Error initializing log: " + e.getMessage, e)
         System.exit(-1)
     }
   }
