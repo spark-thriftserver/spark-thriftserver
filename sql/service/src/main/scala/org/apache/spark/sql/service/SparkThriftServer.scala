@@ -171,28 +171,22 @@ object SparkThriftServer extends Logging {
         uiTab.foreach(_.detach())
       }
 
-      try {
-        val server = new SparkThriftServer(SparkSQLEnv.sqlContext)
-        server.init(SparkSQLEnv.sqlContext.conf)
-        server.start()
-        logInfo("SparkThriftServer started")
-        listener = new SparkThriftServerListener(server, SparkSQLEnv.sqlContext.conf)
-        SparkSQLEnv.sparkContext.addSparkListener(listener)
-        uiTab = if (SparkSQLEnv.sparkContext.getConf.get(UI_ENABLED)) {
-          Some(new ThriftServerTab(SparkSQLEnv.sparkContext))
-        } else {
-          None
-        }
-        // If application was killed before SparkThriftServer start successfully then SparkSubmit
-        // process can not exit, so check whether if SparkContext was stopped.
-        if (SparkSQLEnv.sparkContext.stopped.get()) {
-          logError("SparkContext has stopped even if SparkThriftServer has started, so exit")
-          System.exit(-1)
-        }
-      } catch {
-        case e: Exception =>
-          logError("Error starting SparkThriftServer", e)
-          System.exit(-1)
+      val server = new SparkThriftServer(SparkSQLEnv.sqlContext)
+      server.init(SparkSQLEnv.sqlContext.conf)
+      server.start()
+      logInfo("SparkThriftServer started")
+      listener = new SparkThriftServerListener(server, SparkSQLEnv.sqlContext.conf)
+      SparkSQLEnv.sparkContext.addSparkListener(listener)
+      uiTab = if (SparkSQLEnv.sparkContext.getConf.get(UI_ENABLED)) {
+        Some(new ThriftServerTab(SparkSQLEnv.sparkContext))
+      } else {
+        None
+      }
+      // If application was killed before SparkThriftServer start successfully then SparkSubmit
+      // process can not exit, so check whether if SparkContext was stopped.
+      if (SparkSQLEnv.sparkContext.stopped.get()) {
+        logError("SparkContext has stopped even if SparkThriftServer has started, so exit")
+        System.exit(-1)
       }
     }
   }
@@ -208,7 +202,7 @@ object SparkThriftServer extends Logging {
       oprocResponse.getServerOptionsExecutor.execute()
     } catch {
       case e: Exception =>
-        logError("Error initializing log: " + e.getMessage, e)
+        logError("Error starting SparkThriftServer: " + e.getMessage, e)
         System.exit(-1)
     }
   }
