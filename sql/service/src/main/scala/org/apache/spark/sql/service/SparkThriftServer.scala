@@ -77,6 +77,7 @@ object SparkThriftServer extends Logging {
   }
 
   def main(args: Array[String]): Unit = {
+    Utils.initDaemon(log)
     logInfo("Starting SparkContext")
     SparkSQLEnv.init()
 
@@ -84,7 +85,6 @@ object SparkThriftServer extends Logging {
       SparkSQLEnv.stop()
       uiTab.foreach(_.detach())
     }
-    Utils.initDaemon(log)
 
     try {
       val server = new SparkThriftServer(SparkSQLEnv.sqlContext)
