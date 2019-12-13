@@ -1,13 +1,12 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,7 +23,6 @@ import java.security.PrivilegedExceptionAction;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -35,14 +33,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.util.KerberosName;
-import org.apache.spark.sql.internal.SQLConf;
-import org.apache.spark.sql.service.CookieSigner;
-import org.apache.spark.sql.service.auth.*;
-import org.apache.spark.sql.service.auth.AuthenticationProviderFactory.AuthMethods;
-import org.apache.spark.sql.service.auth.SparkAuthFactory;
-import org.apache.spark.sql.service.cli.ServiceSQLException;
-import org.apache.spark.sql.service.cli.session.SessionManager;
-import org.apache.spark.sql.service.internal.ServiceConf;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TProtocolFactory;
 import org.apache.thrift.server.TServlet;
@@ -54,6 +44,15 @@ import org.ietf.jgss.GSSName;
 import org.ietf.jgss.Oid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.apache.spark.sql.internal.SQLConf;
+import org.apache.spark.sql.service.CookieSigner;
+import org.apache.spark.sql.service.auth.*;
+import org.apache.spark.sql.service.auth.AuthenticationProviderFactory.AuthMethods;
+import org.apache.spark.sql.service.auth.SparkAuthFactory;
+import org.apache.spark.sql.service.cli.ServiceSQLException;
+import org.apache.spark.sql.service.cli.session.SessionManager;
+import org.apache.spark.sql.service.internal.ServiceConf;
 
 /**
  *
