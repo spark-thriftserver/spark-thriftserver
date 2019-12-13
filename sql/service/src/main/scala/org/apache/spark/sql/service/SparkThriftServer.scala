@@ -202,7 +202,7 @@ object SparkThriftServer extends Logging {
       oprocResponse.getServerOptionsExecutor.execute()
     } catch {
       case e: Exception =>
-        logError("Error starting SparkThriftServer: " + e.getMessage, e)
+        logError("Error starting SparkThriftServer", e)
         System.exit(-1)
     }
   }
