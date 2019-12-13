@@ -19,12 +19,8 @@ package org.apache.spark.sql.service
 
 import java.util.concurrent.atomic.AtomicBoolean
 
-import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
-
-import org.apache.commons.cli.{CommandLine, GnuParser, HelpFormatter, Option => CLIOption,
-  OptionBuilder, Options, ParseException}
 
 import org.apache.spark.SparkContext
 import org.apache.spark.annotation.DeveloperApi
@@ -80,66 +76,17 @@ object SparkThriftServer extends Logging {
     }
   }
 
-  /**
-   * ServerOptionsProcessor.
-   * Process arguments given to SparkThriftServer (-sparkconf property=value)
-   * Set properties in System properties
-   * Create an appropriate response object,
-   * which has executor to execute the appropriate command based on the parsed options.
-   */
-  private[this] class ServerProcessor(val serverName: String) {
-    // -sparkconf x=y
-    final private val options = new Options
-    private var commandLine: CommandLine = null
-    final private val debugMessage = new StringBuilder
+  def main(args: Array[String]): Unit = {
+    logInfo("Starting SparkContext")
+    SparkSQLEnv.init()
 
-    OptionBuilder.withValueSeparator
-    OptionBuilder.hasArgs(2)
-    OptionBuilder.withArgName("property=value")
-    OptionBuilder.withLongOpt("sparkconf")
-    OptionBuilder.withDescription("Use value for given property")
-    options.addOption(OptionBuilder.create)
-    options.addOption(new CLIOption("H", "help", false, "Print help information"))
-
-    def parse(argv: Array[String]): StartExecutor = {
-      try {
-        commandLine = new GnuParser().parse(options, argv)
-        // Process --sparkconf
-        // Get sparkconf param values and set the System property values
-        val confProps = commandLine.getOptionProperties("sparkconf")
-        confProps.stringPropertyNames().asScala.foreach(propKey => {
-          // save logging message for log4j output latter after log4j initialize properly
-          debugMessage.append("Setting " + propKey + "=" + confProps.getProperty(propKey) + ";\n")
-          System.setProperty(propKey, confProps.getProperty(propKey))
-        })
-      } catch {
-        case e: ParseException =>
-          // Error out & exit - we were not able to parse the args successfully
-          logError("Error starting SparkThriftServer with given arguments: ")
-          logError(e.getMessage)
-          System.exit(-1)
-      }
-      // Default executor, when no option is specified
-      new StartExecutor
+    ShutdownHookManager.addShutdownHook { () =>
+      SparkSQLEnv.stop()
+      uiTab.foreach(_.detach())
     }
+    Utils.initDaemon(log)
 
-    def getDebugMessage: StringBuilder = debugMessage
-  }
-
-  /**
-   * StartOptionExecutor: starts SparkThriftServer.
-   * This is the default executor, when no option is specified.
-   */
-  class StartExecutor {
-    def execute(): Unit = {
-      logInfo("Starting SparkContext")
-      SparkSQLEnv.init()
-
-      ShutdownHookManager.addShutdownHook { () =>
-        SparkSQLEnv.stop()
-        uiTab.foreach(_.detach())
-      }
-
+    try {
       val server = new SparkThriftServer(SparkSQLEnv.sqlContext)
       server.init(SparkSQLEnv.sqlContext.conf)
       server.start()
@@ -157,18 +104,6 @@ object SparkThriftServer extends Logging {
         logError("SparkContext has stopped even if SparkThriftServer has started, so exit")
         System.exit(-1)
       }
-    }
-  }
-
-  def main(args: Array[String]): Unit = {
-    Utils.initDaemon(log)
-    try {
-      val proc = new ServerProcessor("sparkserver")
-      val executor = proc.parse(args)
-      // Log debug message from "proc" after log4j initialize properly
-      logDebug(proc.getDebugMessage.toString)
-      // Call the executor which will execute the appropriate command based on the parsed options
-      executor.execute()
     } catch {
       case e: Exception =>
         logError("Error starting SparkThriftServer", e)
