@@ -70,7 +70,7 @@ public class ThriftCLIServiceClient extends CLIServiceClient {
    */
   @Override
   public SessionHandle openSessionWithImpersonation(String username, String password,
-      Map<String, String> configuration, String delegationToken) throws ServiceSQLException {
+      Map<String, String> configuration) throws ServiceSQLException {
     throw new ServiceSQLException("open with impersonation operation " +
         "is not supported in the client");
   }

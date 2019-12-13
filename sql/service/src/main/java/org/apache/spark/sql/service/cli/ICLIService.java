@@ -29,7 +29,7 @@ public interface ICLIService {
           throws ServiceSQLException;
 
   SessionHandle openSessionWithImpersonation(String username, String password,
-      Map<String, String> configuration, String delegationToken)
+      Map<String, String> configuration)
           throws ServiceSQLException;
 
   void closeSession(SessionHandle sessionHandle)

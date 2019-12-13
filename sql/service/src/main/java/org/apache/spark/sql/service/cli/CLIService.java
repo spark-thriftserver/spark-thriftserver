@@ -132,21 +132,21 @@ public class CLIService extends CompositeService implements ICLIService {
       Map<String, String> configuration) throws ServiceSQLException {
     SessionHandle sessionHandle =
         sessionManager.openSession(protocol, username, password, null,
-            configuration, false, null);
+            configuration, false);
     LOG.debug(sessionHandle + ": openSession()");
     return sessionHandle;
   }
 
   /**
    * @deprecated  Use {@link #openSessionWithImpersonation(TProtocolVersion, String,
-   *                              String, String, Map, String)}
+   *                              String, String, Map)}
    */
   @Deprecated
   public SessionHandle openSessionWithImpersonation(TProtocolVersion protocol, String username,
-      String password, Map<String, String> configuration, String delegationToken)
+      String password, Map<String, String> configuration)
           throws ServiceSQLException {
     SessionHandle sessionHandle = sessionManager.openSession(protocol, username, password,
-        null, configuration, true, delegationToken);
+        null, configuration, true);
     LOG.debug(sessionHandle + ": openSessionWithImpersonation()");
     return sessionHandle;
   }
@@ -154,16 +154,16 @@ public class CLIService extends CompositeService implements ICLIService {
   public SessionHandle openSession(TProtocolVersion protocol, String username, String password,
       String ipAddress, Map<String, String> configuration) throws ServiceSQLException {
     SessionHandle sessionHandle = sessionManager.openSession(protocol, username, password,
-        ipAddress, configuration, false, null);
+        ipAddress, configuration, false);
     LOG.debug(sessionHandle + ": openSession()");
     return sessionHandle;
   }
 
   public SessionHandle openSessionWithImpersonation(TProtocolVersion protocol, String username,
-      String password, String ipAddress, Map<String, String> configuration, String delegationToken)
+      String password, String ipAddress, Map<String, String> configuration)
           throws ServiceSQLException {
     SessionHandle sessionHandle = sessionManager.openSession(protocol, username, password,
-        ipAddress, configuration, true, delegationToken);
+        ipAddress, configuration, true);
     LOG.debug(sessionHandle + ": openSession()");
     return sessionHandle;
   }
@@ -175,7 +175,7 @@ public class CLIService extends CompositeService implements ICLIService {
   public SessionHandle openSession(String username, String password,
       Map<String, String> configuration) throws ServiceSQLException {
     SessionHandle sessionHandle = sessionManager.openSession(SERVER_VERSION, username, password,
-        null, configuration, false, null);
+        null, configuration, false);
     LOG.debug(sessionHandle + ": openSession()");
     return sessionHandle;
   }
@@ -185,9 +185,9 @@ public class CLIService extends CompositeService implements ICLIService {
    */
   @Override
   public SessionHandle openSessionWithImpersonation(String username, String password,
-      Map<String, String> configuration, String delegationToken) throws ServiceSQLException {
+      Map<String, String> configuration) throws ServiceSQLException {
     SessionHandle sessionHandle = sessionManager.openSession(SERVER_VERSION, username, password,
-        null, configuration, true, delegationToken);
+        null, configuration, true);
     LOG.debug(sessionHandle + ": openSession()");
     return sessionHandle;
   }
