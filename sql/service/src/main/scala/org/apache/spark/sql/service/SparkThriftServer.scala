@@ -87,7 +87,7 @@ object SparkThriftServer extends Logging {
    * Create an appropriate response object,
    * which has executor to execute the appropriate command based on the parsed options.
    */
-  private[this] class ServerOptionsProcessor(val serverName: String) {
+  private[this] class ServerProcessor(val serverName: String) {
     // -sparkconf x=y
     final private val options = new Options
     private var commandLine: CommandLine = null
@@ -101,7 +101,7 @@ object SparkThriftServer extends Logging {
     options.addOption(OptionBuilder.create)
     options.addOption(new CLIOption("H", "help", false, "Print help information"))
 
-    def parse(argv: Array[String]): ServerOptionsProcessorResponse = {
+    def parse(argv: Array[String]): StartExecutor = {
       try {
         commandLine = new GnuParser().parse(options, argv)
         // Process --sparkconf
@@ -112,10 +112,6 @@ object SparkThriftServer extends Logging {
           debugMessage.append("Setting " + propKey + "=" + confProps.getProperty(propKey) + ";\n")
           System.setProperty(propKey, confProps.getProperty(propKey))
         })
-        // Process --help
-        if (commandLine.hasOption('H')) {
-          return new ServerOptionsProcessorResponse(new HelpOptionExecutor(serverName, options))
-        }
       } catch {
         case e: ParseException =>
           // Error out & exit - we were not able to parse the args successfully
@@ -124,45 +120,18 @@ object SparkThriftServer extends Logging {
           System.exit(-1)
       }
       // Default executor, when no option is specified
-      new ServerOptionsProcessorResponse(new StartOptionExecutor)
+      new StartExecutor
     }
 
     def getDebugMessage: StringBuilder = debugMessage
   }
 
   /**
-   * The response sent back from {@link ServerOptionsProcessor#parse(String[])}
-   */
-  private[this] class ServerOptionsProcessorResponse(
-      val serverOptionsExecutor: ServerOptionsExecutor) {
-    def getServerOptionsExecutor: ServerOptionsExecutor = serverOptionsExecutor
-  }
-
-  /**
-   * The executor interface for running the appropriate
-   * SparkThriftServer command based on parsed options
-   */
-  private[this] trait ServerOptionsExecutor {
-    def execute(): Unit
-  }
-
-  /**
-   * HelpOptionExecutor: executes the --help option by printing out the usage
-   */
-  private[this] class HelpOptionExecutor(val serverName: String, val options: Options)
-    extends ServerOptionsExecutor {
-    override def execute(): Unit = {
-      new HelpFormatter().printHelp(serverName, options)
-      System.exit(0)
-    }
-  }
-
-  /**
    * StartOptionExecutor: starts SparkThriftServer.
    * This is the default executor, when no option is specified.
    */
-  class StartOptionExecutor extends ServerOptionsExecutor {
-    override def execute(): Unit = {
+  class StartExecutor {
+    def execute(): Unit = {
       logInfo("Starting SparkContext")
       SparkSQLEnv.init()
 
@@ -194,12 +163,12 @@ object SparkThriftServer extends Logging {
   def main(args: Array[String]): Unit = {
     Utils.initDaemon(log)
     try {
-      val oproc = new ServerOptionsProcessor("sparkserver")
-      val oprocResponse = oproc.parse(args)
-      // Log debug message from "oproc" after log4j initialize properly
-      logDebug(oproc.getDebugMessage.toString)
+      val proc = new ServerProcessor("sparkserver")
+      val executor = proc.parse(args)
+      // Log debug message from "proc" after log4j initialize properly
+      logDebug(proc.getDebugMessage.toString)
       // Call the executor which will execute the appropriate command based on the parsed options
-      oprocResponse.getServerOptionsExecutor.execute()
+      executor.execute()
     } catch {
       case e: Exception =>
         logError("Error starting SparkThriftServer", e)
