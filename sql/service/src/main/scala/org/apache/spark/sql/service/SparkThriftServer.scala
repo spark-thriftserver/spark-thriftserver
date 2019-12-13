@@ -80,11 +80,6 @@ object SparkThriftServer extends Logging {
     }
   }
 
-  def process(args: Array[String]): Unit = {
-
-  }
-
-
   /**
    * ServerOptionsProcessor.
    * Process arguments given to SparkThriftServer (-sparkconf property=value)
