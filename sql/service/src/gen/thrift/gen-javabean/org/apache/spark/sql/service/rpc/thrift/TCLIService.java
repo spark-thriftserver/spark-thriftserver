@@ -3058,7 +3058,7 @@ public class TCLIService {
         return new GetQueryId_args();
       }
 
-      public AsyncMethodCallback<TGetQueryIdResp> getResultHandler(final AsyncFrameBuffer fb, final int seqid) {
+      public AsyncMethodCallback<TGetQueryIdResp> getResultHandler(final org.apache.thrift.server.AbstractNonblockingServer.AsyncFrameBuffer fb, final int seqid) {
         final org.apache.thrift.AsyncProcessFunction fcall = this;
         return new AsyncMethodCallback<TGetQueryIdResp>() { 
           public void onComplete(TGetQueryIdResp o) {
@@ -3109,7 +3109,7 @@ public class TCLIService {
         return new SetClientInfo_args();
       }
 
-      public AsyncMethodCallback<TSetClientInfoResp> getResultHandler(final AsyncFrameBuffer fb, final int seqid) {
+      public AsyncMethodCallback<TSetClientInfoResp> getResultHandler(final org.apache.thrift.server.AbstractNonblockingServer.AsyncFrameBuffer fb, final int seqid) {
         final org.apache.thrift.AsyncProcessFunction fcall = this;
         return new AsyncMethodCallback<TSetClientInfoResp>() { 
           public void onComplete(TSetClientInfoResp o) {
