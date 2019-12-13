@@ -18,6 +18,7 @@
 package org.apache.spark.sql.service.cli.session;
 
 import java.io.File;
+import java.util.List;
 
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.internal.SQLConf;
@@ -86,4 +87,8 @@ public interface ServiceSessionBase {
   void setIpAddress(String ipAddress);
 
   long getLastAccessTime();
+
+  Boolean isImpersonation();
+
+  List<String> getImpersonationTokens();
 }

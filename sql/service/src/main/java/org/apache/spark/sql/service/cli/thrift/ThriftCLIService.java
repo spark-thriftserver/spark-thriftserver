@@ -398,9 +398,8 @@ public abstract class ThriftCLIService extends AbstractService
     SessionHandle sessionHandle;
     if (((boolean) cliService.getSqlConf().getConf(ServiceConf.THRIFTSERVER_ENABLE_DOAS())) &&
         (userName != null)) {
-      String delegationTokenStr = "";
       sessionHandle = cliService.openSessionWithImpersonation(protocol, userName,
-          req.getPassword(), ipAddress, req.getConfiguration(), delegationTokenStr);
+          req.getPassword(), ipAddress, req.getConfiguration());
     } else {
       sessionHandle = cliService.openSession(protocol, userName, req.getPassword(),
           ipAddress, req.getConfiguration());

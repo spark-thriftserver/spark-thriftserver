@@ -214,7 +214,7 @@ public class SessionManager extends CompositeService {
 
   public SessionHandle openSession(TProtocolVersion protocol, String username, String password,
       String ipAddress, Map<String, String> sessionConf) throws ServiceSQLException {
-    return openSession(protocol, username, password, ipAddress, sessionConf, false, null);
+    return openSession(protocol, username, password, ipAddress, sessionConf, false);
   }
 
   /**
@@ -232,13 +232,12 @@ public class SessionManager extends CompositeService {
    * @param ipAddress
    * @param sessionConf
    * @param withImpersonation
-   * @param delegationToken
    * @return
    * @throws ServiceSQLException
    */
   public SessionHandle openSession(TProtocolVersion protocol, String username, String password,
-      String ipAddress, Map<String, String> sessionConf, boolean withImpersonation,
-      String delegationToken) throws ServiceSQLException {
+      String ipAddress, Map<String, String> sessionConf, boolean withImpersonation)
+      throws ServiceSQLException {
     ServiceSession session;
     SQLContext ctx = null;
     if(sqlContext.conf().hiveThriftServerSingleSession()) {
@@ -251,7 +250,7 @@ public class SessionManager extends CompositeService {
     // Within the proxy object, we wrap the method call in a UserGroupInformation#doAs
     if (withImpersonation) {
       ServiceSessionImplwithUGI sessionWithUGI = new ServiceSessionImplwithUGI(protocol, username,
-          password, ctx, ipAddress, delegationToken);
+          password, ctx, ipAddress);
       session = ServiceSessionProxy.getProxy(sessionWithUGI, sessionWithUGI.getSessionUgi());
       sessionWithUGI.setProxySession(session);
     } else {
