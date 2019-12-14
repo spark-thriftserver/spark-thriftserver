@@ -36,7 +36,6 @@ import org.apache.spark.util.{ThreadUtils, Utils}
 class ProxyPlugin(sparkConf: SparkConf, hadoopConf: Configuration) extends Logging {
 
   private val currentUGI = UserGroupInformation.getCurrentUser.getRealUser
-  private val userTokenMap = new ConcurrentHashMap[String, UserGroupInformation]()
   private val sessionToUGI = new ConcurrentHashMap[UUID, UserGroupInformation]()
 
   private val deprecatedProviderEnabledConfigs = List(
@@ -185,11 +184,22 @@ class ProxyPlugin(sparkConf: SparkConf, hadoopConf: Configuration) extends Loggi
       .toMap
   }
 
+  /**
+   * Obtain needed token for session's UserGroupInformation
+   *
+   * @param uuid session's SessionHandle HandleIdentifier
+   * @param ugi session's UserGroupInformation
+   */
   def obtainTokenForProxyUGI(uuid: UUID, ugi: UserGroupInformation): Unit = {
     sessionToUGI.put(uuid, ugi)
     updateTokensTask(ugi)
   }
 
+  /**
+   * If session closed, remove it's UGI from [sessionToUGI] then we won't renew token for it.
+   *
+   * @param uuid closed session's SessionHandle's HandleIdentifier
+   */
   def removeProxyUGI(uuid: UUID): Unit = {
     sessionToUGI.remove(uuid)
   }

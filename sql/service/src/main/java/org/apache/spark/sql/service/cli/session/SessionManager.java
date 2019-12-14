@@ -25,10 +25,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -256,16 +254,6 @@ public class SessionManager extends CompositeService {
           password, ctx, ipAddress);
       UserGroupInformation ugi = sessionWithUGI.getSessionUgi();
       proxyPlugin.obtainTokenForProxyUGI(sessionWithUGI.getSessionHandle().getSessionId(), ugi);
-      Credentials creds = ugi.getCredentials();
-      List<String> tokens = creds.getAllTokens().stream().map(token -> {
-        try {
-          return token.encodeToUrlString();
-        } catch (IOException e) {
-          e.printStackTrace();
-          return null;
-        }
-      }).filter(Objects::nonNull).collect(Collectors.toList());
-      sessionWithUGI.setImpersonationTokens(tokens);
       session = ServiceSessionProxy.getProxy(sessionWithUGI, sessionWithUGI.getSessionUgi());
       sessionWithUGI.setProxySession(session);
     } else {

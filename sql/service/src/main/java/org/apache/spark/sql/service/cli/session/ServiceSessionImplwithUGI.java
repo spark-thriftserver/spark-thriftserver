@@ -19,6 +19,8 @@ package org.apache.spark.sql.service.cli.session;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -75,13 +77,17 @@ public class ServiceSessionImplwithUGI extends ServiceSessionImpl {
     return true;
   }
 
-  public void setImpersonationTokens(List<String> token) {
-    this.delegationTokens = token;
-  }
-
   @Override
   public List<String> getImpersonationTokens() {
-    return this.delegationTokens;
+    return this.sessionUgi.getCredentials().getAllTokens()
+        .stream().map(token -> {
+          try {
+            return token.encodeToUrlString();
+          } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+          }
+        }).filter(Objects::nonNull).collect(Collectors.toList());
   }
 
   @Override
