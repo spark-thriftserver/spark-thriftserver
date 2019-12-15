@@ -299,7 +299,7 @@ private[spark] class SparkThriftServer(sqlContext: SQLContext)
   private var thriftCLIService: ThriftCLIService = _
 
   override def init(sqlConf: SQLConf): Unit = {
-    cliService = new CLIService(this, sqlContext)
+    cliService = new CLIService(sqlContext)
     addService(cliService)
     if (isHTTPTransportMode(sqlConf)) {
       thriftCLIService = new ThriftHttpCLIService(cliService, sqlContext)

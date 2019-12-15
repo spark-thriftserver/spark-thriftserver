@@ -105,29 +105,4 @@ public class CompositeService extends AbstractService {
       }
     }
   }
-
-  /**
-   * JVM Shutdown hook for CompositeService which will stop the given
-   * CompositeService gracefully in case of JVM shutdown.
-   */
-  public static class CompositeServiceShutdownHook implements Runnable {
-
-    private final CompositeService compositeService;
-
-    public CompositeServiceShutdownHook(CompositeService compositeService) {
-      this.compositeService = compositeService;
-    }
-
-    @Override
-    public void run() {
-      try {
-        // Stop the Composite Service
-        compositeService.stop();
-      } catch (Throwable t) {
-        LOG.info("Error stopping " + compositeService.getName(), t);
-      }
-    }
-  }
-
-
 }

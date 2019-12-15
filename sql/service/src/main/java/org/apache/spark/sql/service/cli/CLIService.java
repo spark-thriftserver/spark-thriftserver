@@ -34,7 +34,6 @@ import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.CompositeService;
 import org.apache.spark.sql.service.ServiceException;
-import org.apache.spark.sql.service.SparkThriftServer;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.cli.operation.Operation;
 import org.apache.spark.sql.service.cli.session.ServiceSession;
@@ -58,23 +57,18 @@ public class CLIService extends CompositeService implements ICLIService {
 
   private final Logger LOG = LoggerFactory.getLogger(CLIService.class.getName());
 
-  private SQLConf sqlConf;
   private SQLContext sqlContext;
   private SessionManager sessionManager;
   private UserGroupInformation serviceUGI;
   private UserGroupInformation httpUGI;
-  // The SparkThriftServer instance running this service
-  private final SparkThriftServer sparkServer;
 
-  public CLIService(SparkThriftServer sparkServer, SQLContext sqlContext) {
+  public CLIService(SQLContext sqlContext) {
     super(CLIService.class.getSimpleName());
-    this.sparkServer = sparkServer;
     this.sqlContext = sqlContext;
   }
 
   @Override
   public synchronized void init(SQLConf sqlConf) {
-    this.sqlConf = sqlConf;
     sessionManager = new SessionManager(sqlContext);
     addService(sessionManager);
     //  If the hadoop cluster is secure, do a kerberos login for the service from the keytab
