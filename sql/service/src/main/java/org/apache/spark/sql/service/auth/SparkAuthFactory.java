@@ -79,6 +79,7 @@ public class SparkAuthFactory {
   private SparkDelegationTokenManager delegationTokenManager = null;
 
   public static final String SS2_PROXY_USER = "spark.sql.thriftserver.proxy.user";
+  public static final String HS2_PROXY_USER = "hive.server2.proxy.user";
   public static final String SS2_CLIENT_TOKEN = "sparkserverClientToken";
 
   private static Field keytabFile = null;

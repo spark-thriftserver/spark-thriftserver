@@ -47,7 +47,6 @@ import org.apache.hadoop.hive.serde2.`lazy`.LazySimpleSerDe
 import org.apache.hadoop.security.UserGroupInformation
 
 import org.apache.spark.{SparkConf, SparkException}
-import org.apache.spark.deploy.SparkHadoopUtil
 import org.apache.spark.internal.Logging
 import org.apache.spark.metrics.source.HiveCatalogMetrics
 import org.apache.spark.sql.AnalysisException
@@ -183,23 +182,20 @@ private[hive] class HiveClientImpl(
       // Switch to the initClassLoader.
       Thread.currentThread().setContextClassLoader(initClassLoader)
       try {
-        Hive.closeCurrent()
         val currentConf = conf
-        val ugi = UserGroupInformation.createProxyUser(user, UserGroupInformation.getLoginUser)
+        val ugi = UserGroupInformation.getCurrentUser
         val hive = if (obtainDelegationTokenRequired(currentConf, ugi)) {
           currentConf.set("hive.metastore.token.signature", IMPERSONATION_TOKEN_SIGNATURE)
           val delegationTokenStr = getDelegationToken(user)
           org.apache.hadoop.hive.shims.Utils.setTokenStr(ugi, delegationTokenStr,
             IMPERSONATION_TOKEN_SIGNATURE)
-          ugi.doAs(new PrivilegedExceptionAction[Hive]() {
-            override def run(): Hive = {
-              Hive.get(currentConf)
-            }
-          })
+          Hive.set(null)
+          Hive.get(currentConf)
         } else {
           currentConf.setVar(ConfVars.METASTORE_EXECUTE_SET_UGI, user)
           Hive.get(currentConf)
         }
+        hive.getMSC
         sessionHiveMap.put(user, hive)
         hive
       } finally {
@@ -228,7 +224,9 @@ private[hive] class HiveClientImpl(
       // here create hive client under login UGI and won't proxy user
       val confWithoutImpersonation = state.getConf
       confWithoutImpersonation.set("hive.metastore.token.signature", "")
-      val c = Hive.get(confWithoutImpersonation)
+      val c = UserGroupInformation.getLoginUser.doAs(new PrivilegedExceptionAction[Hive] {
+        override def run(): Hive = Hive.get(confWithoutImpersonation)
+      })
       clientLoader.cachedHive = c
       c
     }
@@ -253,6 +251,7 @@ private[hive] class HiveClientImpl(
         do {
           numTries += 1
           try {
+            Hive.closeCurrent()
             return cachedClient.getDelegationToken(user, user)
           } catch {
             case e: Exception if causedByThrift(e) =>
@@ -447,7 +446,7 @@ private[hive] class HiveClientImpl(
   }
 
   private def msClient: IMetaStoreClient = {
-    shim.getMSC(client)
+    shim.getMSC(cachedClient)
   }
 
   /** Return the associated Hive [[SessionState]] of this [[HiveClientImpl]] */
