@@ -27,6 +27,7 @@ import java.util.concurrent.TimeoutException;
 import javax.security.auth.login.LoginException;
 
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.spark.sql.service.rpc.thrift.TOperationHandle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -508,6 +509,11 @@ public class CLIService extends CompositeService implements ICLIService {
       String tokenStr) throws ServiceSQLException {
     sessionManager.getSession(sessionHandle).renewDelegationToken(authFactory, tokenStr);
     LOG.info(sessionHandle  + ": renewDelegationToken()");
+  }
+
+  @Override
+  public String getQueryId(TOperationHandle opHandle) throws ServiceSQLException {
+    throw new UnsupportedOperationException("getQueryId");
   }
 
   public SessionManager getSessionManager() {

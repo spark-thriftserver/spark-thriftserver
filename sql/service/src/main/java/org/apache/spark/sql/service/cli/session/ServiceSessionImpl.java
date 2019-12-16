@@ -34,9 +34,9 @@ import org.apache.spark.sql.internal.VariableSubstitution;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.cli.*;
 import org.apache.spark.sql.service.cli.ServiceSQLException;
-import org.apache.spark.sql.service.cli.file.ISparkFileProcessor;
-import org.apache.spark.sql.service.cli.file.SparkFileProcessor;
 import org.apache.spark.sql.service.cli.operation.*;
+import org.apache.spark.sql.service.cli.processor.ISparkFileProcessor;
+import org.apache.spark.sql.service.cli.processor.SparkFileProcessor;
 import org.apache.spark.sql.service.internal.ServiceConf;
 import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
 

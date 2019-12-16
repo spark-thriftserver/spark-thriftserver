@@ -308,6 +308,28 @@ public abstract class ThriftCLIService extends AbstractService
     return resp;
   }
 
+  @Override
+  public TSetClientInfoResp SetClientInfo(TSetClientInfoReq req) throws TException {
+    // TODO: We don't do anything for now, just log this for debugging.
+    //       We may be able to make use of this later, e.g. for workload management.
+    if (req.isSetConfiguration()) {
+      StringBuilder sb = null;
+      for (Map.Entry<String, String> e : req.getConfiguration().entrySet()) {
+        if (sb == null) {
+          SessionHandle sh = new SessionHandle(req.getSessionHandle());
+          sb = new StringBuilder("Client information for ").append(sh).append(": ");
+        } else {
+          sb.append(", ");
+        }
+        sb.append(e.getKey()).append(" = ").append(e.getValue());
+      }
+      if (sb != null) {
+        LOG.info("{}", sb);
+      }
+    }
+    return new TSetClientInfoResp(OK_STATUS);
+  }
+
   private String getIpAddress() {
     String clientIpAddress;
     // Http transport mode.
@@ -704,6 +726,15 @@ public abstract class ThriftCLIService extends AbstractService
       resp.setStatus(ServiceSQLException.toTStatus(e));
     }
     return resp;
+  }
+
+  @Override
+  public TGetQueryIdResp GetQueryId(TGetQueryIdReq req) throws TException {
+    try {
+      return new TGetQueryIdResp(cliService.getQueryId(req.getOperationHandle()));
+    } catch (ServiceSQLException e) {
+      throw new TException(e);
+    }
   }
 
   @Override

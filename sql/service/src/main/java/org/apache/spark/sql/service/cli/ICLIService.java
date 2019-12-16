@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
+import org.apache.spark.sql.service.rpc.thrift.TOperationHandle;
 
 public interface ICLIService {
 
@@ -76,6 +77,8 @@ public interface ICLIService {
 
   OperationStatus getOperationStatus(OperationHandle opHandle)
       throws ServiceSQLException;
+
+  String getQueryId(TOperationHandle operationHandle) throws ServiceSQLException;
 
   void cancelOperation(OperationHandle opHandle)
       throws ServiceSQLException;
