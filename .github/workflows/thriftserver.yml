@@ -34,3 +34,9 @@ jobs:
       - name: Test thrift server jdbc module with Sbt
         run: |
           ./build/sbt "jdbc/test-only" -Pspark-thriftserver -P${{ matrix.hadoop }} -Djava.version=${{ matrix.java }}
+      - name: Test sql/hive-thriftserver module with Sbt
+        run: |
+          ./build/sbt "hive-thriftserver/test-only" -Phive -Phive-thriftserver -Pspark-thriftserver -P${{ matrix.hadoop }} -Djava.version=${{ matrix.java }}
+      - name: Test sql/hive module with Sbt
+        run: |
+          ./build/sbt "hive/test-only" -Phive -Pspark-thriftserver -P${{ matrix.hadoop }} -Djava.version=${{ matrix.java }}
