@@ -760,9 +760,18 @@ public abstract class ThriftCLIService extends AbstractService
     }
 
     if (proxyUser == null && sessionConf != null &&
-        sessionConf.containsKey(SparkAuthFactory.SS2_PROXY_USER)) {
+        sessionConf.containsKey(SparkAuthFactory.SS2_PROXY_USER) &&
+        !sessionConf.containsKey(SparkAuthFactory.HS2_PROXY_USER)) {
       String proxyUserFromThriftBody = sessionConf.get(SparkAuthFactory.SS2_PROXY_USER);
       LOG.debug("Proxy user from thrift body: " + proxyUserFromThriftBody);
+      proxyUser = proxyUserFromThriftBody;
+    }
+
+    if (proxyUser == null && sessionConf != null &&
+        !sessionConf.containsKey(SparkAuthFactory.SS2_PROXY_USER) &&
+        sessionConf.containsKey(SparkAuthFactory.HS2_PROXY_USER)) {
+      String proxyUserFromThriftBody = sessionConf.get(SparkAuthFactory.HS2_PROXY_USER);
+      LOG.info("Proxy user from thrift body: " + proxyUserFromThriftBody);
       proxyUser = proxyUserFromThriftBody;
     }
 
