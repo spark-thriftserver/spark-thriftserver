@@ -329,7 +329,7 @@ public class ThriftHttpServlet extends TServlet {
       try {
         AuthMethods authMethod = AuthMethods.getValidAuthMethod(authType);
         PasswdAuthenticationProvider provider =
-            AuthenticationProviderFactory.getAuthenticationProvider(authMethod);
+            AuthenticationProviderFactory.getAuthenticationProvider(authMethod, sparkConf);
         provider.authenticate(userName, getPassword(request, authType));
 
       } catch (Exception e) {

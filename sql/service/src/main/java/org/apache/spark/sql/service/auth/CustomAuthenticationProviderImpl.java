@@ -22,8 +22,9 @@ import javax.security.sasl.AuthenticationException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ReflectionUtils;
 
+import org.apache.spark.SparkConf;
+import org.apache.spark.deploy.SparkHadoopUtil;
 import org.apache.spark.sql.internal.SQLConf;
-import org.apache.spark.sql.service.SparkSQLEnv;
 import org.apache.spark.sql.service.internal.ServiceConf;
 
 /**
@@ -37,8 +38,8 @@ public class CustomAuthenticationProviderImpl implements PasswdAuthenticationPro
   private final PasswdAuthenticationProvider customProvider;
 
   @SuppressWarnings("unchecked")
-  CustomAuthenticationProviderImpl() {
-    Configuration conf = SparkSQLEnv.sqlContext().sparkContext().hadoopConfiguration();
+  CustomAuthenticationProviderImpl(SparkConf sparkConf) {
+    Configuration conf = SparkHadoopUtil.get().newConfiguration(sparkConf);
     conf.set(ServiceConf.THRIFTSERVER_CUSTOM_AUTHENTICATION_CLASS().key(),
             SQLConf.get().getConf(ServiceConf.THRIFTSERVER_CUSTOM_AUTHENTICATION_CLASS()));
     Class<? extends PasswdAuthenticationProvider> customHandlerClass =
