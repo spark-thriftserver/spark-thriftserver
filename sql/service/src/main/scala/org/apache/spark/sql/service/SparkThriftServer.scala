@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
-import org.apache.spark.SparkContext
+import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.annotation.DeveloperApi
 import org.apache.spark.internal.Logging
 import org.apache.spark.internal.config.UI.UI_ENABLED
@@ -52,7 +52,7 @@ object SparkThriftServer extends Logging {
     SparkSQLEnv.setSQLContext(sqlContext)
     val server = new SparkThriftServer(sqlContext)
 
-    server.init(sqlContext.conf)
+    server.init(sqlContext.sparkContext.conf)
     server.start()
     listener = new SparkThriftServerListener(server, sqlContext.conf)
     sqlContext.sparkContext.addSparkListener(listener)
@@ -64,10 +64,10 @@ object SparkThriftServer extends Logging {
     server
   }
 
-  def isHTTPTransportMode(sqlConf: SQLConf): Boolean = {
+  def isHTTPTransportMode(sparkConf: SparkConf): Boolean = {
     var transportMode = System.getenv("THRIFTSERVER_TRANSPORT_MODE")
     if (transportMode == null) {
-      transportMode = sqlConf.getConf(ServiceConf.THRIFTSERVER_TRANSPORT_MODE)
+      transportMode = sparkConf.get(ServiceConf.THRIFTSERVER_TRANSPORT_MODE)
     }
     if (transportMode != null && transportMode.equalsIgnoreCase("http")) {
       true
@@ -88,7 +88,7 @@ object SparkThriftServer extends Logging {
 
     try {
       val server = new SparkThriftServer(SparkSQLEnv.sqlContext)
-      server.init(SparkSQLEnv.sqlContext.conf)
+      server.init(SparkSQLEnv.sparkContext.conf)
       server.start()
       logInfo("SparkThriftServer started")
       listener = new SparkThriftServerListener(server, SparkSQLEnv.sqlContext.conf)
@@ -298,16 +298,16 @@ private[spark] class SparkThriftServer(sqlContext: SQLContext)
   private var cliService: CLIService = _
   private var thriftCLIService: ThriftCLIService = _
 
-  override def init(sqlConf: SQLConf): Unit = {
+  override def init(sparkConf: SparkConf): Unit = {
     cliService = new CLIService(this, sqlContext)
     addService(cliService)
-    if (isHTTPTransportMode(sqlConf)) {
+    if (isHTTPTransportMode(sparkConf)) {
       thriftCLIService = new ThriftHttpCLIService(cliService, sqlContext)
     } else {
       thriftCLIService = new ThriftBinaryCLIService(cliService, sqlContext)
     }
     addService(thriftCLIService)
-    super.init(sqlConf)
+    super.init(sparkConf)
   }
 
   override def start(): Unit = {

@@ -31,6 +31,7 @@ import org.apache.spark.sql.service.rpc.thrift.TOperationHandle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.spark.SparkConf;
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.CompositeService;
@@ -59,7 +60,6 @@ public class CLIService extends CompositeService implements ICLIService {
 
   private final Logger LOG = LoggerFactory.getLogger(CLIService.class.getName());
 
-  private SQLConf sqlConf;
   private SQLContext sqlContext;
   private SessionManager sessionManager;
   private UserGroupInformation serviceUGI;
@@ -74,14 +74,13 @@ public class CLIService extends CompositeService implements ICLIService {
   }
 
   @Override
-  public synchronized void init(SQLConf sqlConf) {
-    this.sqlConf = sqlConf;
+  public synchronized void init(SparkConf sparkConf) {
     sessionManager = new SessionManager(sqlContext);
     addService(sessionManager);
     //  If the hadoop cluster is secure, do a kerberos login for the service from the keytab
     if (UserGroupInformation.isSecurityEnabled()) {
       try {
-        SparkAuthFactory.loginFromKeytab(sqlConf);
+        SparkAuthFactory.loginFromKeytab(sparkConf);
         this.serviceUGI = Utils.getUGI();
       } catch (IOException e) {
         throw new ServiceException("Unable to login to kerberos with given principal/keytab", e);
@@ -90,21 +89,21 @@ public class CLIService extends CompositeService implements ICLIService {
       }
 
       // Also try creating a UGI object for the SPNego principal
-      String principal = sqlConf.getConf(ServiceConf.THRIFTSERVER_SPNEGO_PRINCIPAL());
-      String keyTabFile = sqlConf.getConf(ServiceConf.THRIFTSERVER_SPNEGO_KEYTAB());
+      String principal = sparkConf.get(ServiceConf.THRIFTSERVER_SPNEGO_PRINCIPAL());
+      String keyTabFile = sparkConf.get(ServiceConf.THRIFTSERVER_SPNEGO_KEYTAB());
       if (principal.isEmpty() || keyTabFile.isEmpty()) {
         LOG.info("SPNego httpUGI not created, spNegoPrincipal: " + principal +
             ", ketabFile: " + keyTabFile);
       } else {
         try {
-          this.httpUGI = SparkAuthFactory.loginFromSpnegoKeytabAndReturnUGI(sqlConf);
+          this.httpUGI = SparkAuthFactory.loginFromSpnegoKeytabAndReturnUGI(sparkConf);
           LOG.info("SPNego httpUGI successfully created.");
         } catch (IOException e) {
           LOG.warn("SPNego httpUGI creation failed: ", e);
         }
       }
     }
-    super.init(sqlConf);
+    super.init(sparkConf);
   }
 
   public UserGroupInformation getServiceUGI() {

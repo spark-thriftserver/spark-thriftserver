@@ -32,8 +32,8 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.spark.SparkConf;
 import org.apache.spark.sql.SQLContext;
-import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.CompositeService;
 import org.apache.spark.sql.service.SparkThriftServer;
 import org.apache.spark.sql.service.cli.ServiceSQLException;
@@ -51,7 +51,7 @@ public class SessionManager extends CompositeService {
 
   private static final Logger LOG = LoggerFactory.getLogger(SessionManager.class);
   public static final String SPARKRCFILE = ".sparkrc";
-  private SQLConf sqlConf;
+  private SparkConf sparkConf;
   private SQLContext sqlContext;
   private final Map<SessionHandle, ServiceSession> handleToSession =
       new ConcurrentHashMap<SessionHandle, ServiceSession>();
@@ -72,25 +72,25 @@ public class SessionManager extends CompositeService {
   }
 
   @Override
-  public synchronized void init(SQLConf sqlConf) {
-    this.sqlConf = sqlConf;
+  public synchronized void init(SparkConf sparkConf) {
+    this.sparkConf = sparkConf;
     //Create operation log root directory, if operation logging is enabled
-    if (((boolean) sqlConf.getConf(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_ENABLE()))) {
+    if (((boolean) sparkConf.get(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_ENABLE()))) {
       initOperationLogRootDir();
     }
     createBackgroundOperationPool();
     addService(operationManager);
-    super.init(sqlConf);
+    super.init(sparkConf);
   }
 
   private void createBackgroundOperationPool() {
-    int poolSize = (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_THREADS());
+    int poolSize = (int) sparkConf.get(ServiceConf.THRIFTSERVER_ASYNC_EXEC_THREADS());
     LOG.info("SparkThriftServer: Background operation thread pool size: " + poolSize);
     int poolQueueSize =
-        (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_WAIT_QUEUE_SIZE());
+        (int) sparkConf.get(ServiceConf.THRIFTSERVER_ASYNC_EXEC_WAIT_QUEUE_SIZE());
     LOG.info("SparkThriftServer: Background operation thread wait queue size: " + poolQueueSize);
     long keepAliveTime =
-       (long) sqlConf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_KEEPALIVE_TIME());
+       (long) sparkConf.get(ServiceConf.THRIFTSERVER_ASYNC_EXEC_KEEPALIVE_TIME());
     LOG.info("SparkThriftServer: Background operation thread keepalive time: "
         + keepAliveTime + " seconds");
 
@@ -103,15 +103,15 @@ public class SessionManager extends CompositeService {
         new ThreadFactoryWithName(threadPoolName));
     backgroundOperationPool.allowCoreThreadTimeOut(true);
 
-    checkInterval = (long) sqlConf.getConf(ServiceConf.THRIFTSERVER_SESSION_CHECK_INTERVAL());
-    sessionTimeout = (long) sqlConf.getConf(ServiceConf.THRIFTSERVER_IDLE_SESSION_TIMEOUT());
+    checkInterval = (long) sparkConf.get(ServiceConf.THRIFTSERVER_SESSION_CHECK_INTERVAL());
+    sessionTimeout = (long) sparkConf.get(ServiceConf.THRIFTSERVER_IDLE_SESSION_TIMEOUT());
     checkOperation =
-        (boolean) sqlConf.getConf(ServiceConf.THRIFTSERVER_IDLE_SESSION_CHECK_OPERATION());
+        (boolean) sparkConf.get(ServiceConf.THRIFTSERVER_IDLE_SESSION_CHECK_OPERATION());
   }
 
   private void initOperationLogRootDir() {
     operationLogRootDir = new File(
-        sqlConf.getConf(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_LOG_LOCATION()));
+        sparkConf.get(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_LOG_LOCATION()));
     isOperationLogEnabled = true;
 
     if (operationLogRootDir.exists() && !operationLogRootDir.isDirectory()) {
@@ -189,7 +189,7 @@ public class SessionManager extends CompositeService {
     shutdown = true;
     if (backgroundOperationPool != null) {
       backgroundOperationPool.shutdown();
-      long timeout = (long) sqlConf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_SHUTDOWN_TIMEOUT());
+      long timeout = (long) sparkConf.get(ServiceConf.THRIFTSERVER_ASYNC_EXEC_SHUTDOWN_TIMEOUT());
       try {
         backgroundOperationPool.awaitTermination(timeout, TimeUnit.SECONDS);
       } catch (InterruptedException e) {
