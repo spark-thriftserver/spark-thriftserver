@@ -80,6 +80,7 @@ public class ThriftHttpServlet extends TServlet {
   private boolean isHttpOnlyCookie;
   private final SparkAuthFactory sparkAuthFactory;
   private static final String HIVE_DELEGATION_TOKEN_HEADER =  "X-Hive-Delegation-Token";
+  private static final String SPARK_DELEGATION_TOKEN_HEADER =  "X-Spark-Delegation-Token";
 
   public ThriftHttpServlet(TProcessor processor, TProtocolFactory protocolFactory,
       String authType, UserGroupInformation serviceUGI, UserGroupInformation httpUGI,
@@ -134,9 +135,13 @@ public class ThriftHttpServlet extends TServlet {
       if (clientUserName == null) {
         // For a kerberos setup
         if (isKerberosAuthMode(authType)) {
-          String delegationToken = request.getHeader(HIVE_DELEGATION_TOKEN_HEADER);
+          String sparkDelegationToken = request.getHeader(SPARK_DELEGATION_TOKEN_HEADER);
+          String hiveDelegationToken = request.getHeader(HIVE_DELEGATION_TOKEN_HEADER);
           // Each http request must have an Authorization header
-          if ((delegationToken != null) && (!delegationToken.isEmpty())) {
+          // Here we check both hive & spark token header to support both client
+          if ((sparkDelegationToken != null) && (!sparkDelegationToken.isEmpty())) {
+            clientUserName = doTokenAuth(request, response);
+          } else if ((hiveDelegationToken != null) && (!hiveDelegationToken.isEmpty())) {
             clientUserName = doTokenAuth(request, response);
           } else {
             clientUserName = doKerberosAuth(request);
