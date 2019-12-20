@@ -129,6 +129,11 @@
         </dependency>
         <dependency>
             <groupId>${hive.group}</groupId>
+            <artifactId>hive-serde</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${hive.group}</groupId>
             <artifactId>hive-service</artifactId>
             <version>${hive.version}</version>
             <scope>test</scope>
@@ -144,6 +149,10 @@
                 <exclusion>
                     <groupId>${hive.group}</groupId>
                     <artifactId>hive-common</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>${hive.group}</groupId>
+                    <artifactId>hive-serde</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.eclipse.jetty.aggregate</groupId>
