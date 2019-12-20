@@ -28,4 +28,5 @@ jobs:
       - name: Running Docker-based Integration Test Suites
         run: |
           ./build/mvn install -DskipTests
+          export ORACLE_DOCKER_IMAGE_NAME=wnameless/oracle-xe-11g-r2
           ./build/mvn test -Pdocker-integration-tests -pl :spark-docker-integration-tests_2.12
