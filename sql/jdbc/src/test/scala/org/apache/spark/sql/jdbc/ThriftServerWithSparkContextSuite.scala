@@ -74,7 +74,7 @@ class ThriftServerWithSparkContextSuite extends QueryTest with SharedSparkSessio
   private def withJdbcStatement(fs: (Statement => Unit)*): Unit = {
     val user = System.getProperty("user.name")
 
-    val serverPort = sparkServer.getSqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_PORT)
+    val serverPort = sparkServer.getSparkConf.get(ServiceConf.THRIFTSERVER_THRIFT_PORT)
     val connections =
       fs.map { _ => DriverManager.getConnection(s"jdbc:spark://localhost:$serverPort", user, "") }
     val statements = connections.map(_.createStatement())

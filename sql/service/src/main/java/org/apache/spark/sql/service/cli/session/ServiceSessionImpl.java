@@ -28,8 +28,8 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.spark.SparkConf;
 import org.apache.spark.sql.SQLContext;
-import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.internal.VariableSubstitution;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.cli.*;
@@ -57,7 +57,7 @@ public class ServiceSessionImpl implements ServiceSession {
   private final SessionHandle sessionHandle;
   private String username;
   private final String password;
-  private SQLConf sqlConf;
+  private SparkConf sparkConf;
   private SQLContext sqlContext;
   private String ipAddress;
   private static final Logger LOG = LoggerFactory.getLogger(ServiceSessionImpl.class);
@@ -75,7 +75,7 @@ public class ServiceSessionImpl implements ServiceSession {
     this.password = password;
     this.sessionHandle = new SessionHandle(protocol);
     this.ipAddress = ipAddress;
-    this.sqlConf = sqlContext.conf();
+    this.sparkConf = sqlContext.sparkContext().conf();
     this.sqlContext = sqlContext;
   }
 
@@ -130,7 +130,7 @@ public class ServiceSessionImpl implements ServiceSession {
     ISparkFileProcessor processor = new GlobalSparkrcFileProcessor();
 
     try {
-      String sparkrc = sqlConf.getConf(ServiceConf.THRIFTSERVER_GLOABLE_INIT_FILE_LOCATION());
+      String sparkrc = sparkConf.get(ServiceConf.THRIFTSERVER_GLOABLE_INIT_FILE_LOCATION());
       if (sparkrc != null) {
         File sparkrcFile = new File(sparkrc);
         if (sparkrcFile.isDirectory()) {
@@ -167,7 +167,7 @@ public class ServiceSessionImpl implements ServiceSession {
   // Copy from org.apache.hadoop.hive.ql.processors.SetProcessor, only change:
   // setConf(varname, propName, varvalue, true) when varname.startsWith(SPARKCONF_PREFIX)
   private int setVariable(String varname, String varvalue) throws Exception {
-    VariableSubstitution substitution = new VariableSubstitution(sqlConf);
+    VariableSubstitution substitution = new VariableSubstitution(sqlContext.conf());
     if (varvalue.contains("\n")){
       LOG.error("Warning: Value had a \\n character in it.");
     }
@@ -291,8 +291,8 @@ public class ServiceSessionImpl implements ServiceSession {
   }
 
   @Override
-  public SQLConf getSQLConf() {
-    return sqlConf;
+  public SparkConf getSparkConf() {
+    return sparkConf;
   }
 
   @Override

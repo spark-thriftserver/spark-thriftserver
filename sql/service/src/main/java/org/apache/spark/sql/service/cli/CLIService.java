@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.SQLContext;
-import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.CompositeService;
 import org.apache.spark.sql.service.ServiceException;
 import org.apache.spark.sql.service.SparkThriftServer;
@@ -407,8 +406,8 @@ public class CLIService extends CompositeService implements ICLIService {
      * However, if the background operation is complete, we return immediately.
      */
     if (operation.shouldRunAsync()) {
-      SQLConf conf = operation.getParentSession().getSQLConf();
-      long timeout = (long) conf.getConf(ServiceConf.THRIFTSERVER_LONG_POLLING_TIMEOUT());
+      SparkConf conf = operation.getParentSession().getSparkConf();
+      long timeout = (long) conf.get(ServiceConf.THRIFTSERVER_LONG_POLLING_TIMEOUT());
       try {
         operation.getBackgroundHandle().get(timeout, TimeUnit.MILLISECONDS);
       } catch (TimeoutException e) {
@@ -428,10 +427,6 @@ public class CLIService extends CompositeService implements ICLIService {
     OperationStatus opStatus = operation.getStatus();
     LOG.debug(opHandle + ": getOperationStatus()");
     return opStatus;
-  }
-
-  public SQLConf getSessionConf(SessionHandle sessionHandle) throws ServiceSQLException {
-    return sessionManager.getSession(sessionHandle).getSQLConf();
   }
 
   /* (non-Javadoc)
