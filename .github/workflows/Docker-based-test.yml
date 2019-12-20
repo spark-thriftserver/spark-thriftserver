@@ -1,0 +1,31 @@
+name: Running Docker-based Integration Test Suites
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java: [ '1.8' ]
+        hadoop: [ 'hadoop-2.7' ]
+    name: Build Spark with JDK ${{ matrix.java }} and ${{ matrix.hadoop }}
+
+    steps:
+      - uses: actions/checkout@master
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ matrix.java }}
+      - name: Running Docker-based Integration Test Suites
+        run: |
+          ./build/mvn install -DskipTests
+          ./build/mvn test -Pdocker-integration-tests -pl :spark-docker-integration-tests_2.12
