@@ -80,6 +80,7 @@ public class ThriftHttpServlet extends TServlet {
   private boolean isHttpOnlyCookie;
   private final SparkAuthFactory sparkAuthFactory;
   private static final String HIVE_DELEGATION_TOKEN_HEADER =  "X-Hive-Delegation-Token";
+  private static final String SPARK_DELEGATION_TOKEN_HEADER =  "X-Spark-Delegation-Token";
 
   public ThriftHttpServlet(TProcessor processor, TProtocolFactory protocolFactory,
       String authType, UserGroupInformation serviceUGI, UserGroupInformation httpUGI,
@@ -134,8 +135,9 @@ public class ThriftHttpServlet extends TServlet {
       if (clientUserName == null) {
         // For a kerberos setup
         if (isKerberosAuthMode(authType)) {
-          String delegationToken = request.getHeader(HIVE_DELEGATION_TOKEN_HEADER);
+          String delegationToken = getDelegationTokennStrFromRequest(request);
           // Each http request must have an Authorization header
+          // Here we check both hive & spark token header to support both client
           if ((delegationToken != null) && (!delegationToken.isEmpty())) {
             clientUserName = doTokenAuth(request, response);
           } else {
@@ -341,11 +343,23 @@ public class ThriftHttpServlet extends TServlet {
 
   private String doTokenAuth(HttpServletRequest request, HttpServletResponse response)
       throws HttpAuthenticationException {
-    String tokenStr = request.getHeader(HIVE_DELEGATION_TOKEN_HEADER);
+    String tokenStr = getDelegationTokennStrFromRequest(request);
     try {
       return sparkAuthFactory.verifyDelegationToken(tokenStr);
     } catch (ServiceSQLException e) {
       throw new HttpAuthenticationException(e);
+    }
+  }
+
+  private String getDelegationTokennStrFromRequest(HttpServletRequest request) {
+    String sparkTokenStr = request.getHeader(SPARK_DELEGATION_TOKEN_HEADER);
+    String hiveTokenStr = request.getHeader(HIVE_DELEGATION_TOKEN_HEADER);
+    if (sparkTokenStr != null && !sparkTokenStr.isEmpty()) {
+      return sparkTokenStr;
+    } else if (hiveTokenStr != null && !hiveTokenStr.isEmpty()) {
+      return hiveTokenStr;
+    } else {
+      return null;
     }
   }
 
