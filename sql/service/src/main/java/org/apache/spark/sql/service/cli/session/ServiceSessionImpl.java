@@ -180,20 +180,26 @@ public class ServiceSessionImpl implements ServiceSession {
       System.getProperties().setProperty(propName, substitution.substitute(varvalue));
     } else if (varname.startsWith(SPARKCONF_PREFIX)) {
       String propName = varname.substring(SPARKCONF_PREFIX.length());
-      sqlContext.setConf(propName, substitution.substitute(varvalue));
+      setConf(propName, substitution.substitute(varvalue));
     } else if (varname.startsWith(SPARKVAR_PREFIX)) {
       String propName = varname.substring(SPARKVAR_PREFIX.length());
-      sqlContext.setConf(propName, substitution.substitute(varvalue));
+      setConf(propName, substitution.substitute(varvalue));
     } else if (varname.startsWith(HIVECONF_PREFIX)) {
       String propName = varname.substring(HIVECONF_PREFIX.length());
-      sqlContext.setConf(propName, substitution.substitute(varvalue));
+      setConf(propName, substitution.substitute(varvalue));
     } else if (varname.startsWith(HIVEVAR_PREFIX)) {
       String propName = varname.substring(HIVEVAR_PREFIX.length());
-      sqlContext.setConf(propName, substitution.substitute(varvalue));
+      setConf(propName, substitution.substitute(varvalue));
     } else {
-      sqlContext.setConf(varname, substitution.substitute(varvalue));
+      setConf(varname, substitution.substitute(varvalue));
     }
     return 0;
+  }
+
+  public void setConf(String key, String value) {
+    if (!key.startsWith(ServiceConf.SERVICE_CONF_PREFIX())) {
+      sqlContext.setConf(key, value);
+    }
   }
 
   @Override
