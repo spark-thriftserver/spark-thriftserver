@@ -20,7 +20,7 @@ package org.apache.spark.sql.service.internal
 import java.io.File
 import java.util.concurrent.TimeUnit
 
-import org.apache.spark.sql.internal.SQLConf.buildConf
+import org.apache.spark.internal.config.ConfigBuilder
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // This file defines the configuration options for Spark Thrift Server.
@@ -28,46 +28,46 @@ import org.apache.spark.sql.internal.SQLConf.buildConf
 
 object ServiceConf {
 
-  val THRIFTSERVER_ASYNC = buildConf("spark.sql.thriftServer.async")
+  val THRIFTSERVER_ASYNC = ConfigBuilder("spark.sql.thriftServer.async")
     .doc("When set to true, Spark Thrift server executes SQL queries in an asynchronous way.")
     .booleanConf
     .createWithDefault(true)
 
-  val THRIFTSERVER_TRANSPORT_MODE = buildConf("spark.sql.thriftserver.transport.mode")
+  val THRIFTSERVER_TRANSPORT_MODE = ConfigBuilder("spark.sql.thriftserver.transport.mode")
     .internal()
     .doc("Transport mode of SparkThriftServer: 1. binary  2. http")
     .stringConf
     .createWithDefault("binary")
 
-  val THRIFTSERVER_THRIFT_BIND_HOST = buildConf("spark.sql.thriftserver.thrift.bind.host")
+  val THRIFTSERVER_THRIFT_BIND_HOST = ConfigBuilder("spark.sql.thriftserver.thrift.bind.host")
     .internal()
     .doc("Bind host on which to run the SparkThriftServer Thrift service.")
     .stringConf
     .createWithDefault("")
 
 
-  val THRIFTSERVER_HTTP_PORT = buildConf("spark.sql.thriftserver.http.port")
+  val THRIFTSERVER_HTTP_PORT = ConfigBuilder("spark.sql.thriftserver.http.port")
     .internal()
     .doc("Port number of SparkThriftServer Thrift interface " +
       "when spark.sql.thriftserver.transport.mode is 'http'.")
     .intConf
     .createWithDefault(10001)
 
-  val THRIFTSERVER_HTTP_PATH = buildConf("spark.sql.thriftserver.http.path")
+  val THRIFTSERVER_HTTP_PATH = ConfigBuilder("spark.sql.thriftserver.http.path")
     .internal()
     .doc("Path component of URL endpoint when in HTTP mode.")
     .stringConf
     .createWithDefault("cliservice")
 
   val THRIFTSERVER_MAX_MESSAGE_SIZE =
-    buildConf("spark.sql.thriftserver.max.message.size")
+    ConfigBuilder("spark.sql.thriftserver.max.message.size")
       .internal()
       .doc("Maximum message size in bytes a SS2 server will accept.")
       .intConf
       .createWithDefault(104857600)
 
   val THRIFTSERVER_THRIFT_HTTP_MAX_IDLE_TIME =
-    buildConf("spark.sql.thriftserver.thrift.http.max.idle.time")
+    ConfigBuilder("spark.sql.thriftserver.thrift.http.max.idle.time")
       .internal()
       .doc("Maximum idle time for a connection on the server when in HTTP mode.")
       .timeConf(TimeUnit.MILLISECONDS)
@@ -75,7 +75,7 @@ object ServiceConf {
 
 
   val THRIFTSERVER_THRIFT_HTTP_WORKER_KEEPALIVE_TIME =
-    buildConf("spark.sql.thriftserver.thrift.http.worker.keepalive.time")
+    ConfigBuilder("spark.sql.thriftserver.thrift.http.worker.keepalive.time")
       .internal()
       .doc("Keepalive time for an idle http worker thread. " +
         "When the number of workers exceeds min workers, " +
@@ -85,7 +85,7 @@ object ServiceConf {
 
 
   val THRIFTSERVER_THRIFT_HTTP_COOKIE_AUTH_ENABLED =
-    buildConf("spark.sql.thriftserver.thrift.http.cookie.auth.enabled")
+    ConfigBuilder("spark.sql.thriftserver.thrift.http.cookie.auth.enabled")
       .internal()
       .doc("When true, SparkThriftServer in HTTP transport mode," +
         " will use cookie based authentication mechanism.")
@@ -93,48 +93,48 @@ object ServiceConf {
       .createWithDefault(true)
 
   val THRIFTSERVER_THRIFT_HTTP_COOKIE_MAX_AGE =
-    buildConf("spark.sql.thriftserver.thrift.http.cookie.max.age")
+    ConfigBuilder("spark.sql.thriftserver.thrift.http.cookie.max.age")
       .internal()
       .doc("Maximum age in seconds for server side cookie used by SS2 in HTTP mode.")
       .timeConf(TimeUnit.SECONDS)
       .createWithDefault(86400)
 
   val THRIFTSERVER_THRIFT_HTTP_COOKIE_DOMAIN =
-    buildConf("spark.sql.thriftserver.thrift.http.cookie.domain")
+    ConfigBuilder("spark.sql.thriftserver.thrift.http.cookie.domain")
       .internal()
       .doc("Domain for the HS2 generated cookies")
       .stringConf
       .createWithDefault(null)
 
   val THRIFTSERVER_THRIFT_HTTP_COOKIE_PATH =
-    buildConf("spark.sql.thriftserver.thrift.http.cookie.path")
+    ConfigBuilder("spark.sql.thriftserver.thrift.http.cookie.path")
       .internal()
       .doc("Path for the SS2 generated cookies")
       .stringConf
       .createWithDefault("")
 
   val THRIFTSERVER_THRIFT_HTTP_COOKIE_IS_SECURE =
-    buildConf("spark.sql.thriftserver.thrift.http.cookie.is.secure")
+    ConfigBuilder("spark.sql.thriftserver.thrift.http.cookie.is.secure")
       .internal()
       .doc("Secure attribute of the SS2 generated cookie.")
       .booleanConf
       .createWithDefault(true)
 
   val THRIFTSERVER_THRIFT_HTTP_COOKIE_IS_HTTPONLY =
-    buildConf("spark.sql.thriftserver.thrift.http.cookie.is.httponly")
+    ConfigBuilder("spark.sql.thriftserver.thrift.http.cookie.is.httponly")
       .internal()
       .doc("HttpOnly attribute of the SS2 generated cookie.")
       .booleanConf
       .createWithDefault(true)
 
-  val THRIFTSERVER_THRIFT_PORT = buildConf("spark.sql.thriftserver.thrift.port")
+  val THRIFTSERVER_THRIFT_PORT = ConfigBuilder("spark.sql.thriftserver.thrift.port")
     .internal()
     .doc("Port number of SparkThriftServer Thrift interface " +
       "when spark.sql.thriftserver.transport.mode is 'binary'.")
     .intConf
     .createWithDefault(10000)
 
-  val THRIFTSERVER_THRIFT_SASL_QOP = buildConf("spark.sql.thriftserver.thrift.sasl.qop")
+  val THRIFTSERVER_THRIFT_SASL_QOP = ConfigBuilder("spark.sql.thriftserver.thrift.sasl.qop")
     .internal()
     .doc("Sasl QOP value; set it to one of following values to enable higher levels of" +
       "protection for SparkThriftServer communication with clients." +
@@ -149,14 +149,14 @@ object ServiceConf {
     .createWithDefault("auth")
 
   val THRIFTSERVER_THRIFT_MIN_WORKER_THREADS =
-    buildConf("spark.sql.thriftserver.thrift.min.worker.threads")
+    ConfigBuilder("spark.sql.thriftserver.thrift.min.worker.threads")
       .internal()
       .doc("Minimum number of Thrift worker threads")
       .intConf
       .createWithDefault(5)
 
   val THRIFTSERVER_THRIFT_MAX_WORKER_THREADS =
-    buildConf("spark.sql.thriftserver.thrift.max.worker.threads")
+    ConfigBuilder("spark.sql.thriftserver.thrift.max.worker.threads")
       .internal()
       .doc("Maximum number of Thrift worker threads")
       .intConf
@@ -164,7 +164,7 @@ object ServiceConf {
 
 
   val THRIFTSERVER_THRIFT_LOGIN_BEBACKOFF_SLOT_LENGTH =
-    buildConf("spark.sql.thriftserver.thrift.exponential.backoff.slot.length")
+    ConfigBuilder("spark.sql.thriftserver.thrift.exponential.backoff.slot.length")
       .internal()
       .doc("Binary exponential backoff slot time for Thrift clients " +
         "during login to SparkThriftServer," +
@@ -174,7 +174,7 @@ object ServiceConf {
 
 
   val THRIFTSERVER_THRIFT_LOGIN_TIMEOUT =
-    buildConf("spark.sql.thriftserver.thrift.login.timeout")
+    ConfigBuilder("spark.sql.thriftserver.thrift.login.timeout")
       .internal()
       .doc("Timeout for Thrift clients during login to SparkThriftServer")
       .timeConf(TimeUnit.SECONDS)
@@ -182,7 +182,7 @@ object ServiceConf {
 
 
   val THRIFTSERVER_THRIFT_WORKER_KEEPALIVE_TIME =
-    buildConf("spark.sql.thriftserver.thrift.worker.keepalive.time")
+    ConfigBuilder("spark.sql.thriftserver.thrift.worker.keepalive.time")
       .internal()
       .doc("Keepalive time (in seconds) for an idle worker thread. " +
         "When the number of workers exceeds min workers, " +
@@ -191,21 +191,21 @@ object ServiceConf {
       .createWithDefault(60)
 
   val THRIFTSERVER_ASYNC_EXEC_THREADS =
-    buildConf("spark.sql.thriftserver.async.exec.threads")
+    ConfigBuilder("spark.sql.thriftserver.async.exec.threads")
       .internal()
       .doc("Number of threads in the async thread pool for SparkThriftServer")
       .intConf
       .createWithDefault(100)
 
   val THRIFTSERVER_ASYNC_EXEC_SHUTDOWN_TIMEOUT =
-    buildConf("spark.sql.thriftserver.async.exec.shutdown.timeout")
+    ConfigBuilder("spark.sql.thriftserver.async.exec.shutdown.timeout")
       .internal()
       .doc("How long SparkThriftServer shutdown will wait for async threads to terminate.")
       .timeConf(TimeUnit.SECONDS)
       .createWithDefault(10)
 
   val THRIFTSERVER_ASYNC_EXEC_WAIT_QUEUE_SIZE =
-    buildConf("spark.sql.thriftserver.async.exec.wait.queue.size")
+    ConfigBuilder("spark.sql.thriftserver.async.exec.wait.queue.size")
       .internal()
       .doc("Size of the wait queue for async thread pool in SparkThriftServer." +
         "After hitting this limit, the async thread pool will reject new requests.")
@@ -213,7 +213,7 @@ object ServiceConf {
       .createWithDefault(100)
 
   val THRIFTSERVER_ASYNC_EXEC_KEEPALIVE_TIME =
-    buildConf("spark.sql.thriftserver.async.exec.keepalive.time")
+    ConfigBuilder("spark.sql.thriftserver.async.exec.keepalive.time")
       .internal()
       .doc("Time that an idle SparkThriftServer async thread (from the thread pool) " +
         "will wait for a new task to arrive before terminating")
@@ -221,7 +221,7 @@ object ServiceConf {
       .createWithDefault(10)
 
   val THRIFTSERVER_LONG_POLLING_TIMEOUT =
-    buildConf("spark.sql.thriftserver.long.polling.timeout")
+    ConfigBuilder("spark.sql.thriftserver.long.polling.timeout")
       .internal()
       .doc("Time that SparkThriftServer will wait before responding to " +
         "asynchronous calls that use long polling")
@@ -229,7 +229,7 @@ object ServiceConf {
       .createWithDefault(5000)
 
   val THRIFTSERVER_AUTHENTICATION =
-    buildConf("spark.sql.thriftserver.authentication")
+    ConfigBuilder("spark.sql.thriftserver.authentication")
       .internal()
       .doc("Client authentication types." +
         "  NONE: no authentication check" +
@@ -243,7 +243,7 @@ object ServiceConf {
       .createWithDefault("NONE")
 
   val THRIFTSERVER_ALLOW_USER_SUBSTITUTION =
-    buildConf("spark.sql.thriftserver.allow.user.substitution")
+    ConfigBuilder("spark.sql.thriftserver.allow.user.substitution")
       .internal()
       .doc("Allow alternate user to be specified " +
         "as part of SparkThriftServer open connection request.")
@@ -251,14 +251,14 @@ object ServiceConf {
       .createWithDefault(true)
 
   val THRIFTSERVER_KERBEROS_KEYTAB =
-    buildConf("spark.sql.thriftserver.authentication.kerberos.keytab")
+    ConfigBuilder("spark.sql.thriftserver.authentication.kerberos.keytab")
       .internal()
       .doc("Kerberos keytab file for server principal")
       .stringConf
       .createWithDefault("")
 
   val THRIFTSERVER_KERBEROS_PRINCIPAL =
-    buildConf("spark.sql.thriftserver.authentication.kerberos.principal")
+    ConfigBuilder("spark.sql.thriftserver.authentication.kerberos.principal")
       .internal()
       .doc("Kerberos server principal")
       .stringConf
@@ -266,7 +266,7 @@ object ServiceConf {
 
 
   val THRIFTSERVER_SPNEGO_KEYTAB =
-    buildConf("spark.sql.thriftserver.authentication.spnego.keytab")
+    ConfigBuilder("spark.sql.thriftserver.authentication.spnego.keytab")
       .internal()
       .doc("keytab file for SPNego principal, optional," +
         "typical value would look like /etc/security/keytabs/spnego.service.keytab," +
@@ -280,7 +280,7 @@ object ServiceConf {
       .createWithDefault("")
 
   val THRIFTSERVER_SPNEGO_PRINCIPAL =
-    buildConf("spark.sql.thriftserver.authentication.spnego.principal")
+    ConfigBuilder("spark.sql.thriftserver.authentication.spnego.principal")
       .internal()
       .doc("SPNego service principal, optional, typical value " +
         "would look like HTTP/_HOST@EXAMPLE.COM" +
@@ -291,7 +291,7 @@ object ServiceConf {
       .createWithDefault("")
 
   val THRIFTSERVER_PLAIN_LDAP_URL =
-    buildConf("spark.sql.thriftserver.authentication.ldap.url")
+    ConfigBuilder("spark.sql.thriftserver.authentication.ldap.url")
       .internal()
       .doc("LDAP connection URL(s)," +
         "this value could contain URLs to mutiple LDAP servers instances for HA," +
@@ -301,21 +301,21 @@ object ServiceConf {
       .createWithDefault("")
 
   val THRIFTSERVER_PLAIN_LDAP_BASEDN =
-    buildConf("spark.sql.thriftserver.authentication.ldap.baseDN")
+    ConfigBuilder("spark.sql.thriftserver.authentication.ldap.baseDN")
       .internal()
       .doc("LDAP base DN")
       .stringConf
       .createWithDefault("")
 
   val THRIFTSERVER_PLAIN_LDAP_DOMAIN =
-    buildConf("spark.sql.thriftserver.authentication.ldap.Domain")
+    ConfigBuilder("spark.sql.thriftserver.authentication.ldap.Domain")
       .internal()
       .doc("")
       .stringConf
       .createWithDefault("")
 
   val THRIFTSERVER_CUSTOM_AUTHENTICATION_CLASS =
-    buildConf("spark.sql.thriftserver.custom.authentication.class")
+    ConfigBuilder("spark.sql.thriftserver.custom.authentication.class")
       .internal()
       .doc("Custom authentication class. Used when property" +
         "'spark.sql.thriftserver.authentication' is set to 'CUSTOM'. Provided class" +
@@ -328,7 +328,7 @@ object ServiceConf {
       .createWithDefault("")
 
   val THRIFTSERVER_PAM_SERVICES =
-    buildConf("spark.sql.thriftserver.authentication.pam.services")
+    ConfigBuilder("spark.sql.thriftserver.authentication.pam.services")
       .internal()
       .doc("List of the underlying pam services that should be used when auth type is PAM" +
         "A file with the same name must exist in /etc/pam.d")
@@ -336,7 +336,7 @@ object ServiceConf {
       .createWithDefault("")
 
   val THRIFTSERVER_ENABLE_DOAS =
-    buildConf("spark.sql.thriftserver.enable.doAs")
+    ConfigBuilder("spark.sql.thriftserver.enable.doAs")
       .internal()
       .doc("Setting this property to true will have SparkThriftServer execute" +
         "Spark operations as the user making the calls to it.")
@@ -344,42 +344,42 @@ object ServiceConf {
       .createWithDefault(true)
 
   val THRIFTSERVER_SESSION_HOOK =
-    buildConf("spark.sql.thriftserver.session.hook")
+    ConfigBuilder("spark.sql.thriftserver.session.hook")
       .internal()
       .doc("")
       .stringConf
       .createWithDefault("")
 
   val THRIFTSERVER_USE_SSL =
-    buildConf("spark.sql.thriftserver.use.SSL")
+    ConfigBuilder("spark.sql.thriftserver.use.SSL")
       .internal()
       .doc("Set this to true for using SSL encryption in SparkThriftServer.")
       .booleanConf
       .createWithDefault(false)
 
   val THRIFTSERVER_SSL_KEYSTORE_PATH =
-    buildConf("spark.hadoop.spark.sql.thriftserver.ssl.keystore.path")
+    ConfigBuilder("spark.hadoop.spark.sql.thriftserver.ssl.keystore.path")
       .internal()
       .doc("SSL certificate keystore location.")
       .stringConf
       .createWithDefault("")
 
   val THRIFTSERVER_SSL_KEYSTORE_PASSWORD =
-    buildConf("spark.hadoop.spark.sql.thriftserver.ssl.keystore.password")
+    ConfigBuilder("spark.hadoop.spark.sql.thriftserver.ssl.keystore.password")
       .internal()
       .doc("SSL certificate keystore password.")
       .stringConf
       .createWithDefault("")
 
   val THRIFTSERVER_SSL_PROTOCOL_BLACKLIST =
-    buildConf("spark.sql.thriftserver.ssl.protocol.blacklist")
+    ConfigBuilder("spark.sql.thriftserver.ssl.protocol.blacklist")
       .internal()
       .doc("SSL Versions to disable for all Hive Servers")
       .stringConf
       .createWithDefault("SSLv2,SSLv3")
 
   val THRIFTSERVER_BUILTIN_UDF_WHITELIST =
-    buildConf("spark.sql.thriftserver.builtin.udf.whitelist")
+    ConfigBuilder("spark.sql.thriftserver.builtin.udf.whitelist")
       .internal()
       .doc("Comma separated list of builtin udf names allowed in queries." +
         "An empty whitelist allows all builtin udfs to be executed.  " +
@@ -388,7 +388,7 @@ object ServiceConf {
       .createWithDefault("")
 
   val THRIFTSERVER_BUILTIN_UDF_BLACKLIST =
-    buildConf("spark.sql.thriftserver.builtin.udf.blacklist")
+    ConfigBuilder("spark.sql.thriftserver.builtin.udf.blacklist")
       .internal()
       .doc("Comma separated list of udfs names. These udfs will not be allowed in queries. " +
         "The udf black list takes precedence over udf white list")
@@ -396,7 +396,7 @@ object ServiceConf {
       .createWithDefault("")
 
   val THRIFTSERVER_SESSION_CHECK_INTERVAL =
-    buildConf("spark.sql.thriftserver.session.check.interval")
+    ConfigBuilder("spark.sql.thriftserver.session.check.interval")
       .internal()
       .doc("The check interval for session/operation timeout, " +
         "which can be disabled by setting to zero or negative value.")
@@ -404,7 +404,7 @@ object ServiceConf {
       .createWithDefault(6 * 3600 * 1000)
 
   val THRIFTSERVER_IDLE_SESSION_TIMEOUT =
-    buildConf("spark.sql.thriftserver.idle.session.timeout")
+    ConfigBuilder("spark.sql.thriftserver.idle.session.timeout")
       .internal()
       .doc("Session will be closed when it's not accessed for this duration, " +
         "which can be disabled by setting to zero or negative value.")
@@ -412,7 +412,7 @@ object ServiceConf {
       .createWithDefault(7 * 24 * 3600 * 1000)
 
   val THRIFTSERVER_IDLE_SESSION_CHECK_OPERATION =
-    buildConf("spark.sql.thriftserver.idle.session.check.operation")
+    ConfigBuilder("spark.sql.thriftserver.idle.session.check.operation")
       .internal()
       .doc("Session will be considered to be idle only if there is no activity," +
         " and there is no pending operation. This setting takes effect " +
@@ -422,7 +422,7 @@ object ServiceConf {
       .createWithDefault(true)
 
   val THRIFTSERVER_IDLE_OPERATION_TIMEOUT =
-    buildConf("spark.sql.thriftserver.idle.operation.timeout")
+    ConfigBuilder("spark.sql.thriftserver.idle.operation.timeout")
       .internal()
       .doc("Operation will be closed when it's not accessed for this duration of time, " +
         "which can be disabled by setting to zero value." +
@@ -433,14 +433,14 @@ object ServiceConf {
       .createWithDefault(5 * 24 * 60 * 60 * 1000)
 
   val THRIFTSERVER_LOGGING_OPERATION_ENABLE =
-    buildConf("spark.sql.thriftserver.logging.operation.enabled")
+    ConfigBuilder("spark.sql.thriftserver.logging.operation.enabled")
       .internal()
       .doc("When true, HS2 will save operation logs and make them available for clients")
       .booleanConf
       .createWithDefault(true)
 
   val THRIFTSERVER_LOGGING_OPERATION_LOG_LOCATION =
-    buildConf("spark.sql.thriftserver.logging.operation.log.location")
+    ConfigBuilder("spark.sql.thriftserver.logging.operation.log.location")
       .internal()
       .doc("Top level directory where operation logs are stored " +
         "if logging functionality is enabled")
@@ -449,7 +449,7 @@ object ServiceConf {
         "${system:user.name}" + File.separator + "operation_logs")
 
   val THRIFTSERVER_LOGGING_OPERATION_LEVEL =
-    buildConf("spark.sql.thriftserver.logging.operation.level")
+    ConfigBuilder("spark.sql.thriftserver.logging.operation.level")
       .internal()
       .doc("HS2 operation logging mode available to clients to be set at session level." +
         "For this to work, spark.sql.thriftserver.logging.operation.enabled " +
@@ -462,7 +462,7 @@ object ServiceConf {
       .createWithDefault("EXECUTION")
 
   val THRIFTSERVER_CLUSTER_DELEGATION_TOKEN_STORE_CLS =
-    buildConf("spark.sql.thriftserver.cluster.delegation.token.store.class")
+    ConfigBuilder("spark.sql.thriftserver.cluster.delegation.token.store.class")
       .internal()
       .doc("The delegation token store implementation. " +
         "Set to org.apache.spark.sql.service.auth.thrift.ZooKeeperTokenStore " +
@@ -471,21 +471,21 @@ object ServiceConf {
       .createWithDefault("org.apache.spark.sql.service.auth.thrift.MemoryTokenStore")
 
   val THRIFTSERVER_VARIABLE_SUBSTITUTE =
-    buildConf("spark.sql.thriftserver.variable.substitute")
+    ConfigBuilder("spark.sql.thriftserver.variable.substitute")
       .internal()
       .doc("This enables substitution using syntax like ${var} ${system:var} and ${env:var}.")
       .booleanConf
       .createWithDefault(true)
 
   val THRIFTSERVER_VARIABLE_SUBSTITUTE_DEPTH =
-    buildConf("spark.sql.thriftserver.variable.substitute.depth")
+    ConfigBuilder("spark.sql.thriftserver.variable.substitute.depth")
       .internal()
       .doc("The maximum replacements the substitution engine will do.")
       .intConf
       .createWithDefault(40)
 
   val THRIFTSERVER_GLOABLE_INIT_FILE_LOCATION =
-    buildConf("spark.sql.thriftserver.global.init.file.location")
+    ConfigBuilder("spark.sql.thriftserver.global.init.file.location")
       .internal()
       .doc("Either the location of a SparkThriftServer global init file or a directory" +
         " containing a .sparkrc file. If the property is set, the value must be a valid path " +
