@@ -638,7 +638,7 @@ class VersionsSuite extends SparkFunSuite with Logging {
       client.runSqlHive("SET spark.sql.test.key=1")
     }
 
-    test(s"$version: sql create index and reset") {
+    ignore(s"$version: sql create index and reset") {
       // HIVE-18448 Since Hive 3.0, INDEX is not supported.
       if (version != "3.0" && version != "3.1") {
         client.runSqlHive("CREATE TABLE indexed_table (key INT)")

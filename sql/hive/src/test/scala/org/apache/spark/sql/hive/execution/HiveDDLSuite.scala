@@ -1528,7 +1528,7 @@ class HiveDDLSuite
       sql(s"SELECT * FROM ${targetTable.identifier}"))
   }
 
-  test("create table with the same name as an index table") {
+  ignore("create table with the same name as an index table") {
     val tabName = "tab1"
     val indexName = tabName + "_index"
     withTable(tabName) {
