@@ -132,7 +132,7 @@
     <hive.classifier></hive.classifier>
     <!-- Version used in Maven Hive dependency -->
     <hive.version>1.2.1.spark2</hive.version>
-    <hive23.version>2.3.6</hive23.version>
+    <hive23.version>3.1.2</hive23.version>
     <!-- Version used for internal directory structure -->
     <hive.version.short>1.2.1</hive.version.short>
     <!-- note that this should be compatible with Kafka brokers version 0.10 and up -->
@@ -1592,11 +1592,6 @@
           <exclusion>
             <groupId>org.apache.avro</groupId>
             <artifactId>avro-mapred</artifactId>
-          </exclusion>
-          <!--  Do not need Calcite because we disabled hive.cbo.enable -->
-          <exclusion>
-            <groupId>org.apache.calcite</groupId>
-            <artifactId>calcite-core</artifactId>
           </exclusion>
           <exclusion>
             <groupId>org.apache.calcite</groupId>

@@ -490,7 +490,7 @@ private[hive] trait HiveInspectors {
         System.arraycopy(writable.getBytes, 0, constant, 0, constant.length)
         _ => constant
       case poi: WritableConstantDateObjectInspector =>
-        val constant = DateTimeUtils.fromJavaDate(poi.getWritableConstantValue.get())
+        val constant = DateTimeUtils.millisToDays(poi.getWritableConstantValue.get().toEpochMilli)
         _ => constant
       case mi: StandardConstantMapObjectInspector =>
         val keyUnwrapper = unwrapperFor(mi.getMapKeyObjectInspector)
@@ -613,7 +613,7 @@ private[hive] trait HiveInspectors {
         case x: DateObjectInspector if x.preferWritable() =>
           data: Any => {
             if (data != null) {
-              DateTimeUtils.fromJavaDate(x.getPrimitiveWritableObject(data).get())
+              DateTimeUtils.millisToDays(x.getPrimitiveWritableObject(data).get().toEpochMilli)
             } else {
               null
             }
@@ -621,7 +621,7 @@ private[hive] trait HiveInspectors {
         case x: DateObjectInspector =>
           data: Any => {
             if (data != null) {
-              DateTimeUtils.fromJavaDate(x.getPrimitiveJavaObject(data))
+              DateTimeUtils.millisToDays(x.getPrimitiveJavaObject(data).toEpochMilli)
             } else {
               null
             }
@@ -638,7 +638,7 @@ private[hive] trait HiveInspectors {
         case ti: TimestampObjectInspector =>
           data: Any => {
             if (data != null) {
-              DateTimeUtils.fromJavaTimestamp(ti.getPrimitiveJavaObject(data))
+              DateTimeUtils.fromMillis(ti.getPrimitiveJavaObject(data).toEpochMilli)
             } else {
               null
             }
