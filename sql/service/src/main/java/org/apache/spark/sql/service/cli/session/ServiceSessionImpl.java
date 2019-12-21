@@ -25,6 +25,8 @@ import java.io.InputStreamReader;
 import java.util.*;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.spark.internal.config.ConfigEntry;
+import org.apache.spark.sql.internal.SQLConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -197,7 +199,8 @@ public class ServiceSessionImpl implements ServiceSession {
   }
 
   public void setConf(String key, String value) {
-    if (!key.startsWith(ServiceConf.SERVICE_CONF_PREFIX())) {
+    if (sqlContext.conf().setCommandRejectsSparkCoreConfs() &&
+        ConfigEntry.findEntry(key) != null && !SQLConf.sqlConfEntries().containsKey(key)) {
       sqlContext.setConf(key, value);
     }
   }

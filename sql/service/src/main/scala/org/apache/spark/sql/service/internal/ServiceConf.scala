@@ -28,8 +28,6 @@ import org.apache.spark.internal.config.ConfigBuilder
 
 object ServiceConf {
 
-  val SERVICE_CONF_PREFIX = "spark.sql.thriftserver"
-
   val THRIFTSERVER_ASYNC = ConfigBuilder("spark.sql.thriftServer.async")
     .doc("When set to true, Spark Thrift server executes SQL queries in an asynchronous way.")
     .booleanConf
