@@ -74,8 +74,8 @@ class OperationManager
                                    async: Boolean,
                                    queryTimeOut: Long): SparkExecuteStatementOperation = {
     synchronized {
-      val conf = parentSession.getSQLContext.sessionState.conf
-      val runInBackground = async && conf.getConf(ServiceConf.THRIFTSERVER_ASYNC)
+      val conf = parentSession.getSparkConf
+      val runInBackground = async && conf.get(ServiceConf.THRIFTSERVER_ASYNC)
       val operation = new SparkExecuteStatementOperation(parentSession, statement, confOverlay,
         runInBackground)(sessionToActivePool)
       handleToOperation.put(operation.getHandle, operation)
