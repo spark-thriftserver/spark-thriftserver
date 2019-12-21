@@ -67,7 +67,7 @@ class ThriftServerWithSparkContextSuite extends QueryTest with SharedSparkSessio
   private def startThriftServer(port: Int, attempt: Int): Unit = {
     logInfo(s"Trying to start SparkThriftServer: port=$port, attempt=$attempt")
     val sqlContext = spark.newSession().sqlContext
-    sqlContext.setConf(ServiceConf.THRIFTSERVER_THRIFT_PORT, port)
+    sqlContext.sparkContext.conf.set(ServiceConf.THRIFTSERVER_THRIFT_PORT, port)
     sparkServer = SparkThriftServer.startWithContext(sqlContext)
   }
 
