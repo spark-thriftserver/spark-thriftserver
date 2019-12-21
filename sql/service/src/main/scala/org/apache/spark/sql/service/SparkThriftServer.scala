@@ -17,6 +17,7 @@
 
 package org.apache.spark.sql.service
 
+import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
 
 import scala.collection.mutable
@@ -27,8 +28,9 @@ import org.apache.spark.annotation.DeveloperApi
 import org.apache.spark.internal.Logging
 import org.apache.spark.internal.config.UI.UI_ENABLED
 import org.apache.spark.scheduler.{SparkListener, SparkListenerApplicationEnd, SparkListenerJobStart}
-import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.{SparkSession, SQLContext}
 import org.apache.spark.sql.internal.SQLConf
+import org.apache.spark.sql.internal.StaticSQLConf.CATALOG_IMPLEMENTATION
 import org.apache.spark.sql.service.cli.CLIService
 import org.apache.spark.sql.service.cli.thrift.{ThriftBinaryCLIService, ThriftCLIService, ThriftHttpCLIService}
 import org.apache.spark.sql.service.internal.ServiceConf
@@ -49,7 +51,6 @@ object SparkThriftServer extends Logging {
    */
   @DeveloperApi
   def startWithContext(sqlContext: SQLContext): SparkThriftServer = {
-    SparkSQLEnv.setSQLContext(sqlContext)
     val server = new SparkThriftServer(sqlContext)
 
     server.init(sqlContext.sparkContext.conf)
@@ -79,28 +80,28 @@ object SparkThriftServer extends Logging {
   def main(args: Array[String]): Unit = {
     Utils.initDaemon(log)
     logInfo("Starting SparkContext")
-    SparkSQLEnv.init()
+    val spark = initSparkSession()
 
     ShutdownHookManager.addShutdownHook { () =>
-      SparkSQLEnv.stop()
+      spark.stop()
       uiTab.foreach(_.detach())
     }
 
     try {
-      val server = new SparkThriftServer(SparkSQLEnv.sqlContext)
-      server.init(SparkSQLEnv.sparkContext.conf)
+      val server = new SparkThriftServer(spark.sqlContext)
+      server.init(spark.sparkContext.conf)
       server.start()
       logInfo("SparkThriftServer started")
-      listener = new SparkThriftServerListener(server, SparkSQLEnv.sqlContext.conf)
-      SparkSQLEnv.sparkContext.addSparkListener(listener)
-      uiTab = if (SparkSQLEnv.sparkContext.getConf.get(UI_ENABLED)) {
-        Some(new ThriftServerTab(SparkSQLEnv.sparkContext))
+      listener = new SparkThriftServerListener(server, spark.sqlContext.conf)
+      spark.sparkContext.addSparkListener(listener)
+      uiTab = if (spark.sparkContext.getConf.get(UI_ENABLED)) {
+        Some(new ThriftServerTab(spark.sparkContext))
       } else {
         None
       }
       // If application was killed before SparkThriftServer start successfully then SparkSubmit
       // process can not exit, so check whether if SparkContext was stopped.
-      if (SparkSQLEnv.sparkContext.stopped.get()) {
+      if (spark.sparkContext.stopped.get()) {
         logError("SparkContext has stopped even if SparkThriftServer has started, so exit")
         System.exit(-1)
       }
@@ -109,6 +110,28 @@ object SparkThriftServer extends Logging {
         logError("Error starting SparkThriftServer", e)
         System.exit(-1)
     }
+  }
+
+  private def initSparkSession(): SparkSession = {
+    val sparkConf = new SparkConf(loadDefaults = true)
+    val builder = SparkSession.builder().config(sparkConf)
+    val sparkSession = if (sparkConf.get(CATALOG_IMPLEMENTATION.key, "hive")
+      .toLowerCase(Locale.ROOT) == "hive") {
+      if (SparkSession.hiveClassesArePresent) {
+        builder.enableHiveSupport().getOrCreate()
+      } else {
+        builder.config(CATALOG_IMPLEMENTATION.key, "in-memory")
+        builder.getOrCreate()
+      }
+    } else {
+      builder.getOrCreate()
+    }
+
+    // SPARK-29604: force initialization of the session state with the Spark class loader,
+    // instead of having it happen during the initialization of the Hive client (which may use a
+    // different class loader).
+    sparkSession.sessionState
+    sparkSession
   }
 
   private[service] class SessionInfo(
