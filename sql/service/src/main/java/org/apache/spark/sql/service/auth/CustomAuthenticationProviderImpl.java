@@ -24,7 +24,6 @@ import org.apache.hadoop.util.ReflectionUtils;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.deploy.SparkHadoopUtil;
-import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.internal.ServiceConf;
 
 /**
