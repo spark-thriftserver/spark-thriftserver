@@ -28,7 +28,7 @@ import org.apache.hadoop.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.spark.sql.internal.SQLConf;
+import org.apache.spark.SparkConf;
 import org.apache.spark.sql.service.internal.ServiceConf;
 
 /**
@@ -50,12 +50,12 @@ public class OperationLog {
     NONE, EXECUTION, PERFORMANCE, VERBOSE, UNKNOWN
   }
 
-  public OperationLog(String name, File file, SQLConf sqlConf) throws FileNotFoundException {
+  public OperationLog(String name, File file, SparkConf sparkConf) throws FileNotFoundException {
     operationName = name;
     logFile = new LogFile(file);
 
-    if (((boolean) sqlConf.getConf(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_ENABLE()))) {
-      String logLevel = sqlConf.getConf(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_LEVEL());
+    if (((boolean) sparkConf.get(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_ENABLE()))) {
+      String logLevel = sparkConf.get(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_LEVEL());
       opLoggingLevel = getLoggingLevel(logLevel);
     }
   }

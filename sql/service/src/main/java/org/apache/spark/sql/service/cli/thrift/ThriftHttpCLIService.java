@@ -75,11 +75,11 @@ public class ThriftHttpCLIService extends ThriftCLIService {
       // Connector configs
 
       ConnectionFactory[] connectionFactories;
-      boolean useSsl = (boolean) sqlConf.getConf(ServiceConf.THRIFTSERVER_USE_SSL());
+      boolean useSsl = (boolean) sparkConf.get(ServiceConf.THRIFTSERVER_USE_SSL());
       String schemeName = useSsl ? "https" : "http";
       // Change connector if SSL is used
       if (useSsl) {
-        String keyStorePath = sqlConf.getConf(ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PATH());
+        String keyStorePath = sparkConf.get(ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PATH());
         org.apache.hadoop.conf.Configuration hadoopConf =
             sqlContext.sparkContext().hadoopConfiguration();
         char[] pass = hadoopConf.getPassword(
@@ -92,7 +92,7 @@ public class ThriftHttpCLIService extends ThriftCLIService {
         }
         SslContextFactory sslContextFactory = new SslContextFactory.Server();
         String[] excludedProtocols =
-            sqlConf.getConf(ServiceConf.THRIFTSERVER_SSL_PROTOCOL_BLACKLIST()).split(",");
+            sparkConf.get(ServiceConf.THRIFTSERVER_SSL_PROTOCOL_BLACKLIST()).split(",");
         LOG.info("HTTP Server SSL: adding excluded protocols: " +
              Arrays.toString(excludedProtocols));
         sslContextFactory.addExcludeProtocols(excludedProtocols);
@@ -119,14 +119,14 @@ public class ThriftHttpCLIService extends ThriftCLIService {
       // Linux:yes, Windows:no
       connector.setReuseAddress(!Shell.WINDOWS);
       int maxIdleTime =
-          new Long(((long) sqlConf.getConf(ServiceConf
+          new Long(((long) sparkConf.get(ServiceConf
                .THRIFTSERVER_THRIFT_HTTP_MAX_IDLE_TIME()))).intValue();
       connector.setIdleTimeout(maxIdleTime);
 
       httpServer.addConnector(connector);
 
       // Thrift configs
-      sparkAuthFactory = new SparkAuthFactory(sqlConf);
+      sparkAuthFactory = new SparkAuthFactory(sparkConf);
       TProcessor processor = new TCLIService.Processor<Iface>(this);
       TProtocolFactory protocolFactory = new TBinaryProtocol.Factory();
       // Set during the init phase of SparkThriftServer if auth mode is kerberos
@@ -134,15 +134,15 @@ public class ThriftHttpCLIService extends ThriftCLIService {
       UserGroupInformation serviceUGI = cliService.getServiceUGI();
       // UGI for the http/_HOST (SPNego) principal
       UserGroupInformation httpUGI = cliService.getHttpUGI();
-      String authType = sqlConf.getConf(ServiceConf.THRIFTSERVER_AUTHENTICATION());
+      String authType = sparkConf.get(ServiceConf.THRIFTSERVER_AUTHENTICATION());
       TServlet thriftHttpServlet = new ThriftHttpServlet(processor, protocolFactory, authType,
-          serviceUGI, httpUGI, sparkAuthFactory, sqlConf);
+          serviceUGI, httpUGI, sparkAuthFactory, sparkConf);
 
       // Context handler
       final ServletContextHandler context = new ServletContextHandler(
           ServletContextHandler.SESSIONS);
       context.setContextPath("/");
-      String httpPath = getHttpPath(sqlConf.getConf(ServiceConf.THRIFTSERVER_HTTP_PATH()));
+      String httpPath = getHttpPath(sparkConf.get(ServiceConf.THRIFTSERVER_HTTP_PATH()));
       httpServer.setHandler(context);
       context.addServlet(new ServletHolder(thriftHttpServlet), httpPath);
 

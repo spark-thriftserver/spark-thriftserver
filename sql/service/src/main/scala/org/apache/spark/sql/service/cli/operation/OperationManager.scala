@@ -26,6 +26,7 @@ import scala.collection.JavaConverters._
 
 import org.apache.log4j.Logger
 
+import org.apache.spark.SparkConf
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.service.AbstractService
@@ -41,14 +42,14 @@ class OperationManager
   private[this] val handleToOperation = new ConcurrentHashMap[OperationHandle, Operation]
   val sessionToActivePool = new ConcurrentHashMap[SessionHandle, String]()
 
-  override def init(sqlConf: SQLConf): Unit = synchronized {
-    if (sqlConf.getConf(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_ENABLE)) {
+  override def init(sparkConf: SparkConf): Unit = synchronized {
+    if (sparkConf.get(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_ENABLE)) {
       initOperationLogCapture(
-        sqlConf.getConf(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_LEVEL))
+        sparkConf.get(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_LEVEL))
     } else {
       logDebug("Operation level logging is turned off")
     }
-    super.init(sqlConf)
+    super.init(sparkConf)
   }
 
   override def start(): Unit = {

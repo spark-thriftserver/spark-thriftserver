@@ -294,14 +294,13 @@ class ThriftServerQueryTestSuite extends SQLQueryTestSuite with JdbcTestHelper {
   private def startThriftServer(port: Int, attempt: Int): Unit = {
     logInfo(s"Trying to start SparkThriftServer: port=$port, attempt=$attempt")
     val sqlContext = spark.newSession().sqlContext
-    sqlContext.setConf(ServiceConf.THRIFTSERVER_THRIFT_PORT, port)
+    spark.sparkContext.conf.set(ServiceConf.THRIFTSERVER_THRIFT_PORT, port)
     sparkServer = SparkThriftServer.startWithContext(sqlContext)
   }
 
   private def withJdbcStatement(fs: (Statement => Unit)*): Unit = {
     val user = System.getProperty("user.name")
-
-    val serverPort = sparkServer.getSqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_PORT)
+    val serverPort = sparkServer.getSparkConf.get(ServiceConf.THRIFTSERVER_THRIFT_PORT)
     val connections = fs.map { _ =>
       DriverManager.getConnection(s"${jdbcUrlPrefix}localhost:$serverPort", user, "") }
     val statements = connections.map(_.createStatement())
