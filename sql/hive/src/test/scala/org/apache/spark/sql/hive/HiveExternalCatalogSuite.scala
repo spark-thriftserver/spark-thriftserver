@@ -31,7 +31,9 @@ import org.apache.spark.sql.types.StructType
 class HiveExternalCatalogSuite extends ExternalCatalogSuite {
 
   private val externalCatalog: HiveExternalCatalog = {
-    val catalog = new HiveExternalCatalog(new SparkConf, new Configuration)
+    val conf = new Configuration
+    conf.setBoolean("hive.query.reexecution.enabled", false)
+    val catalog = new HiveExternalCatalog(new SparkConf, conf)
     catalog.client.reset()
     catalog
   }
