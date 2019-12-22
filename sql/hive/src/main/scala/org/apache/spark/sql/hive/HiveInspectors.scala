@@ -323,7 +323,7 @@ private[hive] trait HiveInspectors {
             DateTimeUtils.toJavaDate(o.asInstanceOf[Int]))
       case _: JavaTimestampObjectInspector =>
         withNullSafe(o =>
-            DateTimeUtils.toJavaTimestamp(o.asInstanceOf[Long]))
+          org.apache.hadoop.hive.common.`type`.Timestamp.ofEpochMilli(o.asInstanceOf[Long]))
       case _: HiveDecimalObjectInspector if x.preferWritable() =>
         withNullSafe(o => getDecimalWritable(o.asInstanceOf[Decimal]))
       case _: HiveDecimalObjectInspector =>
@@ -1009,11 +1009,12 @@ private[hive] trait HiveInspectors {
   private def getDateWritable(value: Any): hiveIo.DateWritable =
     if (value == null) null else new hiveIo.DateWritable(value.asInstanceOf[Int])
 
-  private def getTimestampWritable(value: Any): hiveIo.TimestampWritable =
+  private def getTimestampWritable(value: Any): hiveIo.TimestampWritableV2 =
     if (value == null) {
       null
     } else {
-      new hiveIo.TimestampWritable(DateTimeUtils.toJavaTimestamp(value.asInstanceOf[Long]))
+      val ts = org.apache.hadoop.hive.common.`type`.Timestamp.ofEpochMilli(value.asInstanceOf[Long])
+      new hiveIo.TimestampWritableV2(ts)
     }
 
   private def getDecimalWritable(value: Any): hiveIo.HiveDecimalWritable =

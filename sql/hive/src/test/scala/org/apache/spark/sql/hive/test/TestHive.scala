@@ -66,6 +66,9 @@ object TestHive
         // Hive changed the default of hive.metastore.disallow.incompatible.col.type.changes
         // from false to true. For details, see the JIRA HIVE-12320 and HIVE-17764.
         .set("spark.hadoop.hive.metastore.disallow.incompatible.col.type.changes", "false")
+//        .set("spark.hadoop.hive.metastore.schema.verification", "false")
+//        .set("spark.hadoop.metastore.schema.verification", "false")
+//        .set("spark.hadoop.hive.query.reexecution.enabled", "false")
         // Disable ConvertToLocalRelation for better test coverage. Test cases built on
         // LocalRelation will exercise the optimization rules better by disabling it as
         // this rule may potentially block testing of other optimization rules such as
