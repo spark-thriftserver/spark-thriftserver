@@ -25,6 +25,7 @@ import java.io.InputStreamReader;
 import java.util.*;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.spark.internal.config.ConfigEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -180,20 +181,26 @@ public class ServiceSessionImpl implements ServiceSession {
       System.getProperties().setProperty(propName, substitution.substitute(varvalue));
     } else if (varname.startsWith(SPARKCONF_PREFIX)) {
       String propName = varname.substring(SPARKCONF_PREFIX.length());
-      sqlContext.setConf(propName, substitution.substitute(varvalue));
+      setConf(propName, substitution.substitute(varvalue));
     } else if (varname.startsWith(SPARKVAR_PREFIX)) {
       String propName = varname.substring(SPARKVAR_PREFIX.length());
-      sqlContext.setConf(propName, substitution.substitute(varvalue));
+      setConf(propName, substitution.substitute(varvalue));
     } else if (varname.startsWith(HIVECONF_PREFIX)) {
       String propName = varname.substring(HIVECONF_PREFIX.length());
-      sqlContext.setConf(propName, substitution.substitute(varvalue));
+      setConf(propName, substitution.substitute(varvalue));
     } else if (varname.startsWith(HIVEVAR_PREFIX)) {
       String propName = varname.substring(HIVEVAR_PREFIX.length());
-      sqlContext.setConf(propName, substitution.substitute(varvalue));
+      setConf(propName, substitution.substitute(varvalue));
     } else {
-      sqlContext.setConf(varname, substitution.substitute(varvalue));
+      setConf(varname, substitution.substitute(varvalue));
     }
     return 0;
+  }
+
+  private void setConf(String key, String value) {
+    if (sqlContext.conf().isModifiable(key) || (ConfigEntry.findEntry(key) == null)) {
+      sqlContext.setConf(key, value);
+    }
   }
 
   @Override
