@@ -20,8 +20,8 @@ package org.apache.spark.sql.service.cli.session;
 import java.io.File;
 import java.util.List;
 
+import org.apache.spark.SparkConf;
 import org.apache.spark.sql.SQLContext;
-import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.cli.SessionHandle;
 import org.apache.spark.sql.service.cli.operation.OperationManager;
 import org.apache.spark.sql.service.rpc.thrift.TProtocolVersion;
@@ -74,7 +74,7 @@ public interface ServiceSessionBase {
 
   String getPassword();
 
-  SQLConf getSQLConf();
+  SparkConf getSparkConf();
 
   SQLContext getSQLContext();
 

@@ -53,19 +53,19 @@ public class ThriftBinaryCLIService extends ThriftCLIService {
           new ThreadFactoryWithName(threadPoolName));
 
       // Thrift configs
-      sparkAuthFactory = new SparkAuthFactory(sqlConf);
+      sparkAuthFactory = new SparkAuthFactory(sparkConf);
       TTransportFactory transportFactory = sparkAuthFactory.getAuthTransFactory();
       TProcessorFactory processorFactory = sparkAuthFactory.getAuthProcFactory(this);
       TServerSocket serverSocket = null;
       List<String> sslVersionBlacklist = new ArrayList<String>();
-      for (String sslVersion : sqlConf.getConf(ServiceConf.THRIFTSERVER_SSL_PROTOCOL_BLACKLIST())
+      for (String sslVersion : sparkConf.get(ServiceConf.THRIFTSERVER_SSL_PROTOCOL_BLACKLIST())
           .split(",")) {
         sslVersionBlacklist.add(sslVersion);
       }
-      if (!((boolean) sqlConf.getConf(ServiceConf.THRIFTSERVER_USE_SSL()))) {
+      if (!((boolean) sparkConf.get(ServiceConf.THRIFTSERVER_USE_SSL()))) {
         serverSocket = SparkAuthUtils.getServerSocket(sparkHost, portNum);
       } else {
-        String keyStorePath = sqlConf.getConf(ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PATH()).trim();
+        String keyStorePath = sparkConf.get(ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PATH()).trim();
         if (keyStorePath.isEmpty()) {
           throw new IllegalArgumentException(ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PATH().key()
               + " Not configured for SSL connection");
@@ -82,12 +82,12 @@ public class ThriftBinaryCLIService extends ThriftCLIService {
 
       // Server args
       int maxMessageSize =
-          (int) sqlConf.getConf(ServiceConf.THRIFTSERVER_MAX_MESSAGE_SIZE());
+          (int) sparkConf.get(ServiceConf.THRIFTSERVER_MAX_MESSAGE_SIZE());
       int requestTimeout =
-          new Long((long) sqlConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_LOGIN_TIMEOUT()))
+          new Long((long) sparkConf.get(ServiceConf.THRIFTSERVER_THRIFT_LOGIN_TIMEOUT()))
               .intValue();
       int beBackoffSlotLength =
-          new Long(((long) sqlConf.getConf(
+          new Long(((long) sparkConf.get(
               ServiceConf.THRIFTSERVER_THRIFT_LOGIN_BEBACKOFF_SLOT_LENGTH()))).intValue();
       TThreadPoolServer.Args sargs = new TThreadPoolServer.Args(serverSocket)
           .processorFactory(processorFactory).transportFactory(transportFactory)

@@ -23,7 +23,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.spark.sql.internal.SQLConf;
+import org.apache.spark.SparkConf;
 
 /**
  * AbstractService.
@@ -50,7 +50,7 @@ public abstract class AbstractService implements Service {
   /**
    * The configuration. Will be null until the service is initialized.
    */
-  private SQLConf sqlConf;
+  private SparkConf sparkConf;
 
   /**
    * List of state change listeners; it is final to ensure
@@ -82,9 +82,9 @@ public abstract class AbstractService implements Service {
    *           this action
    */
   @Override
-  public synchronized void init(SQLConf sqlConf) {
+  public synchronized void init(SparkConf sparkConf) {
     ensureCurrentState(STATE.NOTINITED);
-    this.sqlConf = sqlConf;
+    this.sparkConf = sparkConf;
     changeState(STATE.INITED);
     LOG.info("Service:" + getName() + " is inited.");
   }
@@ -141,8 +141,8 @@ public abstract class AbstractService implements Service {
   }
 
   @Override
-  public synchronized SQLConf getSqlConf() {
-    return sqlConf;
+  public synchronized SparkConf getSparkConf() {
+    return sparkConf;
   }
 
   @Override

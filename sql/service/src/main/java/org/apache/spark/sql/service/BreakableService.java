@@ -17,7 +17,7 @@
 
 package org.apache.spark.sql.service;
 
-import org.apache.spark.sql.internal.SQLConf;
+import org.apache.spark.SparkConf;
 
 /**
  * This is a service that can be configured to break on any of the lifecycle
@@ -75,7 +75,7 @@ public class BreakableService extends AbstractService {
   }
 
   @Override
-  public void init(SQLConf conf) {
+  public void init(SparkConf conf) {
     inc(STATE.INITED);
     maybeFail(failOnInit, "init");
     super.init(conf);

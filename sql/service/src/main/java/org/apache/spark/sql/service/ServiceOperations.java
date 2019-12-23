@@ -20,7 +20,7 @@ package org.apache.spark.sql.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.spark.sql.internal.SQLConf;
+import org.apache.spark.SparkConf;
 
 /**
  * ServiceOperations.
@@ -56,15 +56,15 @@ public final class ServiceOperations {
    * This process is <i>not</i> thread safe.
    * @param service a service that must be in the state
    *   {@link Service.STATE#NOTINITED}
-   * @param configuration the configuration to initialize the service with
+   * @param sparkConf the configuration to initialize the service with
    * @throws RuntimeException on a state change failure
    * @throws IllegalStateException if the service is in the wrong state
    */
 
-  public static void init(Service service, SQLConf configuration) {
+  public static void init(Service service, SparkConf sparkConf) {
     Service.STATE state = service.getServiceState();
     ensureCurrentState(state, Service.STATE.NOTINITED);
-    service.init(configuration);
+    service.init(sparkConf);
   }
 
   /**
@@ -91,12 +91,12 @@ public final class ServiceOperations {
    * This process is <i>not</i> thread safe.
    * @param service a service that must be in the state
    *   {@link Service.STATE#NOTINITED}
-   * @param configuration the configuration to initialize the service with
+   * @param sparkConf the configuration to initialize the service with
    * @throws RuntimeException on a state change failure
    * @throws IllegalStateException if the service is in the wrong state
    */
-  public static void deploy(Service service, SQLConf configuration) {
-    init(service, configuration);
+  public static void deploy(Service service, SparkConf sparkConf) {
+    init(service, sparkConf);
     start(service);
   }
 

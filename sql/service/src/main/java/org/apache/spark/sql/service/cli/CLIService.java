@@ -27,13 +27,15 @@ import java.util.concurrent.TimeoutException;
 import javax.security.auth.login.LoginException;
 
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.spark.sql.service.rpc.thrift.TOperationHandle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.spark.SparkConf;
 import org.apache.spark.sql.SQLContext;
-import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.service.CompositeService;
 import org.apache.spark.sql.service.ServiceException;
+import org.apache.spark.sql.service.SparkThriftServer;
 import org.apache.spark.sql.service.auth.SparkAuthFactory;
 import org.apache.spark.sql.service.cli.operation.Operation;
 import org.apache.spark.sql.service.cli.session.ServiceSession;
@@ -61,20 +63,23 @@ public class CLIService extends CompositeService implements ICLIService {
   private SessionManager sessionManager;
   private UserGroupInformation serviceUGI;
   private UserGroupInformation httpUGI;
+  // The SparkThriftServer instance running this service
+  private final SparkThriftServer sparkServer;
 
-  public CLIService(SQLContext sqlContext) {
+  public CLIService(SparkThriftServer sparkServer, SQLContext sqlContext) {
     super(CLIService.class.getSimpleName());
+    this.sparkServer = sparkServer;
     this.sqlContext = sqlContext;
   }
 
   @Override
-  public synchronized void init(SQLConf sqlConf) {
+  public synchronized void init(SparkConf sparkConf) {
     sessionManager = new SessionManager(sqlContext);
     addService(sessionManager);
     //  If the hadoop cluster is secure, do a kerberos login for the service from the keytab
     if (UserGroupInformation.isSecurityEnabled()) {
       try {
-        SparkAuthFactory.loginFromKeytab(sqlConf);
+        SparkAuthFactory.loginFromKeytab(sparkConf);
         this.serviceUGI = Utils.getUGI();
       } catch (IOException e) {
         throw new ServiceException("Unable to login to kerberos with given principal/keytab", e);
@@ -83,21 +88,21 @@ public class CLIService extends CompositeService implements ICLIService {
       }
 
       // Also try creating a UGI object for the SPNego principal
-      String principal = sqlConf.getConf(ServiceConf.THRIFTSERVER_SPNEGO_PRINCIPAL());
-      String keyTabFile = sqlConf.getConf(ServiceConf.THRIFTSERVER_SPNEGO_KEYTAB());
+      String principal = sparkConf.get(ServiceConf.THRIFTSERVER_SPNEGO_PRINCIPAL());
+      String keyTabFile = sparkConf.get(ServiceConf.THRIFTSERVER_SPNEGO_KEYTAB());
       if (principal.isEmpty() || keyTabFile.isEmpty()) {
         LOG.info("SPNego httpUGI not created, spNegoPrincipal: " + principal +
             ", ketabFile: " + keyTabFile);
       } else {
         try {
-          this.httpUGI = SparkAuthFactory.loginFromSpnegoKeytabAndReturnUGI(sqlConf);
+          this.httpUGI = SparkAuthFactory.loginFromSpnegoKeytabAndReturnUGI(sparkConf);
           LOG.info("SPNego httpUGI successfully created.");
         } catch (IOException e) {
           LOG.warn("SPNego httpUGI creation failed: ", e);
         }
       }
     }
-    super.init(sqlConf);
+    super.init(sparkConf);
   }
 
   public UserGroupInformation getServiceUGI() {
@@ -401,8 +406,8 @@ public class CLIService extends CompositeService implements ICLIService {
      * However, if the background operation is complete, we return immediately.
      */
     if (operation.shouldRunAsync()) {
-      SQLConf conf = operation.getParentSession().getSQLConf();
-      long timeout = (long) conf.getConf(ServiceConf.THRIFTSERVER_LONG_POLLING_TIMEOUT());
+      SparkConf conf = operation.getParentSession().getSparkConf();
+      long timeout = (long) conf.get(ServiceConf.THRIFTSERVER_LONG_POLLING_TIMEOUT());
       try {
         operation.getBackgroundHandle().get(timeout, TimeUnit.MILLISECONDS);
       } catch (TimeoutException e) {
@@ -422,10 +427,6 @@ public class CLIService extends CompositeService implements ICLIService {
     OperationStatus opStatus = operation.getStatus();
     LOG.debug(opHandle + ": getOperationStatus()");
     return opStatus;
-  }
-
-  public SQLConf getSessionConf(SessionHandle sessionHandle) throws ServiceSQLException {
-    return sessionManager.getSession(sessionHandle).getSQLConf();
   }
 
   /* (non-Javadoc)
@@ -502,6 +503,11 @@ public class CLIService extends CompositeService implements ICLIService {
       String tokenStr) throws ServiceSQLException {
     sessionManager.getSession(sessionHandle).renewDelegationToken(authFactory, tokenStr);
     LOG.info(sessionHandle  + ": renewDelegationToken()");
+  }
+
+  @Override
+  public String getQueryId(TOperationHandle opHandle) throws ServiceSQLException {
+    throw new UnsupportedOperationException("getQueryId");
   }
 
   public SessionManager getSessionManager() {

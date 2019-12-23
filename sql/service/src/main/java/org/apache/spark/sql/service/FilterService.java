@@ -17,7 +17,7 @@
 
 package org.apache.spark.sql.service;
 
-import org.apache.spark.sql.internal.SQLConf;
+import org.apache.spark.SparkConf;
 
 /**
  * FilterService.
@@ -33,8 +33,8 @@ public class FilterService implements Service {
   }
 
   @Override
-  public void init(SQLConf config) {
-    service.init(config);
+  public void init(SparkConf sparkConf) {
+    service.init(sparkConf);
   }
 
   @Override
@@ -64,8 +64,8 @@ public class FilterService implements Service {
   }
 
   @Override
-  public SQLConf getSqlConf() {
-    return service.getSqlConf();
+  public SparkConf getSparkConf() {
+    return service.getSparkConf();
   }
 
   @Override

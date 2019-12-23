@@ -77,8 +77,8 @@ public abstract class Operation {
     this.runAsync = runInBackground;
     this.opHandle = new OperationHandle(opType, parentSession.getProtocolVersion());
     lastAccessTime = System.currentTimeMillis();
-    operationTimeout = (long) parentSession.getSQLConf()
-        .getConf(ServiceConf.THRIFTSERVER_IDLE_OPERATION_TIMEOUT());
+    operationTimeout = (long) parentSession.getSparkConf()
+        .get(ServiceConf.THRIFTSERVER_IDLE_OPERATION_TIMEOUT());
   }
 
   public Future<?> getBackgroundHandle() {
@@ -223,7 +223,7 @@ public abstract class Operation {
       // create OperationLog object with above log file
       try {
         operationLog =
-            new OperationLog(opHandle.toString(), operationLogFile, parentSession.getSQLConf());
+            new OperationLog(opHandle.toString(), operationLogFile, parentSession.getSparkConf());
       } catch (FileNotFoundException e) {
         LOG.warn("Unable to instantiate OperationLog object for operation: " +
             opHandle, e);

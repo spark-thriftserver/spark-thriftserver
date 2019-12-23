@@ -498,4 +498,13 @@ public class ThriftCLIServiceClient extends CLIServiceClient {
       throw new ServiceSQLException(e);
     }
   }
+
+  @Override
+  public String getQueryId(TOperationHandle operationHandle) throws ServiceSQLException {
+    try {
+      return cliService.GetQueryId(new TGetQueryIdReq(operationHandle)).getQueryId();
+    } catch (TException e) {
+      throw new ServiceSQLException(e);
+    }
+  }
 }
