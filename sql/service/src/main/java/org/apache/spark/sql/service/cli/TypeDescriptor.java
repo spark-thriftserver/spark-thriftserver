@@ -18,7 +18,10 @@
 package org.apache.spark.sql.service.cli;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.spark.sql.service.rpc.thrift.TPrimitiveTypeEntry;
 import org.apache.spark.sql.service.rpc.thrift.TTypeDesc;
@@ -77,10 +80,27 @@ public class TypeDescriptor {
 
   public Type getTypeInfo(String typeName) {
     Type type = cachedPrimitiveTypeInfo.getOrDefault(typeName, Type.STRING_TYPE);
-    if (typeName.equalsIgnoreCase("decimal")) {
-      // Todo add parser for decimal(m,n), but seem spark won't get this.
-      type.setSpecifiedPrecision(DecimalType.MAX_PRECISION());
-      type.setSpecifiedScala(DecimalType.MAX_SCALE());
+    if (typeName.toUpperCase(Locale.ROOT).startsWith("DECIMAL")) {
+      type = Type.DECIMAL_TYPE;
+      Pattern compile = Pattern.compile("DECIMAL\\((\\d+),(\\d+)\\)");
+      Matcher matcher = compile.matcher(typeName.toUpperCase(Locale.ROOT));
+      matcher.find();
+      if (matcher.groupCount() != 2) {
+        type.setSpecifiedPrecision(DecimalType.MAX_PRECISION());
+        type.setSpecifiedScala(DecimalType.MAX_SCALE());
+      } else {
+        if (matcher.group(1) != null) {
+          type.setSpecifiedPrecision(Integer.valueOf(matcher.group(1)));
+        } else {
+          type.setSpecifiedPrecision(DecimalType.MAX_PRECISION());
+        }
+
+        if (matcher.group(2) != null) {
+          type.setSpecifiedScala(Integer.valueOf(matcher.group(2)));
+        } else {
+          type.setSpecifiedScala(DecimalType.MAX_SCALE());
+        }
+      }
     }
     return type;
   }
