@@ -250,4 +250,13 @@ class SparkMetadataOperationSuite extends SparkThriftJdbcTest {
       checkResult(metaData.getTypeInfo, Type.values().map(_.getName))
     }
   }
+
+  test("test getMetadata of DECIMAL qualifier") {
+    withJdbcStatement() { statement =>
+      val rs = statement.executeQuery("select cast(1L as decimal(10,7))")
+      val meta = rs.getMetaData
+      assert(meta.getPrecision(1) === 10)
+      assert(meta.getScale(1) === 7)
+    }
+  }
 }
