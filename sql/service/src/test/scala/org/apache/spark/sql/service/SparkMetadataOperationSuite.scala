@@ -255,7 +255,7 @@ class SparkMetadataOperationSuite extends SparkThriftJdbcTest {
     withJdbcStatement() { statement =>
       val rs = statement.executeQuery("select cast(1L as decimal(10,7))")
       val meta = rs.getMetaData
-      assert(meta.getPrecision(11) === 10)
+      assert(meta.getPrecision(1) === 10)
       assert(meta.getScale(1) === 7)
     }
   }
