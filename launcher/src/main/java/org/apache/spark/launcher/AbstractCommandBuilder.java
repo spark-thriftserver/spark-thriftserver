@@ -165,6 +165,7 @@ abstract class AbstractCommandBuilder {
         "resource-managers/yarn",
         "sql/catalyst",
         "sql/core",
+        "sql/thriftserver",
         "sql/hive",
         "sql/hive-thriftserver",
         "streaming"
