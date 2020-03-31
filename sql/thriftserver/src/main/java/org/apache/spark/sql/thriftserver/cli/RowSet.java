@@ -17,7 +17,7 @@
 
 package org.apache.spark.sql.thriftserver.cli;
 
-import org.apache.spark.sql.thriftserver.rpc.thrift.TRowSet;
+import org.apache.hive.service.rpc.thrift.TRowSet;
 
 public interface RowSet extends Iterable<Object[]> {
 

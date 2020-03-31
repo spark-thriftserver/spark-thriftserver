@@ -37,7 +37,7 @@ import org.apache.spark.sql.thriftserver.auth.SparkAuthFactory;
 import org.apache.spark.sql.thriftserver.cli.processor.ISparkFileProcessor;
 import org.apache.spark.sql.thriftserver.cli.processor.SparkFileProcessor;
 import org.apache.spark.sql.thriftserver.internal.ServiceConf;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TProtocolVersion;
+import org.apache.hive.service.rpc.thrift.TProtocolVersion;
 
 /**
  * ServiceSession

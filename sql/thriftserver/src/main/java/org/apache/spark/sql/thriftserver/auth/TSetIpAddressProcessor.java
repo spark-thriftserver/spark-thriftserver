@@ -26,8 +26,8 @@ import org.apache.thrift.transport.TTransport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.spark.sql.thriftserver.rpc.thrift.TCLIService;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TCLIService.Iface;
+import org.apache.hive.service.rpc.thrift.TCLIService;
+import org.apache.hive.service.rpc.thrift.TCLIService.Iface;
 
 /**
  * This class is responsible for setting the ipAddress for operations

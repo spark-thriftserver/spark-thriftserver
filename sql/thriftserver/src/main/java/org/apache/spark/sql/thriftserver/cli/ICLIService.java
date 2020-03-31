@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.spark.sql.thriftserver.auth.SparkAuthFactory;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TOperationHandle;
+import org.apache.hive.service.rpc.thrift.TOperationHandle;
 
 public interface ICLIService {
 

@@ -19,10 +19,10 @@ package org.apache.spark.sql.thriftserver.cli;
 
 import org.apache.thrift.TException;
 
-import org.apache.spark.sql.thriftserver.rpc.thrift.TProtocolVersion;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TRowSet;
+import org.apache.hive.service.rpc.thrift.TProtocolVersion;
+import org.apache.hive.service.rpc.thrift.TRowSet;
 
-import static org.apache.spark.sql.thriftserver.rpc.thrift.TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V6;
+import static org.apache.hive.service.rpc.thrift.TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V6;
 
 public class RowSetFactory {
 

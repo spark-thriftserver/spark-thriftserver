@@ -21,9 +21,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.spark.sql.thriftserver.rpc.thrift.TColumnValue;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TRow;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TRowSet;
+import org.apache.hive.service.rpc.thrift.TColumnValue;
+import org.apache.hive.service.rpc.thrift.TRow;
+import org.apache.hive.service.rpc.thrift.TRowSet;
 
 /**
  * RowBasedSet

@@ -17,7 +17,7 @@
 
 package org.apache.spark.sql.thriftserver.cli;
 
-import org.apache.spark.sql.thriftserver.rpc.thrift.TColumnDesc;
+import org.apache.hive.service.rpc.thrift.TColumnDesc;
 
 
 /**

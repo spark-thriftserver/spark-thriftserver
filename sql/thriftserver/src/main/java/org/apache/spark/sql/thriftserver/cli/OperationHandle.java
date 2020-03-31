@@ -17,8 +17,8 @@
 
 package org.apache.spark.sql.thriftserver.cli;
 
-import org.apache.spark.sql.thriftserver.rpc.thrift.TOperationHandle;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TProtocolVersion;
+import org.apache.hive.service.rpc.thrift.TOperationHandle;
+import org.apache.hive.service.rpc.thrift.TProtocolVersion;
 
 public class OperationHandle extends Handle {
 

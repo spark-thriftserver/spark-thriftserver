@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.thriftserver.cli.session.ServiceSession;
 import org.apache.spark.sql.thriftserver.internal.ServiceConf;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TProtocolVersion;
+import org.apache.hive.service.rpc.thrift.TProtocolVersion;
 
 public abstract class Operation {
   protected final ServiceSession parentSession;

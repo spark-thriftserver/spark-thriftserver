@@ -29,9 +29,9 @@ import org.apache.thrift.transport.TIOStreamTransport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.spark.sql.thriftserver.rpc.thrift.TColumn;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TRow;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TRowSet;
+import org.apache.hive.service.rpc.thrift.TColumn;
+import org.apache.hive.service.rpc.thrift.TRow;
+import org.apache.hive.service.rpc.thrift.TRowSet;
 
 /**
  * ColumnBasedSet.

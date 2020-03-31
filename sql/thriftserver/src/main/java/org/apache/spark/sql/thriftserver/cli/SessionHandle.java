@@ -19,8 +19,8 @@ package org.apache.spark.sql.thriftserver.cli;
 
 import java.util.UUID;
 
-import org.apache.spark.sql.thriftserver.rpc.thrift.TProtocolVersion;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TSessionHandle;
+import org.apache.hive.service.rpc.thrift.TProtocolVersion;
+import org.apache.hive.service.rpc.thrift.TSessionHandle;
 
 /**
  * SessionHandle.

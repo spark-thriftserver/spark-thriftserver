@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.thriftserver.auth.SparkAuthFactory;
 import org.apache.spark.sql.thriftserver.cli.ServiceSQLException;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TProtocolVersion;
+import org.apache.hive.service.rpc.thrift.TProtocolVersion;
 
 /**
  *

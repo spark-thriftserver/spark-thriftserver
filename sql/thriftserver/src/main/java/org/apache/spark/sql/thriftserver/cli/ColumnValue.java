@@ -21,14 +21,14 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Timestamp;
 
-import org.apache.spark.sql.thriftserver.rpc.thrift.TBoolValue;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TByteValue;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TColumnValue;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TDoubleValue;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TI16Value;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TI32Value;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TI64Value;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TStringValue;
+import org.apache.hive.service.rpc.thrift.TBoolValue;
+import org.apache.hive.service.rpc.thrift.TByteValue;
+import org.apache.hive.service.rpc.thrift.TColumnValue;
+import org.apache.hive.service.rpc.thrift.TDoubleValue;
+import org.apache.hive.service.rpc.thrift.TI16Value;
+import org.apache.hive.service.rpc.thrift.TI32Value;
+import org.apache.hive.service.rpc.thrift.TI64Value;
+import org.apache.hive.service.rpc.thrift.TStringValue;
 import org.apache.spark.unsafe.types.UTF8String;
 
 /**

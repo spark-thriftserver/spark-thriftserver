@@ -22,7 +22,7 @@ import java.util.Map;
 
 
 import org.apache.spark.sql.thriftserver.cli.*;
-import org.apache.spark.sql.thriftserver.rpc.thrift.*;
+import org.apache.hive.service.rpc.thrift.*;
 import org.apache.thrift.TException;
 
 import org.apache.spark.sql.thriftserver.auth.SparkAuthFactory;

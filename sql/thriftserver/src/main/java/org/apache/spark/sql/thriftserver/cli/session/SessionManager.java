@@ -40,7 +40,7 @@ import org.apache.spark.sql.thriftserver.cli.ServiceSQLException;
 import org.apache.spark.sql.thriftserver.cli.SessionHandle;
 import org.apache.spark.sql.thriftserver.cli.operation.OperationManager;
 import org.apache.spark.sql.thriftserver.internal.ServiceConf;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TProtocolVersion;
+import org.apache.hive.service.rpc.thrift.TProtocolVersion;
 import org.apache.spark.sql.thriftserver.server.ThreadFactoryWithName;
 
 /**

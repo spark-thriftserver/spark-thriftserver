@@ -32,6 +32,7 @@ import scala.util.{Random, Try}
 
 import com.google.common.io.Files
 import org.apache.hive.jdbc.HiveDriver
+import org.apache.hive.service.rpc.thrift.TCLIService.Client
 import org.apache.thrift.protocol.TBinaryProtocol
 import org.apache.thrift.transport.TSocket
 import org.scalatest.BeforeAndAfterAll
@@ -45,7 +46,6 @@ import org.apache.spark.sql.thriftserver.auth.PlainSaslHelper
 import org.apache.spark.sql.thriftserver.cli.{FetchOrientation, FetchType, GetInfoType, RowSet}
 import org.apache.spark.sql.thriftserver.cli.thrift.ThriftCLIServiceClient
 import org.apache.spark.sql.thriftserver.internal.ServiceConf
-import org.apache.spark.sql.thriftserver.rpc.thrift.TCLIService.Client
 import org.apache.spark.util.{Utils => SparkUtils}
 import org.apache.spark.util.ThreadUtils
 

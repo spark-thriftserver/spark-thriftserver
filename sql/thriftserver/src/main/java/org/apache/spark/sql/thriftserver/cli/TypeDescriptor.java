@@ -20,9 +20,9 @@ package org.apache.spark.sql.thriftserver.cli;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.spark.sql.thriftserver.rpc.thrift.TPrimitiveTypeEntry;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TTypeDesc;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TTypeEntry;
+import org.apache.hive.service.rpc.thrift.TPrimitiveTypeEntry;
+import org.apache.hive.service.rpc.thrift.TTypeDesc;
+import org.apache.hive.service.rpc.thrift.TTypeEntry;
 import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DecimalType;
 

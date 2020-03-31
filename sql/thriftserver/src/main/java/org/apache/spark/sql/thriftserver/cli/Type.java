@@ -20,7 +20,7 @@ package org.apache.spark.sql.thriftserver.cli;
 import java.sql.DatabaseMetaData;
 import java.util.Locale;
 
-import org.apache.spark.sql.thriftserver.rpc.thrift.TTypeId;
+import org.apache.hive.service.rpc.thrift.TTypeId;
 import org.apache.spark.sql.types.*;
 
 /**

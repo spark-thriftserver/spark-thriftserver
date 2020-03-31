@@ -27,7 +27,7 @@ import java.util.concurrent.TimeoutException;
 import javax.security.auth.login.LoginException;
 
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TOperationHandle;
+import org.apache.hive.service.rpc.thrift.TOperationHandle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +41,7 @@ import org.apache.spark.sql.thriftserver.cli.operation.Operation;
 import org.apache.spark.sql.thriftserver.cli.session.ServiceSession;
 import org.apache.spark.sql.thriftserver.cli.session.SessionManager;
 import org.apache.spark.sql.thriftserver.internal.ServiceConf;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TProtocolVersion;
+import org.apache.hive.service.rpc.thrift.TProtocolVersion;
 import org.apache.spark.sql.thriftserver.utils.Utils;
 
 /**

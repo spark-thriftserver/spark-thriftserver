@@ -26,7 +26,7 @@ import javax.security.auth.login.LoginException;
 
 
 import org.apache.spark.sql.thriftserver.cli.*;
-import org.apache.spark.sql.thriftserver.rpc.thrift.*;
+import org.apache.hive.service.rpc.thrift.*;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.server.ServerContext;

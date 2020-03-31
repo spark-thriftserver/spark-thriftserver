@@ -20,7 +20,7 @@ package org.apache.spark.sql.thriftserver.cli;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
-import org.apache.spark.sql.thriftserver.rpc.thrift.THandleIdentifier;
+import org.apache.hive.service.rpc.thrift.THandleIdentifier;
 
 /**
  * HandleIdentifier.

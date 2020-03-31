@@ -20,9 +20,9 @@ package org.apache.spark.sql.thriftserver.cli;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.spark.sql.thriftserver.rpc.thrift.TCLIServiceConstants;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TTypeQualifierValue;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TTypeQualifiers;
+import org.apache.hive.service.rpc.thrift.TCLIServiceConstants;
+import org.apache.hive.service.rpc.thrift.TTypeQualifierValue;
+import org.apache.hive.service.rpc.thrift.TTypeQualifiers;
 
 /**
  * This class holds type qualifier information for a primitive type,

@@ -42,8 +42,8 @@ import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.thriftserver.auth.SparkAuthFactory;
 import org.apache.spark.sql.thriftserver.cli.CLIService;
 import org.apache.spark.sql.thriftserver.internal.ServiceConf;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TCLIService;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TCLIService.Iface;
+import org.apache.hive.service.rpc.thrift.TCLIService;
+import org.apache.hive.service.rpc.thrift.TCLIService.Iface;
 import org.apache.spark.sql.thriftserver.server.ThreadFactoryWithName;
 
 public class ThriftHttpCLIService extends ThriftCLIService {

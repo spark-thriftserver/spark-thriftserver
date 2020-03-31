@@ -39,7 +39,7 @@ import org.apache.thrift.transport.TTransportFactory;
 
 import org.apache.spark.sql.thriftserver.auth.AuthenticationProviderFactory.AuthMethods;
 import org.apache.spark.sql.thriftserver.cli.thrift.ThriftCLIService;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TCLIService.Iface;
+import org.apache.hive.service.rpc.thrift.TCLIService.Iface;
 
 public final class PlainSaslHelper {
 

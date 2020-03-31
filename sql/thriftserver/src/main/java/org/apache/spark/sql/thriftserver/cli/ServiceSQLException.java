@@ -21,8 +21,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.spark.sql.thriftserver.rpc.thrift.TStatus;
-import org.apache.spark.sql.thriftserver.rpc.thrift.TStatusCode;
+import org.apache.hive.service.rpc.thrift.TStatus;
+import org.apache.hive.service.rpc.thrift.TStatusCode;
 
 /**
  * ServiceSQLException.
