@@ -22,11 +22,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import scala.collection.JavaConverters;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -284,6 +287,10 @@ public class SessionManager extends CompositeService {
 
   public void closeSession(SessionHandle sessionHandle) throws ServiceSQLException {
     SparkThriftServer.listener().onSessionClosed(sessionHandle.getSessionId().toString());
+    SQLContext ctx = Optional.of(handleToSession.get(sessionHandle))
+      .map(ServiceSession :: getSQLContext).orElse(sqlContext);
+    JavaConverters.seqAsJavaList(ctx.sparkSession().sessionState().catalog().getTempViewNames())
+      .forEach(ctx::uncacheTable);
     ServiceSession session = handleToSession.remove(sessionHandle);
     if (session == null) {
       throw new ServiceSQLException("Session does not exist!");

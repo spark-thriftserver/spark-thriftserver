@@ -17,7 +17,7 @@
 
 package org.apache.spark.sql.thriftserver
 
-import java.sql.{DatabaseMetaData, ResultSet}
+import java.sql.{DatabaseMetaData, ResultSet, Types}
 
 import org.apache.spark.sql.thriftserver.cli.Type
 
@@ -59,8 +59,8 @@ class SparkMetadataOperationSuite extends SparkThriftJdbcTest {
 
     withJdbcStatement("table1", "table2", "view1") { statement =>
       Seq(
-        "CREATE TABLE table1(key INT, val STRING) USING parquet",
-        "CREATE TABLE table2(key INT, val STRING) USING parquet",
+        "CREATE TABLE table1(key INT, val STRING)",
+        "CREATE TABLE table2(key INT, val STRING)",
         "CREATE VIEW view1 AS SELECT * FROM table2",
         "CREATE OR REPLACE GLOBAL TEMPORARY VIEW view_global_temp_1 AS SELECT 1 AS col1",
         "CREATE OR REPLACE TEMPORARY VIEW view_temp_1 AS SELECT 1 as col1"
@@ -114,9 +114,8 @@ class SparkMetadataOperationSuite extends SparkThriftJdbcTest {
 
     withJdbcStatement("table1", "table2", "view1") { statement =>
       Seq(
-        "CREATE TABLE table1(key INT comment 'Int column', val STRING comment 'String column') " +
-          "USING parquet",
-        "CREATE TABLE table2(key INT, val DECIMAL comment 'Decimal column') USING parquet",
+        "CREATE TABLE table1(key INT comment 'Int column', val STRING comment 'String column')",
+        "CREATE TABLE table2(key INT, val DECIMAL comment 'Decimal column')",
         "CREATE VIEW view1 AS SELECT key FROM table1",
         "CREATE OR REPLACE GLOBAL TEMPORARY VIEW view_global_temp_1 AS SELECT 2 AS col2",
         "CREATE OR REPLACE TEMPORARY VIEW view_temp_1 AS SELECT 2 as col2"
@@ -259,6 +258,18 @@ class SparkMetadataOperationSuite extends SparkThriftJdbcTest {
       assert(meta.getScale(1) === 7)
       assert(rs.next())
       assert(rs.getLong(1) === 1L)
+    }
+  }
+
+  test("SPARK-28636: Thriftserver can not support decimal type with negative scale") {
+    withJdbcStatement() { statement =>
+      val rs = statement.executeQuery("select 2.35E10 * 1.0")
+      val meta = rs.getMetaData
+      assert(meta.getColumnType(1) === Types.DOUBLE)
+      assert(meta.getPrecision(1) === 15)
+      assert(meta.getScale(1) === 15)
+      assert(rs.next())
+      assert(rs.getLong(1) === 23500000000L)
     }
   }
 }

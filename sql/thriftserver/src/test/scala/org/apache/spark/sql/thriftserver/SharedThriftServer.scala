@@ -25,7 +25,7 @@ import scala.util.{Random, Try}
 import org.apache.spark.sql.test.SharedSparkSession
 import org.apache.spark.sql.thriftserver.internal.ServiceConf
 
-trait SharedThriftServer extends SharedSparkSession with JdbcTestHelper {
+trait SharedThriftServer extends SharedSparkSession {
 
   private var sparkServer: SparkThriftServer = _
 
@@ -58,8 +58,8 @@ trait SharedThriftServer extends SharedSparkSession with JdbcTestHelper {
   protected def withJdbcStatement(fs: (Statement => Unit)*): Unit = {
     val user = System.getProperty("user.name")
     val serverPort = sparkServer.getSparkConf.get(ServiceConf.THRIFTSERVER_THRIFT_PORT)
-    val connections = fs.map { _ =>
-      DriverManager.getConnection(s"${jdbcUrlPrefix}localhost:$serverPort", user, "") }
+    val connections =
+      fs.map { _ => DriverManager.getConnection(s"jdbc:hive2://localhost:$serverPort", user, "") }
     val statements = connections.map(_.createStatement())
 
     try {

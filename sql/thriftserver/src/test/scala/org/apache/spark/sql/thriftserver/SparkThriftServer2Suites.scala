@@ -32,6 +32,9 @@ import scala.util.{Random, Try}
 
 import com.google.common.io.Files
 import org.apache.hive.jdbc.HiveDriver
+import org.apache.hive.service.auth.PlainSaslHelper
+import org.apache.hive.service.cli.{FetchOrientation, FetchType, GetInfoType, RowSet}
+import org.apache.hive.service.cli.thrift.ThriftCLIServiceClient
 import org.apache.hive.service.rpc.thrift.TCLIService.Client
 import org.apache.thrift.protocol.TBinaryProtocol
 import org.apache.thrift.transport.TSocket
@@ -42,9 +45,6 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.sql.internal.StaticSQLConf
 import org.apache.spark.sql.internal.StaticSQLConf.HIVE_THRIFT_SERVER_SINGLESESSION
 import org.apache.spark.sql.test.ProcessTestUtils.ProcessOutputCapturer
-import org.apache.spark.sql.thriftserver.auth.PlainSaslHelper
-import org.apache.spark.sql.thriftserver.cli.{FetchOrientation, FetchType, GetInfoType, RowSet}
-import org.apache.spark.sql.thriftserver.cli.thrift.ThriftCLIServiceClient
 import org.apache.spark.sql.thriftserver.internal.ServiceConf
 import org.apache.spark.util.{Utils => SparkUtils}
 import org.apache.spark.util.ThreadUtils
@@ -331,9 +331,9 @@ class SparkThriftBinaryServerSuite extends SparkThriftJdbcTest {
       { statement =>
 
         val queries = Seq(
-            s"SET ${SQLConf.SHUFFLE_PARTITIONS.key}=291",
-            "SET hive.cli.print.header=true"
-            )
+          s"SET ${SQLConf.SHUFFLE_PARTITIONS.key}=291",
+          "SET hive.cli.print.header=true"
+        )
 
         queries.map(statement.execute)
         val rs1 = statement.executeQuery(s"SET ${SQLConf.SHUFFLE_PARTITIONS.key}")
@@ -763,6 +763,16 @@ class SingleSessionSuite extends SparkThriftJdbcTest {
 
           assert(rs2.next())
           assert(rs2.getString(1) === "Usage: N/A.")
+
+          val rs3 = statement.executeQuery(
+            "SELECT key, cc FROM test_udtf LATERAL VIEW udtf_count2(value) dd AS cc")
+          assert(rs3.next())
+          assert(rs3.getInt(1) === 165)
+          assert(rs3.getInt(2) === 5)
+
+          assert(rs3.next())
+          assert(rs3.getInt(1) === 165)
+          assert(rs3.getInt(2) === 5)
         } finally {
           statement.executeQuery("DROP TEMPORARY FUNCTION udtf_count2")
         }
@@ -852,11 +862,11 @@ object ServerMode extends Enumeration {
   val binary, http = Value
 }
 
-abstract class SparkThriftJdbcTest extends SparkThriftServerTest with JdbcTestHelper {
-  SparkUtils.classForName(jdbcDriver)
+abstract class SparkThriftJdbcTest extends SparkThriftServerTest {
+  SparkUtils.classForName(classOf[HiveDriver].getCanonicalName)
 
   private def jdbcUri = if (mode == ServerMode.http) {
-    s"""${jdbcUrlPrefix}localhost:$serverPort/
+    s"""jdbc:hive2://localhost:$serverPort/
        |default?
        |hive.server2.transport.mode=http;
        |hive.server2.thrift.http.path=cliservice;
@@ -865,7 +875,7 @@ abstract class SparkThriftJdbcTest extends SparkThriftServerTest with JdbcTestHe
        |${hiveConfList};${sparkConfList}#${hiveVarList}
      """.stripMargin.split("\n").mkString.trim
   } else {
-    s"${jdbcUrlPrefix}localhost:$serverPort/?${hiveConfList};${sparkConfList}#${hiveVarList}"
+    s"jdbc:hive2://localhost:$serverPort/?${hiveConfList};${sparkConfList}#${hiveVarList}"
   }
 
   def withMultipleConnectionJdbcStatement(tableNames: String*)(fs: (Statement => Unit)*): Unit = {
@@ -975,6 +985,7 @@ abstract class SparkThriftServerTest extends SparkFunSuite with BeforeAndAfterAl
        |  --conf $portConf=$port
        |  --driver-java-options -Dderby.system.home=$metastorePath
        |  --driver-class-path $driverClassPath
+       |  --driver-java-options -Dlog4j.debug
        |  --conf spark.ui.enabled=false
        |  ${extraConf.mkString("\n")}
      """.stripMargin.split("\\s+").toSeq
@@ -1060,7 +1071,7 @@ abstract class SparkThriftServerTest extends SparkFunSuite with BeforeAndAfterAl
         }
       }
 
-        val process = builder.start()
+      val process = builder.start()
 
       new ProcessOutputCapturer(process.getInputStream, captureOutput).start()
       new ProcessOutputCapturer(process.getErrorStream, captureOutput).start()
@@ -1138,16 +1149,5 @@ abstract class SparkThriftServerTest extends SparkFunSuite with BeforeAndAfterAl
     } finally {
       super.afterAll()
     }
-  }
-}
-
-trait JdbcTestHelper {
-
-  protected def jdbcDriver: String = classOf[HiveDriver].getCanonicalName
-
-  val jdbcUrlPrefix: String = if (classOf[HiveDriver].getCanonicalName.equals(jdbcDriver)) {
-    "jdbc:hive2://"
-  } else {
-    "jdbc:hive2://"
   }
 }
