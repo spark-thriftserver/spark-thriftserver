@@ -66,25 +66,15 @@ public class TypeDescriptor {
     }
   }
 
-  public TypeDescriptor(String typeName) {
-    this.type = Type.getType(typeName);
-    if (this.type.isComplexType()) {
-      this.typeName = typeName;
-    } else if (this.type.isQualifiedType()) {
-      Type type = getTypeInfo(typeName);
-      setTypeQualifiers(TypeQualifiers.fromTypeInfo(type));
-    }
-  }
-
   public TypeDescriptor(DataType dataType) {
     this.type = Type.getType(dataType.sql());
     if (this.type.isComplexType()) {
       this.typeName = dataType.sql();
-//    } else if (dataType instanceof DecimalType) {
-//      DecimalType dt = ((DecimalType) dataType);
-//      this.type.setSpecifiedPrecision(dt.precision());
-//      this.type.setSpecifiedScala(dt.scale());
-//    }
+    } else if (dataType instanceof DecimalType) {
+      DecimalType dt = ((DecimalType) dataType);
+      this.type.setSpecifiedPrecision(dt.precision());
+      this.type.setSpecifiedScala(dt.scale());
+      setTypeQualifiers(TypeQualifiers.fromTypeInfo(type));
     } else if (this.type.isQualifiedType()) {
       Type type = getTypeInfo(this.type.getName().toLowerCase());
       setTypeQualifiers(TypeQualifiers.fromTypeInfo(type));
