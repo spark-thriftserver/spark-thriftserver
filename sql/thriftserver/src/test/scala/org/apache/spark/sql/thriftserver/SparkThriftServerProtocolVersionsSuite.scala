@@ -21,14 +21,14 @@ import java.sql.{Date, Timestamp}
 import java.util.{List => JList, Properties}
 
 import org.apache.hive.jdbc.{HiveConnection, HiveQueryResultSet}
-import org.apache.hive.service.auth.PlainSaslHelper
-import org.apache.hive.service.cli.GetInfoType
 import org.apache.hive.service.rpc.thrift.{TExecuteStatementReq, TGetInfoReq, TGetTablesReq, TOpenSessionReq, TProtocolVersion}
 import org.apache.hive.service.rpc.thrift.TCLIService.Client
 import org.apache.thrift.protocol.TBinaryProtocol
 import org.apache.thrift.transport.TSocket
 
 import org.apache.spark.sql.catalyst.util.NumberConverter
+import org.apache.spark.sql.thriftserver.auth.PlainSaslHelper
+import org.apache.spark.sql.thriftserver.cli.GetInfoType
 import org.apache.spark.unsafe.types.UTF8String
 
 class SparkThriftServerProtocolVersionsSuite extends SparkThriftJdbcTest {
