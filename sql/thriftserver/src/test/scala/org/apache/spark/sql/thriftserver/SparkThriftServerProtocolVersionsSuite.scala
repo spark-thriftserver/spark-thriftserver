@@ -145,7 +145,18 @@ class SparkThriftServerProtocolVersionsSuite extends SparkThriftJdbcTest {
     }
   }
 
-  TProtocolVersion.values().foreach { version =>
+  // See supported protocols in HiveConnection
+  Seq(TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V1,
+    TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V2,
+    TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V3,
+    TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V4,
+    TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V5,
+    TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V6,
+    TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V7,
+    TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V8,
+    TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V9,
+    TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V10).foreach { version =>
+
     test(s"$version get byte type") {
       testExecuteStatementWithProtocolVersion(version, "SELECT cast(1 as byte)") { rs =>
         assert(rs.next())
