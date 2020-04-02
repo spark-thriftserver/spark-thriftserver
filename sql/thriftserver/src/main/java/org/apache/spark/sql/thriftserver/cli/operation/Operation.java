@@ -24,23 +24,23 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
 
-
-import org.apache.spark.sql.thriftserver.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.spark.sql.internal.SQLConf;
+import org.apache.spark.sql.thriftserver.cli.*;
 import org.apache.spark.sql.thriftserver.cli.session.ServiceSession;
 import org.apache.spark.sql.thriftserver.internal.ServiceConf;
 import org.apache.hive.service.rpc.thrift.TProtocolVersion;
+
+import static org.apache.spark.sql.thriftserver.cli.FetchOrientation.*;
 
 public abstract class Operation {
   protected final ServiceSession parentSession;
   private OperationState state = OperationState.INITIALIZED;
   private final OperationHandle opHandle;
-  private SQLConf configuration;
   public static final Logger LOG = LoggerFactory.getLogger(Operation.class.getName());
-  public static final FetchOrientation DEFAULT_FETCH_ORIENTATION = FetchOrientation.FETCH_NEXT;
+  public static final FetchOrientation DEFAULT_FETCH_ORIENTATION = FETCH_NEXT;
   public static final long DEFAULT_FETCH_MAX_ROWS = 100;
   protected boolean hasResultSet;
   protected volatile ServiceSQLException operationException;
@@ -54,31 +54,31 @@ public abstract class Operation {
   private long lastAccessTime;
 
   protected static final EnumSet<FetchOrientation> DEFAULT_FETCH_ORIENTATION_SET =
-      EnumSet.of(
-          FetchOrientation.FETCH_NEXT,
-          FetchOrientation.FETCH_FIRST,
-          FetchOrientation.FETCH_PRIOR);
+    EnumSet.of(FETCH_NEXT, FETCH_FIRST, FETCH_PRIOR);
 
   protected Operation(ServiceSession parentSession, OperationType opType) {
     this(parentSession, null, opType);
   }
 
-  protected Operation(ServiceSession parentSession, Map<String, String> confOverlay,
-                      OperationType opType) {
+  protected Operation(
+      ServiceSession parentSession,
+      Map<String, String> confOverlay,
+      OperationType opType) {
     this(parentSession, confOverlay, opType, false);
   }
 
-  protected Operation(ServiceSession parentSession,
-                      Map<String, String> confOverlay,
-                      OperationType opType,
-                      boolean runInBackground) {
+  protected Operation(
+      ServiceSession parentSession,
+      Map<String, String> confOverlay,
+      OperationType opType,
+      boolean runInBackground) {
     this.parentSession = parentSession;
     this.confOverlay = confOverlay;
     this.runAsync = runInBackground;
     this.opHandle = new OperationHandle(opType, parentSession.getProtocolVersion());
     lastAccessTime = System.currentTimeMillis();
-    operationTimeout = (long) parentSession.getSparkConf()
-        .get(ServiceConf.THRIFTSERVER_IDLE_OPERATION_TIMEOUT());
+    operationTimeout = (long) parentSession.getSQLContext().conf()
+      .getConf(ServiceConf.THRIFTSERVER_IDLE_OPERATION_TIMEOUT());
   }
 
   public Future<?> getBackgroundHandle() {
@@ -91,14 +91,6 @@ public abstract class Operation {
 
   public boolean shouldRunAsync() {
     return runAsync;
-  }
-
-  public void setConfiguration(SQLConf configuration) {
-    this.configuration = configuration;
-  }
-
-  public SQLConf getConfiguration() {
-    return configuration;
   }
 
   public ServiceSession getParentSession() {
@@ -222,11 +214,10 @@ public abstract class Operation {
 
       // create OperationLog object with above log file
       try {
-        operationLog =
-            new OperationLog(opHandle.toString(), operationLogFile, parentSession.getSparkConf());
+        SQLConf conf = parentSession.getSQLContext().conf();
+        operationLog = new OperationLog(opHandle.toString(), operationLogFile, conf);
       } catch (FileNotFoundException e) {
-        LOG.warn("Unable to instantiate OperationLog object for operation: " +
-            opHandle, e);
+        LOG.warn("Unable to instantiate OperationLog object for operation: " + opHandle, e);
         isOperationLogEnabled = false;
         return;
       }
@@ -298,7 +289,7 @@ public abstract class Operation {
       throws ServiceSQLException;
 
   public RowSet getNextRowSet() throws ServiceSQLException {
-    return getNextRowSet(FetchOrientation.FETCH_NEXT, DEFAULT_FETCH_MAX_ROWS);
+    return getNextRowSet(FETCH_NEXT, DEFAULT_FETCH_MAX_ROWS);
   }
 
   /**
@@ -306,18 +297,16 @@ public abstract class Operation {
    * @param orientation
    * @throws ServiceSQLException
    */
-  protected void validateDefaultFetchOrientation(FetchOrientation orientation)
-      throws ServiceSQLException {
+  protected void validateDefaultFetchOrientation(
+      FetchOrientation orientation) throws ServiceSQLException {
     validateFetchOrientation(orientation, DEFAULT_FETCH_ORIENTATION_SET);
   }
 
   /**
    * Verify if the given fetch orientation is part of the supported orientation types.
-   * @param orientation
-   * @param supportedOrientations
-   * @throws ServiceSQLException
    */
-  protected void validateFetchOrientation(FetchOrientation orientation,
+  protected void validateFetchOrientation(
+      FetchOrientation orientation,
       EnumSet<FetchOrientation> supportedOrientations) throws ServiceSQLException {
     if (!supportedOrientations.contains(orientation)) {
       throw new ServiceSQLException("The fetch type " + orientation.toString() +

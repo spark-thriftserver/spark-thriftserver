@@ -42,7 +42,6 @@ public enum OperationType {
   }
 
   public static OperationType getOperationType(TOperationType tOperationType) {
-    // TODO: replace this with a Map?
     for (OperationType opType : values()) {
       if (tOperationType.equals(opType.tOperationType)) {
         return opType;

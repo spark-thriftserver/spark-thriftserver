@@ -47,9 +47,9 @@ public enum OperationState {
     return OperationState.values()[tOperationState.getValue()];
   }
 
-  public static void validateTransition(OperationState oldState,
-      OperationState newState)
-          throws ServiceSQLException {
+  public static void validateTransition(
+      OperationState oldState,
+      OperationState newState) throws ServiceSQLException {
     switch (oldState) {
     case INITIALIZED:
       switch (newState) {
@@ -97,8 +97,7 @@ public enum OperationState {
         "from " + oldState + " to " + newState);
   }
 
-  public void validateTransition(OperationState newState)
-      throws ServiceSQLException {
+  public void validateTransition(OperationState newState) throws ServiceSQLException {
     validateTransition(this, newState);
   }
 

@@ -25,7 +25,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.spark.SparkConf;
+import org.apache.spark.sql.internal.SQLConf;
 
 /**
  * CompositeService.
@@ -54,11 +54,11 @@ public class CompositeService extends AbstractService {
   }
 
   @Override
-  public synchronized void init(SparkConf sparkConf) {
+  public synchronized void init(SQLConf conf) {
     for (Service service : serviceList) {
-      service.init(sparkConf);
+      service.init(conf);
     }
-    super.init(sparkConf);
+    super.init(conf);
   }
 
   @Override

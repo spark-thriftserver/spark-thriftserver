@@ -26,7 +26,7 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.delegation.AbstractDelegationTokenSecretManager;
 import org.apache.hadoop.security.token.delegation.DelegationKey;
-import org.apache.hadoop.security.token.delegation.SparkDelegationTokenSupport;
+import org.apache.hadoop.security.token.delegation.DelegationTokenSupport;
 import org.apache.hadoop.util.Daemon;
 import org.apache.hadoop.util.StringUtils;
 import org.slf4j.Logger;
@@ -247,13 +247,11 @@ public class TokenStoreDelegationTokenSecretManager extends DelegationTokenSecre
 
   /**
    * Extension of rollMasterKey to remove expired keys from store.
-   *
-   * @throws IOException
    */
   protected void rollMasterKeyExt() throws IOException {
     Map<Integer, DelegationKey> keys = reloadKeys();
     int currentKeyId = super.currentId;
-    SparkDelegationTokenSupport.rollMasterKey(TokenStoreDelegationTokenSecretManager.this);
+    DelegationTokenSupport.rollMasterKey(TokenStoreDelegationTokenSecretManager.this);
     List<DelegationKey> keysAfterRoll = Arrays.asList(getAllKeys());
     for (DelegationKey key : keysAfterRoll) {
       keys.remove(key.getKeyId());

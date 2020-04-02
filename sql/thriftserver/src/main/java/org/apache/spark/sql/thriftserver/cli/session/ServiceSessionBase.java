@@ -74,8 +74,6 @@ public interface ServiceSessionBase {
 
   String getPassword();
 
-  SparkConf getSparkConf();
-
   SQLContext getSQLContext();
 
   String getUserName();

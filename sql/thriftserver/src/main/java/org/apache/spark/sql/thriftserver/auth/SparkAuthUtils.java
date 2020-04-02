@@ -41,42 +41,9 @@ import org.slf4j.LoggerFactory;
 public class SparkAuthUtils {
   private static final Logger LOG = LoggerFactory.getLogger(SparkAuthUtils.class);
 
-  public static TTransport getSocketTransport(String host, int port, int loginTimeout) {
-    return new TSocket(host, port, loginTimeout);
-  }
-
-  public static TTransport getSSLSocket(String host, int port, int loginTimeout)
-          throws TTransportException {
-    // The underlying SSLSocket object is bound to host:port with the given SO_TIMEOUT
-    TSocket tSSLSocket = TSSLTransportFactory.getClientSocket(host, port, loginTimeout);
-    return getSSLSocketWithHttps(tSSLSocket);
-  }
-
-  public static TTransport getSSLSocket(String host, int port, int loginTimeout,
-                                        String trustStorePath, String trustStorePassWord)
-      throws TTransportException {
-    TSSLTransportFactory.TSSLTransportParameters params =
-            new TSSLTransportFactory.TSSLTransportParameters();
-    params.setTrustStore(trustStorePath, trustStorePassWord);
-    params.requireClientAuth(true);
-    // The underlying SSLSocket object is bound to host:port with the given SO_TIMEOUT and
-    // SSLContext created with the given params
-    TSocket tSSLSocket = TSSLTransportFactory.getClientSocket(host, port, loginTimeout, params);
-    return getSSLSocketWithHttps(tSSLSocket);
-  }
-
-  // Using endpoint identification algorithm as HTTPS enables us to do
-  // CNAMEs/subjectAltName verification
-  private static TSocket getSSLSocketWithHttps(TSocket tSSLSocket) throws TTransportException {
-    SSLSocket sslSocket = (SSLSocket) tSSLSocket.getSocket();
-    SSLParameters sslParams = sslSocket.getSSLParameters();
-    sslParams.setEndpointIdentificationAlgorithm("HTTPS");
-    sslSocket.setSSLParameters(sslParams);
-    return new TSocket(sslSocket);
-  }
-
-  public static TServerSocket getServerSocket(String hiveHost, int portNum)
-          throws TTransportException {
+  public static TServerSocket getServerSocket(
+      String hiveHost,
+      int portNum) throws TTransportException {
     InetSocketAddress serverAddress;
     if (hiveHost == null || hiveHost.isEmpty()) {
       // Wildcard bind
@@ -87,13 +54,15 @@ public class SparkAuthUtils {
     return new TServerSocket(serverAddress);
   }
 
-  public static TServerSocket getServerSSLSocket(String hiveHost, int portNum, String keyStorePath,
-                                                 String keyStorePassWord,
-                                                 List<String> sslVersionBlacklist)
-      throws TTransportException,
-          UnknownHostException {
+  public static TServerSocket getServerSSLSocket(
+      String hiveHost,
+      int portNum,
+      String keyStorePath,
+      String keyStorePassWord,
+      List<String> sslVersionBlacklist)
+      throws TTransportException, UnknownHostException {
     TSSLTransportFactory.TSSLTransportParameters params =
-            new TSSLTransportFactory.TSSLTransportParameters();
+      new TSSLTransportFactory.TSSLTransportParameters();
     params.setKeyStore(keyStorePath, keyStorePassWord);
     InetSocketAddress serverAddress;
     if (hiveHost == null || hiveHost.isEmpty()) {

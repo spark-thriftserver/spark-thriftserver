@@ -25,7 +25,7 @@ import org.apache.hadoop.security.token.delegation.AbstractDelegationTokenIdenti
  */
 public class DelegationTokenIdentifier
     extends AbstractDelegationTokenIdentifier {
-  public static final Text HIVE_DELEGATION_KIND = new Text("HIVE_DELEGATION_TOKEN");
+  public static final Text SPARK_SQL_DELEGATION_KIND = new Text("SPARK_SQL_DELEGATION_TOKEN");
 
   /**
    * Create an empty delegation token identifier for reading into.
@@ -45,7 +45,7 @@ public class DelegationTokenIdentifier
 
   @Override
   public Text getKind() {
-    return HIVE_DELEGATION_KIND;
+    return SPARK_SQL_DELEGATION_KIND;
   }
 
 }

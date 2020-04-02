@@ -88,10 +88,7 @@ public class OperationHandle extends Handle {
       return false;
     }
     OperationHandle other = (OperationHandle) obj;
-    if (opType != other.opType) {
-      return false;
-    }
-    return true;
+    return opType == other.opType;
   }
 
   @Override

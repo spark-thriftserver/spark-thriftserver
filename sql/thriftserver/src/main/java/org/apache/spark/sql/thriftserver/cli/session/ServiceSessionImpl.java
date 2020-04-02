@@ -30,7 +30,6 @@ import org.apache.spark.sql.thriftserver.cli.operation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.spark.SparkConf;
 import org.apache.spark.sql.SQLContext;
 import org.apache.spark.sql.internal.VariableSubstitution;
 import org.apache.spark.sql.thriftserver.auth.SparkAuthFactory;
@@ -56,7 +55,6 @@ public class ServiceSessionImpl implements ServiceSession {
   private final SessionHandle sessionHandle;
   private String username;
   private final String password;
-  private SparkConf sparkConf;
   private SQLContext sqlContext;
   private String ipAddress;
   private static final Logger LOG = LoggerFactory.getLogger(ServiceSessionImpl.class);
@@ -68,13 +66,16 @@ public class ServiceSessionImpl implements ServiceSession {
   private volatile long lastAccessTime;
   private volatile long lastIdleTime;
 
-  public ServiceSessionImpl(TProtocolVersion protocol, String username, String password,
-                            SQLContext sqlContext, String ipAddress) {
+  public ServiceSessionImpl(
+      TProtocolVersion protocol,
+      String username,
+      String password,
+      SQLContext sqlContext,
+      String ipAddress) {
     this.username = username;
     this.password = password;
     this.sessionHandle = new SessionHandle(protocol);
     this.ipAddress = ipAddress;
-    this.sparkConf = sqlContext.sparkContext().conf();
     this.sqlContext = sqlContext;
   }
 
@@ -129,7 +130,8 @@ public class ServiceSessionImpl implements ServiceSession {
     ISparkFileProcessor processor = new GlobalSparkrcFileProcessor();
 
     try {
-      String sparkrc = sparkConf.get(ServiceConf.THRIFTSERVER_GLOABLE_INIT_FILE_LOCATION());
+      String sparkrc = sqlContext.conf()
+        .getConf(ServiceConf.THRIFTSERVER_GLOABLE_INIT_FILE_LOCATION());
       if (sparkrc != null) {
         File sparkrcFile = new File(sparkrc);
         if (sparkrcFile.isDirectory()) {
@@ -214,7 +216,7 @@ public class ServiceSessionImpl implements ServiceSession {
     if (!sessionLogDir.exists()) {
       if (!sessionLogDir.mkdir()) {
         LOG.warn("Unable to create operation log session directory: " +
-            sessionLogDir.getAbsolutePath());
+          sessionLogDir.getAbsolutePath());
         isOperationLogEnabled = false;
       }
     }
@@ -290,11 +292,6 @@ public class ServiceSessionImpl implements ServiceSession {
   }
 
   @Override
-  public SparkConf getSparkConf() {
-    return sparkConf;
-  }
-
-  @Override
   public SQLContext getSQLContext() {
     return sqlContext;
   }
@@ -311,31 +308,39 @@ public class ServiceSessionImpl implements ServiceSession {
   }
 
   @Override
-  public OperationHandle executeStatement(String statement, Map<String, String> confOverlay)
-      throws ServiceSQLException {
+  public OperationHandle executeStatement(
+      String statement,
+      Map<String, String> confOverlay) throws ServiceSQLException {
     return executeStatementInternal(statement, confOverlay, false, 0);
   }
 
   @Override
-  public OperationHandle executeStatement(String statement, Map<String, String> confOverlay,
+  public OperationHandle executeStatement(
+      String statement,
+      Map<String, String> confOverlay,
       long queryTimeout) throws ServiceSQLException {
     return executeStatementInternal(statement, confOverlay, false, queryTimeout);
   }
 
   @Override
-  public OperationHandle executeStatementAsync(String statement, Map<String, String> confOverlay)
-      throws ServiceSQLException {
+  public OperationHandle executeStatementAsync(
+      String statement,
+      Map<String, String> confOverlay) throws ServiceSQLException {
     return executeStatementInternal(statement, confOverlay, true, 0);
   }
 
   @Override
-  public OperationHandle executeStatementAsync(String statement, Map<String, String> confOverlay,
+  public OperationHandle executeStatementAsync(
+      String statement,
+      Map<String, String> confOverlay,
       long queryTimeout) throws ServiceSQLException {
     return executeStatementInternal(statement, confOverlay, true, queryTimeout);
   }
 
-  private OperationHandle executeStatementInternal(String statement,
-      Map<String, String> confOverlay, boolean runAsync,
+  private OperationHandle executeStatementInternal(
+      String statement,
+      Map<String, String> confOverlay,
+      boolean runAsync,
       long queryTimeout) throws ServiceSQLException {
     acquire(true);
 
@@ -359,8 +364,7 @@ public class ServiceSessionImpl implements ServiceSession {
   }
 
   @Override
-  public OperationHandle getTypeInfo()
-      throws ServiceSQLException {
+  public OperationHandle getTypeInfo() throws ServiceSQLException {
     acquire(true);
 
     OperationManager operationManager = getOperationManager();
@@ -379,8 +383,7 @@ public class ServiceSessionImpl implements ServiceSession {
   }
 
   @Override
-  public OperationHandle getCatalogs()
-      throws ServiceSQLException {
+  public OperationHandle getCatalogs() throws ServiceSQLException {
     acquire(true);
 
     OperationManager operationManager = getOperationManager();
@@ -399,8 +402,9 @@ public class ServiceSessionImpl implements ServiceSession {
   }
 
   @Override
-  public OperationHandle getSchemas(String catalogName, String schemaName)
-      throws ServiceSQLException {
+  public OperationHandle getSchemas(
+      String catalogName,
+      String schemaName) throws ServiceSQLException {
     acquire(true);
 
     OperationManager operationManager = getOperationManager();
@@ -420,9 +424,11 @@ public class ServiceSessionImpl implements ServiceSession {
   }
 
   @Override
-  public OperationHandle getTables(String catalogName, String schemaName, String tableName,
-      List<String> tableTypes)
-          throws ServiceSQLException {
+  public OperationHandle getTables(
+      String catalogName,
+      String schemaName,
+      String tableName,
+      List<String> tableTypes) throws ServiceSQLException {
     acquire(true);
 
     OperationManager operationManager = getOperationManager();
@@ -443,8 +449,7 @@ public class ServiceSessionImpl implements ServiceSession {
   }
 
   @Override
-  public OperationHandle getTableTypes()
-      throws ServiceSQLException {
+  public OperationHandle getTableTypes() throws ServiceSQLException {
     acquire(true);
 
     OperationManager operationManager = getOperationManager();
@@ -464,8 +469,11 @@ public class ServiceSessionImpl implements ServiceSession {
   }
 
   @Override
-  public OperationHandle getColumns(String catalogName, String schemaName,
-      String tableName, String columnName)  throws ServiceSQLException {
+  public OperationHandle getColumns(
+      String catalogName,
+      String schemaName,
+      String tableName,
+      String columnName)  throws ServiceSQLException {
     acquire(true);
     OperationManager operationManager = getOperationManager();
     SparkGetColumnsOperation operation = operationManager.newGetColumnsOperation(getSession(),
@@ -484,8 +492,10 @@ public class ServiceSessionImpl implements ServiceSession {
   }
 
   @Override
-  public OperationHandle getFunctions(String catalogName, String schemaName, String functionName)
-      throws ServiceSQLException {
+  public OperationHandle getFunctions(
+      String catalogName,
+      String schemaName,
+      String functionName) throws ServiceSQLException {
     acquire(true);
 
     OperationManager operationManager = getOperationManager();
@@ -621,8 +631,11 @@ public class ServiceSessionImpl implements ServiceSession {
   }
 
   @Override
-  public RowSet fetchResults(OperationHandle opHandle, FetchOrientation orientation,
-      long maxRows, FetchType fetchType) throws ServiceSQLException {
+  public RowSet fetchResults(
+      OperationHandle opHandle,
+      FetchOrientation orientation,
+      long maxRows,
+      FetchType fetchType) throws ServiceSQLException {
     acquire(true);
     try {
       if (fetchType == FetchType.QUERY_OUTPUT) {
@@ -649,46 +662,57 @@ public class ServiceSessionImpl implements ServiceSession {
   }
 
   @Override
-  public String getDelegationToken(SparkAuthFactory authFactory, String owner, String renewer)
-      throws ServiceSQLException {
+  public String getDelegationToken(
+      SparkAuthFactory authFactory,
+      String owner,
+      String renewer) throws ServiceSQLException {
     SparkAuthFactory.verifyProxyAccess(getUsername(), owner, getIpAddress(),
-        sqlContext.sparkContext().hadoopConfiguration());
+      sqlContext.sparkContext().hadoopConfiguration());
     return authFactory.getDelegationToken(owner, renewer, getIpAddress());
   }
 
   @Override
-  public void cancelDelegationToken(SparkAuthFactory authFactory, String tokenStr)
-      throws ServiceSQLException {
+  public void cancelDelegationToken(
+      SparkAuthFactory authFactory,
+      String tokenStr) throws ServiceSQLException {
     SparkAuthFactory.verifyProxyAccess(getUsername(), getUserFromToken(authFactory, tokenStr),
-        getIpAddress(), sqlContext.sparkContext().hadoopConfiguration());
+      getIpAddress(), sqlContext.sparkContext().hadoopConfiguration());
     authFactory.cancelDelegationToken(tokenStr);
   }
 
   @Override
-  public void renewDelegationToken(SparkAuthFactory authFactory, String tokenStr)
-      throws ServiceSQLException {
+  public void renewDelegationToken(
+      SparkAuthFactory authFactory,
+      String tokenStr) throws ServiceSQLException {
     SparkAuthFactory.verifyProxyAccess(getUsername(), getUserFromToken(authFactory, tokenStr),
-        getIpAddress(), sqlContext.sparkContext().hadoopConfiguration());
+      getIpAddress(), sqlContext.sparkContext().hadoopConfiguration());
     authFactory.renewDelegationToken(tokenStr);
   }
 
   // extract the real user from the given token string
-  private String getUserFromToken(SparkAuthFactory authFactory, String tokenStr)
-      throws ServiceSQLException {
+  private String getUserFromToken(
+      SparkAuthFactory authFactory,
+      String tokenStr) throws ServiceSQLException {
     return authFactory.getUserFromToken(tokenStr);
   }
 
   @Override
-  public OperationHandle getPrimaryKeys(String catalog, String schema,
+  public OperationHandle getPrimaryKeys(
+      String catalog,
+      String schema,
       String table) throws ServiceSQLException {
     acquire(true);
     throw new ServiceSQLException("GetPrimaryKeys is not supported yet");
   }
 
   @Override
-  public OperationHandle getCrossReference(String primaryCatalog,
-      String primarySchema, String primaryTable, String foreignCatalog,
-      String foreignSchema, String foreignTable) throws ServiceSQLException {
+  public OperationHandle getCrossReference(
+      String primaryCatalog,
+      String primarySchema,
+      String primaryTable,
+      String foreignCatalog,
+      String foreignSchema,
+      String foreignTable) throws ServiceSQLException {
     acquire(true);
     throw new ServiceSQLException("GetCrossReference is not supported yet");
   }

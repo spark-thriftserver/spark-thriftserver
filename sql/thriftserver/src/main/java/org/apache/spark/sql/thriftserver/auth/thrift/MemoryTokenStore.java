@@ -35,11 +35,11 @@ import org.slf4j.LoggerFactory;
 public class MemoryTokenStore implements DelegationTokenStore {
   private static final Logger LOG = LoggerFactory.getLogger(MemoryTokenStore.class);
 
-  private final Map<Integer, String> masterKeys
-      = new ConcurrentHashMap<Integer, String>();
+  private final Map<Integer, String> masterKeys =
+    new ConcurrentHashMap<Integer, String>();
 
-  private final ConcurrentHashMap<DelegationTokenIdentifier, DelegationTokenInformation> tokens
-      = new ConcurrentHashMap<DelegationTokenIdentifier, DelegationTokenInformation>();
+  private final ConcurrentHashMap<DelegationTokenIdentifier, DelegationTokenInformation> tokens =
+    new ConcurrentHashMap<DelegationTokenIdentifier, DelegationTokenInformation>();
 
   private final AtomicInteger masterKeySeq = new AtomicInteger();
   private Configuration conf;
@@ -86,8 +86,9 @@ public class MemoryTokenStore implements DelegationTokenStore {
   }
 
   @Override
-  public boolean addToken(DelegationTokenIdentifier tokenIdentifier,
-                          DelegationTokenInformation token) {
+  public boolean addToken(
+      DelegationTokenIdentifier tokenIdentifier,
+      DelegationTokenInformation token) {
     DelegationTokenInformation tokenInfo = tokens.putIfAbsent(tokenIdentifier, token);
     if (LOG.isTraceEnabled()) {
       LOG.trace("addToken: tokenIdentifier = " +

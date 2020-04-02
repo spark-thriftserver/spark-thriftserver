@@ -20,7 +20,7 @@ package org.apache.spark.sql.thriftserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.spark.SparkConf;
+import org.apache.spark.sql.internal.SQLConf;
 
 /**
  * ServiceOperations.
@@ -39,13 +39,10 @@ public final class ServiceOperations {
    * @throws IllegalStateException if the service state is different from
    * the desired state
    */
-  public static void ensureCurrentState(Service.STATE state,
-                                        Service.STATE expectedState) {
+  public static void ensureCurrentState(Service.STATE state, Service.STATE expectedState) {
     if (state != expectedState) {
-      throw new IllegalStateException("For this operation, the " +
-                                          "current service state must be "
-                                          + expectedState
-                                          + " instead of " + state);
+      throw new IllegalStateException("For this operation, " +
+        "the current service state must be " + expectedState + " instead of " + state);
     }
   }
 
@@ -56,15 +53,15 @@ public final class ServiceOperations {
    * This process is <i>not</i> thread safe.
    * @param service a service that must be in the state
    *   {@link Service.STATE#NOTINITED}
-   * @param sparkConf the configuration to initialize the service with
+   * @param conf the configuration to initialize the service with
    * @throws RuntimeException on a state change failure
    * @throws IllegalStateException if the service is in the wrong state
    */
 
-  public static void init(Service service, SparkConf sparkConf) {
+  public static void init(Service service, SQLConf conf) {
     Service.STATE state = service.getServiceState();
     ensureCurrentState(state, Service.STATE.NOTINITED);
-    service.init(sparkConf);
+    service.init(conf);
   }
 
   /**
@@ -91,12 +88,12 @@ public final class ServiceOperations {
    * This process is <i>not</i> thread safe.
    * @param service a service that must be in the state
    *   {@link Service.STATE#NOTINITED}
-   * @param sparkConf the configuration to initialize the service with
+   * @param conf the configuration to initialize the service with
    * @throws RuntimeException on a state change failure
    * @throws IllegalStateException if the service is in the wrong state
    */
-  public static void deploy(Service service, SparkConf sparkConf) {
-    init(service, sparkConf);
+  public static void deploy(Service service, SQLConf conf) {
+    init(service, conf);
     start(service);
   }
 

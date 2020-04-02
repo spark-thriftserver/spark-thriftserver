@@ -24,6 +24,9 @@ import java.util.*;
 import javax.security.auth.login.LoginException;
 import javax.security.sasl.Sasl;
 
+import scala.collection.JavaConverters;
+
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.SaslRpcServer;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -34,8 +37,8 @@ import org.apache.thrift.transport.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.spark.SparkConf;
 import org.apache.spark.deploy.SparkHadoopUtil;
+import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.thriftserver.auth.thrift.HadoopThriftAuthBridge;
 import org.apache.spark.sql.thriftserver.auth.thrift.HadoopThriftAuthBridge.Server.ServerMode;
 import org.apache.spark.sql.thriftserver.auth.thrift.SparkDelegationTokenManager;
@@ -73,7 +76,7 @@ public class SparkAuthFactory {
   private HadoopThriftAuthBridge.Server saslServer;
   private String authTypeStr;
   private final String transportMode;
-  private final SparkConf sparkConf;
+  private final SQLConf conf;
   private SparkDelegationTokenManager delegationTokenManager = null;
 
   public static final String SS2_PROXY_USER = "spark.sql.thriftserver.proxy.user";
@@ -104,10 +107,10 @@ public class SparkAuthFactory {
     }
   }
 
-  public SparkAuthFactory(SparkConf sparkConf) throws TTransportException, IOException {
-    this.sparkConf = sparkConf;
-    transportMode = sparkConf.get(ServiceConf.THRIFTSERVER_TRANSPORT_MODE());
-    authTypeStr = sparkConf.get(ServiceConf.THRIFTSERVER_AUTHENTICATION());
+  public SparkAuthFactory(SQLConf conf) throws TTransportException, IOException {
+    this.conf = conf;
+    transportMode = conf.getConf(ServiceConf.THRIFTSERVER_TRANSPORT_MODE());
+    authTypeStr = conf.getConf(ServiceConf.THRIFTSERVER_AUTHENTICATION());
 
     // In http mode we use NOSASL as the default auth type
     if ("http".equalsIgnoreCase(transportMode)) {
@@ -119,8 +122,8 @@ public class SparkAuthFactory {
         authTypeStr = AuthTypes.NONE.getAuthName();
       }
       if (authTypeStr.equalsIgnoreCase(AuthTypes.KERBEROS.getAuthName())) {
-        String principal = sparkConf.get(ServiceConf.THRIFTSERVER_KERBEROS_PRINCIPAL());
-        String keytab = sparkConf.get(ServiceConf.THRIFTSERVER_KERBEROS_KEYTAB());
+        String principal = conf.getConf(ServiceConf.THRIFTSERVER_KERBEROS_PRINCIPAL());
+        String keytab = conf.getConf(ServiceConf.THRIFTSERVER_KERBEROS_KEYTAB());
         if (needUgiLogin(UserGroupInformation.getCurrentUser(),
           SecurityUtil.getServerPrincipal(principal, "0.0.0.0"), keytab)) {
           saslServer = HadoopThriftAuthBridge.getInstance().createServer(keytab, principal);
@@ -129,10 +132,13 @@ public class SparkAuthFactory {
           saslServer = new HadoopThriftAuthBridge.Server();
         }
 
+        Configuration hadoopConf = SparkHadoopUtil.get().conf();
+        JavaConverters.mapAsJavaMap(conf.getAllConfs()).forEach(hadoopConf::set);
+
         // start delegation token manager
         delegationTokenManager = new SparkDelegationTokenManager();
         delegationTokenManager.startDelegationTokenSecretManager(
-            SparkHadoopUtil.get().newConfiguration(sparkConf), ServerMode.HIVESERVER2);
+          hadoopConf, ServerMode.HIVESERVER2);
         saslServer.setSecretManager(delegationTokenManager.getSecretManager());
       }
     }
@@ -140,7 +146,7 @@ public class SparkAuthFactory {
 
   public Map<String, String> getSaslProperties() {
     Map<String, String> saslProps = new HashMap<String, String>();
-    SaslQOP saslQOP = SaslQOP.fromString(sparkConf.get(ServiceConf.THRIFTSERVER_THRIFT_SASL_QOP()));
+    SaslQOP saslQOP = SaslQOP.fromString(conf.getConf(ServiceConf.THRIFTSERVER_THRIFT_SASL_QOP()));
     saslProps.put(Sasl.QOP, saslQOP.toString());
     saslProps.put(Sasl.SERVER_AUTH, "true");
     return saslProps;
@@ -206,12 +212,12 @@ public class SparkAuthFactory {
   }
 
   // Perform kerberos login using the hadoop shim API if the configuration is available
-  public static void loginFromKeytab(SparkConf sparkConf) throws IOException {
-    String principal = sparkConf.get(ServiceConf.THRIFTSERVER_KERBEROS_PRINCIPAL());
-    String keyTabFile = sparkConf.get(ServiceConf.THRIFTSERVER_KERBEROS_KEYTAB());
+  public static void loginFromKeytab(SQLConf conf) throws IOException {
+    String principal = conf.getConf(ServiceConf.THRIFTSERVER_KERBEROS_PRINCIPAL());
+    String keyTabFile = conf.getConf(ServiceConf.THRIFTSERVER_KERBEROS_KEYTAB());
     if (principal.isEmpty() || keyTabFile.isEmpty()) {
-      throw new IOException("SparkThriftServer Kerberos principal or keytab " +
-          "is not correctly configured");
+      throw new IOException(
+        "SparkThriftServer Kerberos principal or keytab is not correctly configured");
     } else {
       UserGroupInformation.loginUserFromKeytab(
           SecurityUtil.getServerPrincipal(principal, "0.0.0.0"), keyTabFile);
@@ -219,10 +225,10 @@ public class SparkAuthFactory {
   }
 
   // Perform SPNEGO login using the hadoop shim API if the configuration is available
-  public static UserGroupInformation loginFromSpnegoKeytabAndReturnUGI(SparkConf sparkConf)
+  public static UserGroupInformation loginFromSpnegoKeytabAndReturnUGI(SQLConf conf)
     throws IOException {
-    String principal = sparkConf.get(ServiceConf.THRIFTSERVER_SPNEGO_PRINCIPAL());
-    String keyTabFile = sparkConf.get(ServiceConf.THRIFTSERVER_SPNEGO_KEYTAB());
+    String principal = conf.getConf(ServiceConf.THRIFTSERVER_SPNEGO_PRINCIPAL());
+    String keyTabFile = conf.getConf(ServiceConf.THRIFTSERVER_SPNEGO_KEYTAB());
     if (principal.isEmpty() || keyTabFile.isEmpty()) {
       throw new IOException("SparkThriftServer SPNEGO" +
           " principal or keytab is not correctly configured");
@@ -233,16 +239,18 @@ public class SparkAuthFactory {
   }
 
   // retrieve delegation token for the given user
-  public String getDelegationToken(String owner, String renewer, String remoteAddr)
-      throws ServiceSQLException {
+  public String getDelegationToken(
+      String owner,
+      String renewer,
+      String remoteAddr) throws ServiceSQLException {
     if (delegationTokenManager == null) {
       throw new ServiceSQLException(
-          "Delegation token only supported over kerberos authentication", "08S01");
+        "Delegation token only supported over kerberos authentication", "08S01");
     }
 
     try {
       String tokenStr = delegationTokenManager.getDelegationTokenWithService(owner, renewer,
-              SS2_CLIENT_TOKEN, remoteAddr);
+        SS2_CLIENT_TOKEN, remoteAddr);
       if (tokenStr == null || tokenStr.isEmpty()) {
         throw new ServiceSQLException(
             "Received empty retrieving delegation token for user " + owner, "08S01");
@@ -260,33 +268,33 @@ public class SparkAuthFactory {
   public void cancelDelegationToken(String delegationToken) throws ServiceSQLException {
     if (delegationTokenManager == null) {
       throw new ServiceSQLException(
-          "Delegation token only supported over kerberos authentication", "08S01");
+        "Delegation token only supported over kerberos authentication", "08S01");
     }
     try {
       delegationTokenManager.cancelDelegationToken(delegationToken);
     } catch (IOException e) {
       throw new ServiceSQLException(
-          "Error canceling delegation token " + delegationToken, "08S01", e);
+        "Error canceling delegation token " + delegationToken, "08S01", e);
     }
   }
 
   public void renewDelegationToken(String delegationToken) throws ServiceSQLException {
     if (delegationTokenManager == null) {
       throw new ServiceSQLException(
-          "Delegation token only supported over kerberos authentication", "08S01");
+        "Delegation token only supported over kerberos authentication", "08S01");
     }
     try {
       delegationTokenManager.renewDelegationToken(delegationToken);
     } catch (IOException e) {
       throw new ServiceSQLException(
-          "Error renewing delegation token " + delegationToken, "08S01", e);
+        "Error renewing delegation token " + delegationToken, "08S01", e);
     }
   }
 
   public String verifyDelegationToken(String delegationToken) throws ServiceSQLException {
     if (delegationTokenManager == null) {
       throw new ServiceSQLException(
-          "Delegation token only supported over kerberos authentication", "08S01");
+        "Delegation token only supported over kerberos authentication", "08S01");
     }
     try {
       return delegationTokenManager.verifyDelegationToken(delegationToken);
@@ -300,13 +308,13 @@ public class SparkAuthFactory {
   public String getUserFromToken(String delegationToken) throws ServiceSQLException {
     if (delegationTokenManager == null) {
       throw new ServiceSQLException(
-          "Delegation token only supported over kerberos authentication", "08S01");
+        "Delegation token only supported over kerberos authentication", "08S01");
     }
     try {
       return delegationTokenManager.getUserFromToken(delegationToken);
     } catch (IOException e) {
       throw new ServiceSQLException(
-          "Error extracting user from delegation token " + delegationToken, "08S01", e);
+        "Error extracting user from delegation token " + delegationToken, "08S01", e);
     }
   }
 
@@ -317,14 +325,14 @@ public class SparkAuthFactory {
       if (UserGroupInformation.isSecurityEnabled()) {
         KerberosName kerbName = new KerberosName(realUser);
         sessionUgi = UserGroupInformation.createProxyUser(
-            kerbName.getServiceName(), UserGroupInformation.getLoginUser());
+          kerbName.getServiceName(), UserGroupInformation.getLoginUser());
       } else {
         sessionUgi = UserGroupInformation.createRemoteUser(realUser);
       }
       if (!proxyUser.equalsIgnoreCase(realUser)) {
         ProxyUsers.refreshSuperUserGroupsConfiguration(conf);
         ProxyUsers.authorize(UserGroupInformation.createProxyUser(proxyUser, sessionUgi),
-            ipAddress, null);
+          ipAddress, null);
       }
     } catch (IOException e) {
       throw new ServiceSQLException(

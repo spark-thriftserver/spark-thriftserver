@@ -17,7 +17,7 @@
 
 package org.apache.spark.sql.thriftserver;
 
-import org.apache.spark.SparkConf;
+import org.apache.spark.sql.internal.SQLConf;
 
 /**
  * This is a service that can be configured to break on any of the lifecycle
@@ -39,9 +39,7 @@ public class BreakableService extends AbstractService {
     this(false, false, false);
   }
 
-  public BreakableService(boolean failOnInit,
-                          boolean failOnStart,
-                          boolean failOnStop) {
+  public BreakableService(boolean failOnInit, boolean failOnStart, boolean failOnStop) {
     super("BreakableService");
     this.failOnInit = failOnInit;
     this.failOnStart = failOnStart;
@@ -75,7 +73,7 @@ public class BreakableService extends AbstractService {
   }
 
   @Override
-  public void init(SparkConf conf) {
+  public void init(SQLConf conf) {
     inc(STATE.INITED);
     maybeFail(failOnInit, "init");
     super.init(conf);

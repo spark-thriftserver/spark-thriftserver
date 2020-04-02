@@ -57,7 +57,7 @@ trait SharedThriftServer extends SharedSparkSession {
 
   protected def withJdbcStatement(fs: (Statement => Unit)*): Unit = {
     val user = System.getProperty("user.name")
-    val serverPort = sparkServer.getSparkConf.get(ServiceConf.THRIFTSERVER_THRIFT_PORT)
+    val serverPort = sparkServer.getConf.getConf(ServiceConf.THRIFTSERVER_THRIFT_PORT)
     val connections =
       fs.map { _ => DriverManager.getConnection(s"jdbc:hive2://localhost:$serverPort", user, "") }
     val statements = connections.map(_.createStatement())

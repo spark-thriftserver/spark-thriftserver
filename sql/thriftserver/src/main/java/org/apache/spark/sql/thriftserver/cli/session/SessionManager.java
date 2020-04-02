@@ -35,8 +35,8 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.spark.SparkConf;
 import org.apache.spark.sql.SQLContext;
+import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.thriftserver.CompositeService;
 import org.apache.spark.sql.thriftserver.SparkThriftServer;
 import org.apache.spark.sql.thriftserver.cli.ServiceSQLException;
@@ -54,7 +54,7 @@ public class SessionManager extends CompositeService {
 
   private static final Logger LOG = LoggerFactory.getLogger(SessionManager.class);
   public static final String SPARKRCFILE = ".sparkrc";
-  private SparkConf sparkConf;
+  private SQLConf conf;
   private SQLContext sqlContext;
   private final Map<SessionHandle, ServiceSession> handleToSession =
       new ConcurrentHashMap<SessionHandle, ServiceSession>();
@@ -75,25 +75,25 @@ public class SessionManager extends CompositeService {
   }
 
   @Override
-  public synchronized void init(SparkConf sparkConf) {
-    this.sparkConf = sparkConf;
+  public synchronized void init(SQLConf conf) {
+    this.conf = conf;
     //Create operation log root directory, if operation logging is enabled
-    if (((boolean) sparkConf.get(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_ENABLE()))) {
+    if (((boolean) conf.getConf(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_ENABLE()))) {
       initOperationLogRootDir();
     }
     createBackgroundOperationPool();
     addService(operationManager);
-    super.init(sparkConf);
+    super.init(conf);
   }
 
   private void createBackgroundOperationPool() {
-    int poolSize = (int) sparkConf.get(ServiceConf.THRIFTSERVER_ASYNC_EXEC_THREADS());
+    int poolSize = (int) conf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_THREADS());
     LOG.info("SparkThriftServer: Background operation thread pool size: " + poolSize);
     int poolQueueSize =
-        (int) sparkConf.get(ServiceConf.THRIFTSERVER_ASYNC_EXEC_WAIT_QUEUE_SIZE());
+        (int) conf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_WAIT_QUEUE_SIZE());
     LOG.info("SparkThriftServer: Background operation thread wait queue size: " + poolQueueSize);
     long keepAliveTime =
-       (long) sparkConf.get(ServiceConf.THRIFTSERVER_ASYNC_EXEC_KEEPALIVE_TIME());
+       (long) conf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_KEEPALIVE_TIME());
     LOG.info("SparkThriftServer: Background operation thread keepalive time: "
         + keepAliveTime + " seconds");
 
@@ -106,15 +106,15 @@ public class SessionManager extends CompositeService {
         new ThreadFactoryWithName(threadPoolName));
     backgroundOperationPool.allowCoreThreadTimeOut(true);
 
-    checkInterval = (long) sparkConf.get(ServiceConf.THRIFTSERVER_SESSION_CHECK_INTERVAL());
-    sessionTimeout = (long) sparkConf.get(ServiceConf.THRIFTSERVER_IDLE_SESSION_TIMEOUT());
+    checkInterval = (long) conf.getConf(ServiceConf.THRIFTSERVER_SESSION_CHECK_INTERVAL());
+    sessionTimeout = (long) conf.getConf(ServiceConf.THRIFTSERVER_IDLE_SESSION_TIMEOUT());
     checkOperation =
-        (boolean) sparkConf.get(ServiceConf.THRIFTSERVER_IDLE_SESSION_CHECK_OPERATION());
+        (boolean) conf.getConf(ServiceConf.THRIFTSERVER_IDLE_SESSION_CHECK_OPERATION());
   }
 
   private void initOperationLogRootDir() {
-    operationLogRootDir = new File(
-        sparkConf.get(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_LOG_LOCATION()));
+    operationLogRootDir =
+      new File(conf.getConf(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_LOG_LOCATION()));
     isOperationLogEnabled = true;
 
     if (operationLogRootDir.exists() && !operationLogRootDir.isDirectory()) {
@@ -126,7 +126,7 @@ public class SessionManager extends CompositeService {
     if (!operationLogRootDir.exists()) {
       if (!operationLogRootDir.mkdirs()) {
         LOG.warn("Unable to create operation log root directory: " +
-            operationLogRootDir.getAbsolutePath());
+          operationLogRootDir.getAbsolutePath());
         isOperationLogEnabled = false;
       }
     }
@@ -137,7 +137,7 @@ public class SessionManager extends CompositeService {
         FileUtils.forceDeleteOnExit(operationLogRootDir);
       } catch (IOException e) {
         LOG.warn("Failed to schedule cleanup HS2 operation logging root dir: " +
-            operationLogRootDir.getAbsolutePath(), e);
+          operationLogRootDir.getAbsolutePath(), e);
       }
     }
   }
@@ -192,7 +192,7 @@ public class SessionManager extends CompositeService {
     shutdown = true;
     if (backgroundOperationPool != null) {
       backgroundOperationPool.shutdown();
-      long timeout = (long) sparkConf.get(ServiceConf.THRIFTSERVER_ASYNC_EXEC_SHUTDOWN_TIMEOUT());
+      long timeout = (long) conf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_SHUTDOWN_TIMEOUT());
       try {
         backgroundOperationPool.awaitTermination(timeout, TimeUnit.SECONDS);
       } catch (InterruptedException e) {
@@ -210,7 +210,7 @@ public class SessionManager extends CompositeService {
         FileUtils.forceDelete(operationLogRootDir);
       } catch (Exception e) {
         LOG.warn("Failed to cleanup root dir of HS2 logging: " + operationLogRootDir
-            .getAbsolutePath(), e);
+          .getAbsolutePath(), e);
       }
     }
   }
@@ -228,15 +228,6 @@ public class SessionManager extends CompositeService {
    *
    * Please see {@code ThriftCLIService.getUserName()} for
    * more details.
-   *
-   * @param protocol
-   * @param username
-   * @param password
-   * @param ipAddress
-   * @param sessionConf
-   * @param withImpersonation
-   * @return
-   * @throws ServiceSQLException
    */
   public SessionHandle openSession(TProtocolVersion protocol, String username, String password,
       String ipAddress, Map<String, String> sessionConf, boolean withImpersonation)

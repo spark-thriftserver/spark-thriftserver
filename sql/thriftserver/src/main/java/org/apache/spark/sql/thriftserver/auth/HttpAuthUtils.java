@@ -53,31 +53,6 @@ public final class HttpAuthUtils {
     new HashSet<String>(Arrays.asList(COOKIE_CLIENT_USER_NAME, COOKIE_CLIENT_RAND_NUMBER));
 
   /**
-   * @return Stringified Base64 encoded kerberosAuthHeader on success
-   * @throws Exception
-   */
-  public static String getKerberosServiceTicket(String principal, String host,
-      String serverHttpUrl, boolean assumeSubject) throws Exception {
-    String serverPrincipal =
-        HadoopThriftAuthBridge.getInstance().getServerPrincipal(principal, host);
-    if (assumeSubject) {
-      // With this option, we're assuming that the external application,
-      // using the JDBC driver has done a JAAS kerberos login already
-      AccessControlContext context = AccessController.getContext();
-      Subject subject = Subject.getSubject(context);
-      if (subject == null) {
-        throw new Exception("The Subject is not set");
-      }
-      return Subject.doAs(subject, new HttpKerberosClientAction(serverPrincipal, serverHttpUrl));
-    } else {
-      // JAAS login from ticket cache to setup the client UserGroupInformation
-      UserGroupInformation clientUGI =
-          HadoopThriftAuthBridge.getInstance().getCurrentUGIWithConf("kerberos");
-      return clientUGI.doAs(new HttpKerberosClientAction(serverPrincipal, serverHttpUrl));
-    }
-  }
-
-  /**
    * Creates and returns a HS2 cookie token.
    * @param clientUserName Client User name.
    * @return An unsigned cookie token generated from input parameters.

@@ -42,9 +42,12 @@ public class ServiceSessionImplwithUGI extends ServiceSessionImpl {
   private ServiceSession proxySession = null;
   static final Logger LOG = LoggerFactory.getLogger(ServiceSessionImplwithUGI.class);
 
-  public ServiceSessionImplwithUGI(TProtocolVersion protocol, String username, String password,
-                                   SQLContext sqlContext, String ipAddress)
-      throws ServiceSQLException {
+  public ServiceSessionImplwithUGI(
+      TProtocolVersion protocol,
+      String username,
+      String password,
+      SQLContext sqlContext,
+      String ipAddress) throws ServiceSQLException {
     super(protocol, username, password, sqlContext, ipAddress);
     setSessionUGI(username);
   }
@@ -123,20 +126,24 @@ public class ServiceSessionImplwithUGI extends ServiceSessionImpl {
   }
 
   @Override
-  public String getDelegationToken(SparkAuthFactory authFactory, String owner,
-                                   String renewer) throws ServiceSQLException {
+  public String getDelegationToken(
+      SparkAuthFactory authFactory,
+      String owner,
+      String renewer) throws ServiceSQLException {
     return authFactory.getDelegationToken(owner, renewer, getIpAddress());
   }
 
   @Override
-  public void cancelDelegationToken(SparkAuthFactory authFactory, String tokenStr)
-      throws ServiceSQLException {
+  public void cancelDelegationToken(
+      SparkAuthFactory authFactory,
+      String tokenStr) throws ServiceSQLException {
     authFactory.cancelDelegationToken(tokenStr);
   }
 
   @Override
-  public void renewDelegationToken(SparkAuthFactory authFactory, String tokenStr)
-      throws ServiceSQLException {
+  public void renewDelegationToken(
+      SparkAuthFactory authFactory,
+      String tokenStr) throws ServiceSQLException {
     authFactory.renewDelegationToken(tokenStr);
   }
 

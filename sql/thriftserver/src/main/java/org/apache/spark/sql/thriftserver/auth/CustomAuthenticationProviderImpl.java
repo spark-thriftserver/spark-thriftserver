@@ -19,10 +19,11 @@ package org.apache.spark.sql.thriftserver.auth;
 
 import javax.security.sasl.AuthenticationException;
 
+import scala.collection.JavaConverters;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ReflectionUtils;
 
-import org.apache.spark.SparkConf;
 import org.apache.spark.deploy.SparkHadoopUtil;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.thriftserver.internal.ServiceConf;
@@ -38,15 +39,16 @@ public class CustomAuthenticationProviderImpl implements PasswdAuthenticationPro
   private final PasswdAuthenticationProvider customProvider;
 
   @SuppressWarnings("unchecked")
-  CustomAuthenticationProviderImpl(SparkConf sparkConf) {
-    Configuration conf = SparkHadoopUtil.get().newConfiguration(sparkConf);
-    conf.set(ServiceConf.THRIFTSERVER_CUSTOM_AUTHENTICATION_CLASS().key(),
-            SQLConf.get().getConf(ServiceConf.THRIFTSERVER_CUSTOM_AUTHENTICATION_CLASS()));
+  CustomAuthenticationProviderImpl(SQLConf conf) {
+    Configuration hadoopConf = SparkHadoopUtil.get().conf();
+    JavaConverters.mapAsJavaMap(conf.getAllConfs()).forEach(hadoopConf::set);
+    hadoopConf.set(ServiceConf.THRIFTSERVER_CUSTOM_AUTHENTICATION_CLASS().key(),
+      conf.getConf(ServiceConf.THRIFTSERVER_CUSTOM_AUTHENTICATION_CLASS()));
     Class<? extends PasswdAuthenticationProvider> customHandlerClass =
-      (Class<? extends PasswdAuthenticationProvider>) conf.getClass(
+      (Class<? extends PasswdAuthenticationProvider>) hadoopConf.getClass(
         ServiceConf.THRIFTSERVER_CUSTOM_AUTHENTICATION_CLASS().key(),
         PasswdAuthenticationProvider.class);
-    customProvider = ReflectionUtils.newInstance(customHandlerClass, conf);
+    customProvider = ReflectionUtils.newInstance(customHandlerClass, hadoopConf);
   }
 
   @Override

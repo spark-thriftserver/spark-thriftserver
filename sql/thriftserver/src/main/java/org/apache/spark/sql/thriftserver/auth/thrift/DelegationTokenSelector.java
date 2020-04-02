@@ -28,6 +28,6 @@ public class DelegationTokenSelector
     extends AbstractDelegationTokenSelector<DelegationTokenIdentifier> {
 
   public DelegationTokenSelector() {
-    super(DelegationTokenIdentifier.HIVE_DELEGATION_KIND);
+    super(DelegationTokenIdentifier.SPARK_SQL_DELEGATION_KIND);
   }
 }

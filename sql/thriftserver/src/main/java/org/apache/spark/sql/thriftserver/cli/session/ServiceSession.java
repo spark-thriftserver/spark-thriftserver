@@ -27,153 +27,66 @@ public interface ServiceSession extends ServiceSessionBase {
 
   void open(Map<String, String> sessionConfMap) throws Exception;
 
-  /**
-   * getInfo operation handler
-   * @param getInfoType
-   * @return
-   * @throws ServiceSQLException
-   */
   GetInfoValue getInfo(GetInfoType getInfoType) throws ServiceSQLException;
 
-  /**
-   * execute operation handler
-   * @param statement
-   * @param confOverlay
-   * @return
-   * @throws ServiceSQLException
-   */
-  OperationHandle executeStatement(String statement,
-                                   Map<String, String> confOverlay) throws ServiceSQLException;
+  OperationHandle executeStatement(
+      String statement,
+      Map<String, String> confOverlay) throws ServiceSQLException;
 
-  /**
-   * execute operation handler
-   * @param statement
-   * @param confOverlay
-   * @param queryTimeout
-   * @return
-   * @throws ServiceSQLException
-   */
-  OperationHandle executeStatement(String statement, Map<String, String> confOverlay,
+  OperationHandle executeStatement(
+      String statement,
+      Map<String, String> confOverlay,
       long queryTimeout) throws ServiceSQLException;
 
-  /**
-   * execute operation handler
-   * @param statement
-   * @param confOverlay
-   * @return
-   * @throws ServiceSQLException
-   */
-  OperationHandle executeStatementAsync(String statement, Map<String, String> confOverlay)
-      throws ServiceSQLException;
+  OperationHandle executeStatementAsync(
+      String statement,
+      Map<String, String> confOverlay) throws ServiceSQLException;
 
-  /**
-   * execute operation handler
-   * @param statement
-   * @param confOverlay
-   * @param queryTimeout
-   * @return
-   * @throws ServiceSQLException
-   */
-  OperationHandle executeStatementAsync(String statement, Map<String, String> confOverlay,
+  OperationHandle executeStatementAsync(
+      String statement,
+      Map<String, String> confOverlay,
       long queryTimeout) throws ServiceSQLException;
 
-  /**
-   * getTypeInfo operation handler
-   * @return
-   * @throws ServiceSQLException
-   */
   OperationHandle getTypeInfo() throws ServiceSQLException;
 
-  /**
-   * getCatalogs operation handler
-   * @return
-   * @throws ServiceSQLException
-   */
   OperationHandle getCatalogs() throws ServiceSQLException;
 
-  /**
-   * getSchemas operation handler
-   * @param catalogName
-   * @param schemaName
-   * @return
-   * @throws ServiceSQLException
-   */
-  OperationHandle getSchemas(String catalogName, String schemaName)
-      throws ServiceSQLException;
+  OperationHandle getSchemas(
+      String catalogName,
+      String schemaName) throws ServiceSQLException;
 
-  /**
-   * getTables operation handler
-   * @param catalogName
-   * @param schemaName
-   * @param tableName
-   * @param tableTypes
-   * @return
-   * @throws ServiceSQLException
-   */
-  OperationHandle getTables(String catalogName, String schemaName,
-      String tableName, List<String> tableTypes) throws ServiceSQLException;
+  OperationHandle getTables(
+      String catalogName,
+      String schemaName,
+      String tableName,
+      List<String> tableTypes) throws ServiceSQLException;
 
-  /**
-   * getTableTypes operation handler
-   * @return
-   * @throws ServiceSQLException
-   */
   OperationHandle getTableTypes() throws ServiceSQLException;
 
-  /**
-   * getColumns operation handler
-   * @param catalogName
-   * @param schemaName
-   * @param tableName
-   * @param columnName
-   * @return
-   * @throws ServiceSQLException
-   */
-  OperationHandle getColumns(String catalogName, String schemaName,
-      String tableName, String columnName)  throws ServiceSQLException;
+  OperationHandle getColumns(
+      String catalogName,
+      String schemaName,
+      String tableName,
+      String columnName)  throws ServiceSQLException;
 
-  /**
-   * getFunctions operation handler
-   * @param catalogName
-   * @param schemaName
-   * @param functionName
-   * @return
-   * @throws ServiceSQLException
-   */
-  OperationHandle getFunctions(String catalogName, String schemaName,
+  OperationHandle getFunctions(
+      String catalogName,
+      String schemaName,
       String functionName) throws ServiceSQLException;
 
-  /**
-   * getPrimaryKeys operation handler
-   * @param catalog
-   * @param schema
-   * @param table
-   * @return
-   * @throws ServiceSQLException
-   */
-  OperationHandle getPrimaryKeys(String catalog, String schema,
+  OperationHandle getPrimaryKeys(
+      String catalog,
+      String schema,
       String table) throws ServiceSQLException;
 
+  OperationHandle getCrossReference(
+      String primaryCatalog,
+      String primarySchema,
+      String primaryTable,
+      String foreignCatalog,
+      String foreignSchema,
+      String foreignTable) throws ServiceSQLException;
 
-  /**
-   * getCrossReference operation handler
-   * @param primaryCatalog
-   * @param primarySchema
-   * @param primaryTable
-   * @param foreignCatalog
-   * @param foreignSchema
-   * @param foreignTable
-   * @return
-   * @throws ServiceSQLException
-   */
-  OperationHandle getCrossReference(String primaryCatalog,
-      String primarySchema, String primaryTable, String foreignCatalog,
-      String foreignSchema, String foreignTable) throws ServiceSQLException;
-
-  /**
-   * close the session
-   * @throws ServiceSQLException
-   */
   void close() throws ServiceSQLException;
 
   void cancelOperation(OperationHandle opHandle) throws ServiceSQLException;
@@ -183,17 +96,24 @@ public interface ServiceSession extends ServiceSessionBase {
   TableSchema getResultSetMetadata(OperationHandle opHandle)
       throws ServiceSQLException;
 
-  RowSet fetchResults(OperationHandle opHandle, FetchOrientation orientation,
-                      long maxRows, FetchType fetchType) throws ServiceSQLException;
+  RowSet fetchResults(
+      OperationHandle opHandle,
+      FetchOrientation orientation,
+      long maxRows,
+      FetchType fetchType) throws ServiceSQLException;
 
-  String getDelegationToken(SparkAuthFactory authFactory, String owner,
-                            String renewer) throws ServiceSQLException;
+  String getDelegationToken(
+      SparkAuthFactory authFactory,
+      String owner,
+      String renewer) throws ServiceSQLException;
 
-  void cancelDelegationToken(SparkAuthFactory authFactory, String tokenStr)
-      throws ServiceSQLException;
+  void cancelDelegationToken(
+      SparkAuthFactory authFactory,
+      String tokenStr) throws ServiceSQLException;
 
-  void renewDelegationToken(SparkAuthFactory authFactory, String tokenStr)
-      throws ServiceSQLException;
+  void renewDelegationToken(
+      SparkAuthFactory authFactory,
+      String tokenStr) throws ServiceSQLException;
 
   void closeExpiredOperations();
 

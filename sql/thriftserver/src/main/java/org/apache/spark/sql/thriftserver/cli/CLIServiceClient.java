@@ -28,8 +28,7 @@ import org.apache.spark.sql.thriftserver.auth.SparkAuthFactory;
 public abstract class CLIServiceClient implements ICLIService {
   private static final long DEFAULT_MAX_ROWS = 1000;
 
-  public SessionHandle openSession(String username, String password)
-      throws ServiceSQLException {
+  public SessionHandle openSession(String username, String password) throws ServiceSQLException {
     return openSession(username, password, Collections.<String, String>emptyMap());
   }
 
@@ -37,23 +36,26 @@ public abstract class CLIServiceClient implements ICLIService {
   public RowSet fetchResults(OperationHandle opHandle) throws ServiceSQLException {
     // TODO: provide STATIC default value
     return fetchResults(opHandle, FetchOrientation.FETCH_NEXT,
-        DEFAULT_MAX_ROWS, FetchType.QUERY_OUTPUT);
+      DEFAULT_MAX_ROWS, FetchType.QUERY_OUTPUT);
   }
 
   @Override
-  public abstract String getDelegationToken(SessionHandle sessionHandle,
-                                            SparkAuthFactory authFactory,
-                                            String owner,
-                                            String renewer) throws ServiceSQLException;
+  public abstract String getDelegationToken(
+      SessionHandle sessionHandle,
+      SparkAuthFactory authFactory,
+      String owner,
+      String renewer) throws ServiceSQLException;
 
   @Override
-  public abstract void cancelDelegationToken(SessionHandle sessionHandle,
-                                             SparkAuthFactory authFactory,
-                                             String tokenStr) throws ServiceSQLException;
+  public abstract void cancelDelegationToken(
+      SessionHandle sessionHandle,
+      SparkAuthFactory authFactory,
+      String tokenStr) throws ServiceSQLException;
 
   @Override
-  public abstract void renewDelegationToken(SessionHandle sessionHandle,
-                                            SparkAuthFactory authFactory,
-                                            String tokenStr) throws ServiceSQLException;
+  public abstract void renewDelegationToken(
+      SessionHandle sessionHandle,
+      SparkAuthFactory authFactory,
+      String tokenStr) throws ServiceSQLException;
 
 }

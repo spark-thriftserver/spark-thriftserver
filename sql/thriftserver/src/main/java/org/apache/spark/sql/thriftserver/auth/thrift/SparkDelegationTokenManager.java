@@ -35,37 +35,23 @@ import org.apache.spark.sql.thriftserver.utils.Utils;
 public class SparkDelegationTokenManager {
 
   public static final String  DELEGATION_TOKEN_GC_INTERVAL =
-          "spark.cluster.delegation.token.gc-interval";
+    "spark.cluster.delegation.token.gc-interval";
   private static long DELEGATION_TOKEN_GC_INTERVAL_DEFAULT = 3600000; // 1 hour
   // Delegation token related keys
   public static final String  DELEGATION_KEY_UPDATE_INTERVAL_KEY =
-          "spark.cluster.delegation.key.update-interval";
+    "spark.cluster.delegation.key.update-interval";
   public static final long    DELEGATION_KEY_UPDATE_INTERVAL_DEFAULT =
-          24*60*60*1000; // 1 day
+    24 * 60 * 60 * 1000; // 1 day
   public static final String  DELEGATION_TOKEN_RENEW_INTERVAL_KEY =
-          "spark.cluster.delegation.token.renew-interval";
+    "spark.cluster.delegation.token.renew-interval";
   public static final long    DELEGATION_TOKEN_RENEW_INTERVAL_DEFAULT =
-          24*60*60*1000;  // 1 day
+    24 * 60 * 60 * 1000;  // 1 day
   public static final String  DELEGATION_TOKEN_MAX_LIFETIME_KEY =
-          "spark.cluster.delegation.token.max-lifetime";
+    "spark.cluster.delegation.token.max-lifetime";
   public static final long    DELEGATION_TOKEN_MAX_LIFETIME_DEFAULT =
-          7*24*60*60*1000; // 7 days
+    7 * 24 * 60 * 60 * 1000; // 7 days
   public static final String DELEGATION_TOKEN_STORE_CLS =
-          "spark.cluster.delegation.token.store.class";
-  public static final String DELEGATION_TOKEN_STORE_ZK_CONNECT_STR =
-          "spark.cluster.delegation.token.store.zookeeper.connectString";
-  // Alternate connect string specification configuration
-  public static final String DELEGATION_TOKEN_STORE_ZK_CONNECT_STR_ALTERNATE =
-          "spark.zookeeper.quorum";
-
-  public static final String DELEGATION_TOKEN_STORE_ZK_CONNECT_TIMEOUTMILLIS =
-          "spark.cluster.delegation.token.store.zookeeper.connectTimeoutMillis";
-  public static final String DELEGATION_TOKEN_STORE_ZK_ZNODE =
-          "spark.cluster.delegation.token.store.zookeeper.znode";
-  public static final String DELEGATION_TOKEN_STORE_ZK_ACL =
-          "spark.cluster.delegation.token.store.zookeeper.acl";
-  public static final String DELEGATION_TOKEN_STORE_ZK_ZNODE_DEFAULT =
-          "/hivedelegation";
+    "spark.cluster.delegation.token.store.class";
 
   protected DelegationTokenSecretManager secretManager;
 
@@ -78,31 +64,27 @@ public class SparkDelegationTokenManager {
 
   public void startDelegationTokenSecretManager(Configuration conf, ServerMode smode)
           throws IOException {
-    long secretKeyInterval =
-            conf.getLong(DELEGATION_KEY_UPDATE_INTERVAL_KEY,
-                DELEGATION_KEY_UPDATE_INTERVAL_DEFAULT);
-    long tokenMaxLifetime =
-            conf.getLong(DELEGATION_TOKEN_MAX_LIFETIME_KEY,
-                DELEGATION_TOKEN_MAX_LIFETIME_DEFAULT);
-    long tokenRenewInterval =
-            conf.getLong(DELEGATION_TOKEN_RENEW_INTERVAL_KEY,
-                DELEGATION_TOKEN_RENEW_INTERVAL_DEFAULT);
-    long tokenGcInterval =
-            conf.getLong(DELEGATION_TOKEN_GC_INTERVAL,
-                DELEGATION_TOKEN_GC_INTERVAL_DEFAULT);
+    long secretKeyInterval = conf.getLong(DELEGATION_KEY_UPDATE_INTERVAL_KEY,
+      DELEGATION_KEY_UPDATE_INTERVAL_DEFAULT);
+    long tokenMaxLifetime = conf.getLong(DELEGATION_TOKEN_MAX_LIFETIME_KEY,
+      DELEGATION_TOKEN_MAX_LIFETIME_DEFAULT);
+    long tokenRenewInterval = conf.getLong(DELEGATION_TOKEN_RENEW_INTERVAL_KEY,
+      DELEGATION_TOKEN_RENEW_INTERVAL_DEFAULT);
+    long tokenGcInterval = conf.getLong(DELEGATION_TOKEN_GC_INTERVAL,
+      DELEGATION_TOKEN_GC_INTERVAL_DEFAULT);
 
     DelegationTokenStore dts = getTokenStore(conf);
     dts.setConf(conf);
     dts.init(null, smode);
-    secretManager =
-            new TokenStoreDelegationTokenSecretManager(secretKeyInterval, tokenMaxLifetime,
-                    tokenRenewInterval, tokenGcInterval, dts);
+    secretManager = new TokenStoreDelegationTokenSecretManager(secretKeyInterval, tokenMaxLifetime,
+      tokenRenewInterval, tokenGcInterval, dts);
     secretManager.startThreads();
   }
 
-  public String getDelegationToken(final String owner, final String renewer, String remoteAddr)
-          throws IOException,
-          InterruptedException {
+  public String getDelegationToken(
+      final String owner,
+      final String renewer,
+      String remoteAddr) throws IOException, InterruptedException {
     /**
      * If the user asking the token is same as the 'owner' then don't do
      * any proxy authorization checks. For cases like oozie, where it gets
@@ -128,15 +110,16 @@ public class SparkDelegationTokenManager {
     });
   }
 
-  public String getDelegationTokenWithService(String owner, String renewer, String service,
-                                              String remoteAddr)
-          throws IOException, InterruptedException {
+  public String getDelegationTokenWithService(
+      String owner,
+      String renewer,
+      String service,
+      String remoteAddr) throws IOException, InterruptedException {
     String token = getDelegationToken(owner, renewer, remoteAddr);
     return Utils.addServiceToToken(token, service);
   }
 
-  public long renewDelegationToken(String tokenStrForm)
-          throws IOException {
+  public long renewDelegationToken(String tokenStrForm) throws IOException {
     return secretManager.renewDelegationToken(tokenStrForm);
   }
 
@@ -148,12 +131,6 @@ public class SparkDelegationTokenManager {
     secretManager.cancelDelegationToken(tokenStrForm);
   }
 
-  /**
-   * Verify token string
-   * @param tokenStrForm
-   * @return user name
-   * @throws IOException
-   */
   public synchronized String verifyDelegationToken(String tokenStrForm) throws IOException {
     Token<DelegationTokenIdentifier> t = new Token<DelegationTokenIdentifier>();
     t.decodeFromUrlString(tokenStrForm);
@@ -163,8 +140,8 @@ public class SparkDelegationTokenManager {
     return id.getUser().getShortUserName();
   }
 
-  protected DelegationTokenIdentifier getTokenIdentifier(Token<DelegationTokenIdentifier> token)
-          throws IOException {
+  protected DelegationTokenIdentifier getTokenIdentifier(
+      Token<DelegationTokenIdentifier> token) throws IOException {
     // turn bytes back into identifier for cache lookup
     ByteArrayInputStream buf = new ByteArrayInputStream(token.getIdentifier());
     DataInputStream in = new DataInputStream(buf);

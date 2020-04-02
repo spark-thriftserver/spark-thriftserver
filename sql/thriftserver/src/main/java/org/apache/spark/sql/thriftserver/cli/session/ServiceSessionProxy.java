@@ -42,8 +42,9 @@ public class ServiceSessionProxy implements InvocationHandler {
     this.ugi = ugi;
   }
 
-  public static ServiceSession getProxy(ServiceSession serviceSession, UserGroupInformation ugi)
-      throws IllegalArgumentException, ServiceSQLException {
+  public static ServiceSession getProxy(
+      ServiceSession serviceSession,
+      UserGroupInformation ugi) throws IllegalArgumentException, ServiceSQLException {
     return (ServiceSession)Proxy.newProxyInstance(ServiceSession.class.getClassLoader(),
         new Class<?>[] {ServiceSession.class},
         new ServiceSessionProxy(serviceSession, ugi));

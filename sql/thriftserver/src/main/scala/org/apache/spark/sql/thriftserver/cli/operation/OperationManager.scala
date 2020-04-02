@@ -18,14 +18,13 @@
 package org.apache.spark.sql.thriftserver.cli.operation
 
 import java.sql.SQLException
-import java.util.{List => JList, Map => JMap}
+import java.util.{ArrayList => JArrayList, List => JList, Map => JMap}
 import java.util.concurrent.ConcurrentHashMap
 
 import scala.collection.JavaConverters._
 
 import org.apache.log4j.Logger
 
-import org.apache.spark.SparkConf
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.thriftserver.AbstractService
@@ -41,14 +40,13 @@ class OperationManager
   private[this] val handleToOperation = new ConcurrentHashMap[OperationHandle, Operation]
   val sessionToActivePool = new ConcurrentHashMap[SessionHandle, String]()
 
-  override def init(sparkConf: SparkConf): Unit = synchronized {
-    if (sparkConf.get(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_ENABLE)) {
-      initOperationLogCapture(
-        sparkConf.get(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_LEVEL))
+  override def init(conf: SQLConf): Unit = synchronized {
+    if (conf.getConf(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_ENABLE)) {
+      initOperationLogCapture(conf.getConf(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_LEVEL))
     } else {
       logDebug("Operation level logging is turned off")
     }
-    super.init(sparkConf)
+    super.init(conf)
   }
 
   override def start(): Unit = {
@@ -67,53 +65,52 @@ class OperationManager
   }
 
 
-  def newExecuteStatementOperation(parentSession: ServiceSession,
-                                   statement: String,
-                                   confOverlay: JMap[String, String],
-                                   async: Boolean,
-                                   queryTimeOut: Long): SparkExecuteStatementOperation = {
-    synchronized {
-      val conf = parentSession.getSQLContext.sessionState.conf
-      val runInBackground = async && conf.getConf(ServiceConf.THRIFTSERVER_ASYNC)
-      val operation = new SparkExecuteStatementOperation(parentSession, statement, confOverlay,
-        runInBackground)(sessionToActivePool)
-      handleToOperation.put(operation.getHandle, operation)
-      logDebug(s"Created Operation for $statement with session=$parentSession, " +
-        s"runInBackground=$runInBackground")
-      operation
-    }
+  def newExecuteStatementOperation(
+      parentSession: ServiceSession,
+      statement: String,
+      confOverlay: JMap[String, String],
+      async: Boolean,
+      queryTimeOut: Long): SparkExecuteStatementOperation = synchronized {
+    val conf = parentSession.getSQLContext.sessionState.conf
+    val runInBackground = async && conf.getConf(ServiceConf.THRIFTSERVER_ASYNC)
+    val operation = new SparkExecuteStatementOperation(parentSession, statement, confOverlay,
+      runInBackground)(sessionToActivePool)
+    handleToOperation.put(operation.getHandle, operation)
+    logDebug(s"Created Operation for $statement with session=$parentSession, " +
+      s"runInBackground=$runInBackground")
+    operation
   }
 
-  def newGetTypeInfoOperation(session: ServiceSession): SparkGetTypeInfoOperation =
-    synchronized {
-      val operation = new SparkGetTypeInfoOperation(session)
-      handleToOperation.put(operation.getHandle, operation)
-      logDebug(s"Created GetTypeInfoOperation with session=$session.")
-      operation
-    }
+  def newGetTypeInfoOperation(session: ServiceSession): SparkGetTypeInfoOperation = synchronized {
+    val operation = new SparkGetTypeInfoOperation(session)
+    handleToOperation.put(operation.getHandle, operation)
+    logDebug(s"Created GetTypeInfoOperation with session=$session.")
+    operation
+  }
 
-  def newGetCatalogsOperation(session: ServiceSession): SparkGetCatalogsOperation =
-    synchronized {
-      val operation = new SparkGetCatalogsOperation(session)
-      handleToOperation.put(operation.getHandle, operation)
-      logDebug(s"Created GetCatalogsOperation with session=$session.")
-      operation
-    }
+  def newGetCatalogsOperation(session: ServiceSession): SparkGetCatalogsOperation = synchronized {
+    val operation = new SparkGetCatalogsOperation(session)
+    handleToOperation.put(operation.getHandle, operation)
+    logDebug(s"Created GetCatalogsOperation with session=$session.")
+    operation
+  }
 
-  def newGetSchemasOperation(session: ServiceSession,
-                             catalogName: String,
-                             schemaName: String): SparkGetSchemasOperation = synchronized {
+  def newGetSchemasOperation(
+      session: ServiceSession,
+      catalogName: String,
+      schemaName: String): SparkGetSchemasOperation = synchronized {
     val operation = new SparkGetSchemasOperation(session, catalogName, schemaName)
     handleToOperation.put(operation.getHandle, operation)
     logDebug(s"Created GetSchemasOperation with session=$session.")
     operation
   }
 
-  def newGetTablesOperation(session: ServiceSession,
-                            catalogName: String,
-                            schemaName: String,
-                            tableName: String,
-                            tableTypes: JList[String]): SparkMetadataOperation = synchronized {
+  def newGetTablesOperation(
+      session: ServiceSession,
+      catalogName: String,
+      schemaName: String,
+      tableName: String,
+      tableTypes: JList[String]): SparkMetadataOperation = synchronized {
     val operation = new SparkGetTablesOperation(session,
       catalogName, schemaName, tableName, tableTypes)
     handleToOperation.put(operation.getHandle, operation)
@@ -121,11 +118,12 @@ class OperationManager
     operation
   }
 
-  def newGetColumnsOperation(session: ServiceSession,
-                             catalogName: String,
-                             schemaName: String,
-                             tableName: String,
-                             columnName: String): SparkGetColumnsOperation = synchronized {
+  def newGetColumnsOperation(
+      session: ServiceSession,
+      catalogName: String,
+      schemaName: String,
+      tableName: String,
+      columnName: String): SparkGetColumnsOperation = synchronized {
     val operation = new SparkGetColumnsOperation(session,
       catalogName, schemaName, tableName, columnName)
     handleToOperation.put(operation.getHandle, operation)
@@ -133,18 +131,19 @@ class OperationManager
     operation
   }
 
-  def newGetTableTypesOperation(session: ServiceSession): SparkGetTableTypesOperation =
-    synchronized {
-      val operation = new SparkGetTableTypesOperation(session)
-      handleToOperation.put(operation.getHandle, operation)
-      logDebug(s"Created GetTableTypesOperation with session=$session.")
-      operation
-    }
+  def newGetTableTypesOperation(
+       session: ServiceSession): SparkGetTableTypesOperation = synchronized {
+    val operation = new SparkGetTableTypesOperation(session)
+    handleToOperation.put(operation.getHandle, operation)
+    logDebug(s"Created GetTableTypesOperation with session=$session.")
+    operation
+  }
 
-  def newGetFunctionsOperation(session: ServiceSession,
-                               catalogName: String,
-                               schemaName: String,
-                               functionName: String): SparkGetFunctionsOperation = synchronized {
+  def newGetFunctionsOperation(
+      session: ServiceSession,
+      catalogName: String,
+      schemaName: String,
+      functionName: String): SparkGetFunctionsOperation = synchronized {
     val operation = new SparkGetFunctionsOperation(session,
       catalogName, schemaName, functionName)
     handleToOperation.put(operation.getHandle, operation)
@@ -152,20 +151,22 @@ class OperationManager
     operation
   }
 
-  def newGetPrimaryKeysOperation(session: ServiceSession,
-                                 catalogName: String,
-                                 schemaName: String,
-                                 tableName: String): Operation = {
+  def newGetPrimaryKeysOperation(
+      session: ServiceSession,
+      catalogName: String,
+      schemaName: String,
+      tableName: String): Operation = {
     throw new ServiceSQLException("GetPrimaryKeysOperation is not supported yet")
   }
 
-  def newGetCrossReferenceOperation(parentSession: ServiceSession,
-                                    primaryCatalog: String,
-                                    primarySchema: String,
-                                    primaryTable: String,
-                                    foreignCatalog: String,
-                                    foreignSchema: String,
-                                    foreignTable: String): Operation = {
+  def newGetCrossReferenceOperation(
+      parentSession: ServiceSession,
+      primaryCatalog: String,
+      primarySchema: String,
+      primaryTable: String,
+      foreignCatalog: String,
+      foreignSchema: String,
+      foreignTable: String): Operation = {
     throw new ServiceSQLException("GetCrossReferenceOperation is not supported yet")
   }
 
@@ -248,16 +249,18 @@ class OperationManager
   }
 
   @throws[ServiceSQLException]
-  def getOperationNextRowSet(opHandle: OperationHandle,
-                             orientation: FetchOrientation,
-                             maxRows: Long): RowSet = {
+  def getOperationNextRowSet(
+      opHandle: OperationHandle,
+      orientation: FetchOrientation,
+      maxRows: Long): RowSet = {
     getOperation(opHandle).getNextRowSet(orientation, maxRows)
   }
 
   @throws[ServiceSQLException]
-  def getOperationLogRowSet(opHandle: OperationHandle,
-                            orientation: FetchOrientation,
-                            maxRows: Long): RowSet = {
+  def getOperationLogRowSet(
+      opHandle: OperationHandle,
+      orientation: FetchOrientation,
+      maxRows: Long): RowSet = {
     // get the OperationLog object from the operation
     val operationLog: OperationLog = getOperation(opHandle).getOperationLog
     if (operationLog == null) {
@@ -265,7 +268,7 @@ class OperationManager
         "with operation handle: " + opHandle)
     }
     // read logs
-    var logs: java.util.List[String] = null
+    var logs: JList[String] = null
     try {
       logs = operationLog.readOperationLog(isFetchFirst(orientation), maxRows)
     } catch {
@@ -285,10 +288,7 @@ class OperationManager
   private def isFetchFirst(fetchOrientation: FetchOrientation): Boolean = {
     // TODO: Since OperationLog is moved to package o.a.h.h.ql.session,
     // we may add a Enum there and map FetchOrientation to it.
-    if (fetchOrientation.equals(FetchOrientation.FETCH_FIRST)) {
-      return true
-    }
-    false
+    fetchOrientation.equals(FetchOrientation.FETCH_FIRST)
   }
 
   def getOperationLogByThread: OperationLog = {
@@ -296,7 +296,7 @@ class OperationManager
   }
 
   def removeExpiredOperations(handles: Array[OperationHandle]): JList[Operation] = {
-    val removed: java.util.List[Operation] = new java.util.ArrayList[Operation]
+    val removed: JList[Operation] = new JArrayList[Operation]
     handles.foreach(handle => {
       val operation: Operation = removeTimedOutOperation(handle)
       if (operation != null) {

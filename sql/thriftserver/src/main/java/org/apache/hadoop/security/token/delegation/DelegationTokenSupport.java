@@ -15,31 +15,24 @@
  * limitations under the License.
  */
 
-package org.apache.spark.sql.thriftserver;
+package org.apache.hadoop.security.token.delegation;
 
-public class ServiceUtils {
+import java.io.IOException;
 
-  /*
-   * Get the index separating the user name from domain name (the user's name up
-   * to the first '/' or '@').
-   *
-   * @param userName full user name.
-   * @return index of domain match or -1 if not found
-   */
-  public static int indexOfDomainMatch(String userName) {
-    if (userName == null) {
-      return -1;
-    }
+import org.apache.hadoop.security.token.delegation.AbstractDelegationTokenSecretManager.DelegationTokenInformation;
 
-    int idx = userName.indexOf('/');
-    int idx2 = userName.indexOf('@');
-    int endIdx = Math.min(idx, idx2); // Use the earlier match.
-    // Unless at least one of '/' or '@' was not found, in
-    // which case, user the latter match.
-    if (endIdx == -1) {
-      endIdx = Math.max(idx, idx2);
-    }
-    return endIdx;
+/**
+ * Workaround for serialization of {@link DelegationTokenInformation} through package access.
+ * Future version of Hadoop should add this to DelegationTokenInformation itself.
+ */
+public final class DelegationTokenSupport {
+
+  private DelegationTokenSupport() {}
+
+  public static void rollMasterKey(
+      AbstractDelegationTokenSecretManager<? extends AbstractDelegationTokenIdentifier> mgr)
+      throws IOException {
+    mgr.rollMasterKey();
   }
 
 }

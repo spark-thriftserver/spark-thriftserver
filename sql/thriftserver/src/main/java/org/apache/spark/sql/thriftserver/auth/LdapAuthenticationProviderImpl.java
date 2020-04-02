@@ -23,7 +23,7 @@ import javax.naming.NamingException;
 import javax.naming.directory.InitialDirContext;
 import javax.security.sasl.AuthenticationException;
 
-import org.apache.spark.SparkConf;
+import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.thriftserver.ServiceUtils;
 import org.apache.spark.sql.thriftserver.internal.ServiceConf;
 
@@ -33,10 +33,10 @@ public class LdapAuthenticationProviderImpl implements PasswdAuthenticationProvi
   private final String baseDN;
   private final String ldapDomain;
 
-  LdapAuthenticationProviderImpl(SparkConf sparkConf) {
-    ldapURL = sparkConf.get(ServiceConf.THRIFTSERVER_PLAIN_LDAP_URL());
-    baseDN = sparkConf.get(ServiceConf.THRIFTSERVER_PLAIN_LDAP_BASEDN());
-    ldapDomain = sparkConf.get(ServiceConf.THRIFTSERVER_PLAIN_LDAP_DOMAIN());
+  LdapAuthenticationProviderImpl(SQLConf conf) {
+    ldapURL = conf.getConf(ServiceConf.THRIFTSERVER_PLAIN_LDAP_URL());
+    baseDN = conf.getConf(ServiceConf.THRIFTSERVER_PLAIN_LDAP_BASEDN());
+    ldapDomain = conf.getConf(ServiceConf.THRIFTSERVER_PLAIN_LDAP_DOMAIN());
   }
 
   @Override

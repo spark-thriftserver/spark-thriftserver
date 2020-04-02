@@ -51,62 +51,52 @@ public interface DelegationTokenStore extends Configurable, Closeable {
    * Add new master key. The token store assigns and returns the sequence number.
    * Caller needs to use the identifier to update the key (since it is embedded in the key).
    *
-   * @param s
    * @return sequence number for new key
    */
   int addMasterKey(String s) throws TokenStoreException;
 
   /**
    * Update master key (for expiration and setting store assigned sequence within key)
-   * @param keySeq
-   * @param s
-   * @throws TokenStoreException
    */
   void updateMasterKey(int keySeq, String s) throws TokenStoreException;
 
   /**
    * Remove key for given id.
-   * @param keySeq
+   *
    * @return false if key no longer present, true otherwise.
    */
   boolean removeMasterKey(int keySeq);
 
   /**
    * Return all master keys.
-   * @return
-   * @throws TokenStoreException
    */
   String[] getMasterKeys() throws TokenStoreException;
 
   /**
    * Add token. If identifier is already present, token won't be added.
-   * @param tokenIdentifier
-   * @param token
+   *
    * @return true if token was added, false for existing identifier
    */
-  boolean addToken(DelegationTokenIdentifier tokenIdentifier,
-                   DelegationTokenInformation token) throws TokenStoreException;
+  boolean addToken(
+      DelegationTokenIdentifier tokenIdentifier,
+      DelegationTokenInformation token) throws TokenStoreException;
 
   /**
    * Get token. Returns null if the token does not exist.
-   * @param tokenIdentifier
-   * @return
    */
   DelegationTokenInformation getToken(DelegationTokenIdentifier tokenIdentifier)
       throws TokenStoreException;
 
   /**
    * Remove token. Return value can be used by caller to detect concurrency.
-   * @param tokenIdentifier
+   *
    * @return true if token was removed, false if it was already removed.
-   * @throws TokenStoreException
    */
   boolean removeToken(DelegationTokenIdentifier tokenIdentifier) throws TokenStoreException;
 
   /**
    * List of all token identifiers in the store. This is used to remove expired tokens
    * and a potential scalability improvement would be to partition by master key id
-   * @return
    */
   List<DelegationTokenIdentifier> getAllDelegationTokenIdentifiers() throws TokenStoreException;
 

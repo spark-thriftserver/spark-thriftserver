@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.security.auth.login.LoginException;
 
-
 import org.apache.spark.sql.thriftserver.cli.*;
 import org.apache.hive.service.rpc.thrift.*;
 import org.apache.thrift.TException;
@@ -36,8 +35,8 @@ import org.apache.thrift.transport.TTransport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.spark.SparkConf;
 import org.apache.spark.sql.SQLContext;
+import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.thriftserver.AbstractService;
 import org.apache.spark.sql.thriftserver.ServiceException;
 import org.apache.spark.sql.thriftserver.ServiceUtils;
@@ -69,7 +68,7 @@ public abstract class ThriftCLIService extends AbstractService
   private boolean isStarted = false;
   protected boolean isEmbedded = false;
 
-  protected SparkConf sparkConf;
+  protected SQLConf conf;
   protected SQLContext sqlContext;
 
   protected int minWorkerThreads;
@@ -131,13 +130,13 @@ public abstract class ThriftCLIService extends AbstractService
   }
 
   @Override
-  public synchronized void init(SparkConf sparkConf) {
-    this.sparkConf = sparkConf;
+  public synchronized void init(SQLConf conf) {
+    this.conf = conf;
     // Initialize common server configs needed in both binary & http modes
     String portString;
     sparkHost = System.getenv("THRIFTSERVER_THRIFT_BIND_HOST");
     if (sparkHost == null) {
-      sparkHost = sparkConf.get(ServiceConf.THRIFTSERVER_THRIFT_BIND_HOST());
+      sparkHost = conf.getConf(ServiceConf.THRIFTSERVER_THRIFT_BIND_HOST());
     }
     try {
       if (sparkHost != null && !sparkHost.isEmpty()) {
@@ -148,30 +147,30 @@ public abstract class ThriftCLIService extends AbstractService
     } catch (UnknownHostException e) {
       throw new ServiceException(e);
     }
-    if (SparkThriftServer.isHTTPTransportMode(sparkConf)) {
+    if (SparkThriftServer.isHTTPTransportMode(conf)) {
       // HTTP mode
       workerKeepAliveTime =
-          (long) sparkConf.get(ServiceConf.THRIFTSERVER_THRIFT_HTTP_WORKER_KEEPALIVE_TIME());
+          (long) conf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_WORKER_KEEPALIVE_TIME());
       portString = System.getenv("THRIFTSERVER_THRIFT_HTTP_PORT");
       if (portString != null) {
-        portNum = Integer.valueOf(portString);
+        portNum = Integer.parseInt(portString);
       } else {
-        portNum = (int) sparkConf.get(ServiceConf.THRIFTSERVER_HTTP_PORT());
+        portNum = (int) conf.getConf(ServiceConf.THRIFTSERVER_HTTP_PORT());
       }
     } else {
       // Binary mode
       workerKeepAliveTime =
-          (long) sparkConf.get(ServiceConf.THRIFTSERVER_THRIFT_WORKER_KEEPALIVE_TIME());
+          (long) conf.getConf(ServiceConf.THRIFTSERVER_THRIFT_WORKER_KEEPALIVE_TIME());
       portString = System.getenv("THRIFTSERVER_THRIFT_PORT");
       if (portString != null) {
-        portNum = Integer.valueOf(portString);
+        portNum = Integer.parseInt(portString);
       } else {
-        portNum = (int) sparkConf.get(ServiceConf.THRIFTSERVER_THRIFT_PORT());
+        portNum = (int) conf.getConf(ServiceConf.THRIFTSERVER_THRIFT_PORT());
       }
     }
-    minWorkerThreads = (int) sparkConf.get(ServiceConf.THRIFTSERVER_THRIFT_MIN_WORKER_THREADS());
-    maxWorkerThreads = (int) sparkConf.get(ServiceConf.THRIFTSERVER_THRIFT_MAX_WORKER_THREADS());
-    super.init(sparkConf);
+    minWorkerThreads = (int) conf.getConf(ServiceConf.THRIFTSERVER_THRIFT_MIN_WORKER_THREADS());
+    maxWorkerThreads = (int) conf.getConf(ServiceConf.THRIFTSERVER_THRIFT_MAX_WORKER_THREADS());
+    super.init(conf);
   }
 
   @Override
@@ -335,8 +334,8 @@ public abstract class ThriftCLIService extends AbstractService
     String clientIpAddress;
     // Http transport mode.
     // We set the thread local ip address, in ThriftHttpServlet.
-    if (cliService.getSparkConf().get(
-        ServiceConf.THRIFTSERVER_TRANSPORT_MODE()).equalsIgnoreCase("http")) {
+    if (cliService.getConf().getConf(ServiceConf.THRIFTSERVER_TRANSPORT_MODE())
+        .equalsIgnoreCase("http")) {
       clientIpAddress = SessionManager.getIpAddress();
     }
     else {
@@ -361,9 +360,6 @@ public abstract class ThriftCLIService extends AbstractService
    *          the username of the end user,
    * that the connecting user is trying to proxy for.
    * This includes a check whether the connecting user is allowed to proxy for the end user.
-   * @param req
-   * @return
-   * @throws ServiceSQLException
    */
   private String getUserName(TOpenSessionReq req) throws ServiceSQLException {
     String userName = null;
@@ -377,8 +373,8 @@ public abstract class ThriftCLIService extends AbstractService
     }
     // Http transport mode.
     // We set the thread local username, in ThriftHttpServlet.
-    if (cliService.getSparkConf().get(
-            ServiceConf.THRIFTSERVER_TRANSPORT_MODE()).equalsIgnoreCase("http")) {
+    if (cliService.getConf().getConf(ServiceConf.THRIFTSERVER_TRANSPORT_MODE())
+        .equalsIgnoreCase("http")) {
       userName = SessionManager.getUserName();
     }
     if (userName == null) {
@@ -404,12 +400,6 @@ public abstract class ThriftCLIService extends AbstractService
 
   /**
    * Create a session handle
-   * @param req
-   * @param res
-   * @return
-   * @throws ServiceSQLException
-   * @throws LoginException
-   * @throws IOException
    */
   SessionHandle getSessionHandle(TOpenSessionReq req, TOpenSessionResp res)
       throws ServiceSQLException, LoginException, IOException {
@@ -419,7 +409,7 @@ public abstract class ThriftCLIService extends AbstractService
         req.getClient_protocol());
     res.setServerProtocolVersion(protocol);
     SessionHandle sessionHandle;
-    if (((boolean) cliService.getSparkConf().get(ServiceConf.THRIFTSERVER_ENABLE_DOAS())) &&
+    if (((boolean) cliService.getConf().getConf(ServiceConf.THRIFTSERVER_ENABLE_DOAS())) &&
         (userName != null)) {
       sessionHandle = cliService.openSessionWithImpersonation(protocol, userName,
           req.getPassword(), ipAddress, req.getConfiguration());
@@ -754,8 +744,8 @@ public abstract class ThriftCLIService extends AbstractService
     String proxyUser = null;
     // Http transport mode.
     // We set the thread local proxy username, in ThriftHttpServlet.
-    if (cliService.getSparkConf().get(
-        ServiceConf.THRIFTSERVER_TRANSPORT_MODE()).equalsIgnoreCase("http")) {
+    if (cliService.getConf().getConf(ServiceConf.THRIFTSERVER_TRANSPORT_MODE())
+        .equalsIgnoreCase("http")) {
       proxyUser = SessionManager.getProxyUserName();
       LOG.debug("Proxy user from query string: " + proxyUser);
     }
@@ -781,13 +771,13 @@ public abstract class ThriftCLIService extends AbstractService
     }
 
     // check whether substitution is allowed
-    if (!((boolean) sparkConf.get(ServiceConf.THRIFTSERVER_ALLOW_USER_SUBSTITUTION()))) {
+    if (!((boolean) conf.getConf(ServiceConf.THRIFTSERVER_ALLOW_USER_SUBSTITUTION()))) {
       throw new ServiceSQLException("Proxy user substitution is not allowed");
     }
 
     // If there's no authentication, then directly substitute the user
     if (SparkAuthFactory.AuthTypes.NONE.toString()
-        .equalsIgnoreCase(sparkConf.get(ServiceConf.THRIFTSERVER_AUTHENTICATION()))) {
+        .equalsIgnoreCase(conf.getConf(ServiceConf.THRIFTSERVER_AUTHENTICATION()))) {
       return proxyUser;
     }
 
@@ -799,7 +789,7 @@ public abstract class ThriftCLIService extends AbstractService
   }
 
   private boolean isKerberosAuthMode() {
-    return cliService.getSparkConf().get(ServiceConf.THRIFTSERVER_AUTHENTICATION())
+    return cliService.getConf().getConf(ServiceConf.THRIFTSERVER_AUTHENTICATION())
         .equalsIgnoreCase(SparkAuthFactory.AuthTypes.KERBEROS.toString());
   }
 }

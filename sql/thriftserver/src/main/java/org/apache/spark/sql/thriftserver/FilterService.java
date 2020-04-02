@@ -17,7 +17,7 @@
 
 package org.apache.spark.sql.thriftserver;
 
-import org.apache.spark.SparkConf;
+import org.apache.spark.sql.internal.SQLConf;
 
 /**
  * FilterService.
@@ -33,8 +33,8 @@ public class FilterService implements Service {
   }
 
   @Override
-  public void init(SparkConf sparkConf) {
-    service.init(sparkConf);
+  public void init(SQLConf conf) {
+    service.init(conf);
   }
 
   @Override
@@ -64,8 +64,8 @@ public class FilterService implements Service {
   }
 
   @Override
-  public SparkConf getSparkConf() {
-    return service.getSparkConf();
+  public SQLConf getConf() {
+    return service.getConf();
   }
 
   @Override

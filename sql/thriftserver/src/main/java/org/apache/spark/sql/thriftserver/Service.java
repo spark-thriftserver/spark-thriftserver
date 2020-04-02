@@ -17,7 +17,7 @@
 
 package org.apache.spark.sql.thriftserver;
 
-import org.apache.spark.SparkConf;
+import org.apache.spark.sql.internal.SQLConf;
 
 /**
  * Service.
@@ -50,7 +50,7 @@ public interface Service {
    *
    * @param conf the configuration of the service
    */
-  void init(SparkConf conf);
+  void init(SQLConf conf);
 
 
   /**
@@ -99,7 +99,7 @@ public interface Service {
    * @return the current configuration, unless a specific implementation chooses
    *         otherwise.
    */
-  SparkConf getSparkConf();
+  SQLConf getConf();
 
   /**
    * Get the current service state

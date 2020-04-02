@@ -19,7 +19,7 @@ package org.apache.spark.sql.thriftserver.auth;
 
 import javax.security.sasl.AuthenticationException;
 
-import org.apache.spark.SparkConf;
+import org.apache.spark.sql.internal.SQLConf;
 
 /**
  * This class helps select a {@link PasswdAuthenticationProvider} for a given {@code AuthMethod}.
@@ -58,18 +58,18 @@ public final class AuthenticationProviderFactory {
 
   public static PasswdAuthenticationProvider getAuthenticationProvider(
       AuthMethods authMethod) throws AuthenticationException{
-    return getAuthenticationProvider(authMethod, new SparkConf());
+    return getAuthenticationProvider(authMethod, SQLConf.get());
   }
 
   public static PasswdAuthenticationProvider getAuthenticationProvider(
       AuthMethods authMethod,
-      SparkConf sparkConf) throws AuthenticationException {
+      SQLConf conf) throws AuthenticationException {
     if (authMethod == AuthMethods.LDAP) {
-      return new LdapAuthenticationProviderImpl(sparkConf);
+      return new LdapAuthenticationProviderImpl(conf);
     } else if (authMethod == AuthMethods.PAM) {
-      return new PamAuthenticationProviderImpl(sparkConf);
+      return new PamAuthenticationProviderImpl(conf);
     } else if (authMethod == AuthMethods.CUSTOM) {
-      return new CustomAuthenticationProviderImpl(sparkConf);
+      return new CustomAuthenticationProviderImpl(conf);
     } else if (authMethod == AuthMethods.NONE) {
       return new AnonymousAuthenticationProviderImpl();
     } else {

@@ -46,7 +46,7 @@ import org.ietf.jgss.Oid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.spark.SparkConf;
+import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.thriftserver.CookieSigner;
 import org.apache.spark.sql.thriftserver.auth.AuthenticationProviderFactory.AuthMethods;
 import org.apache.spark.sql.thriftserver.cli.ServiceSQLException;
@@ -65,7 +65,7 @@ public class ThriftHttpServlet extends TServlet {
   private final String authType;
   private final UserGroupInformation serviceUGI;
   private final UserGroupInformation httpUGI;
-  private SparkConf sparkConf;
+  private SQLConf conf;
 
   // Class members for cookie based authentication.
   private CookieSigner signer;
@@ -83,15 +83,15 @@ public class ThriftHttpServlet extends TServlet {
 
   public ThriftHttpServlet(TProcessor processor, TProtocolFactory protocolFactory,
       String authType, UserGroupInformation serviceUGI, UserGroupInformation httpUGI,
-      SparkAuthFactory sparkAuthFactory, SparkConf sparkConf) {
+      SparkAuthFactory sparkAuthFactory, SQLConf conf) {
     super(processor, protocolFactory);
-    this.sparkConf = sparkConf;
+    this.conf = conf;
     this.authType = authType;
     this.serviceUGI = serviceUGI;
     this.httpUGI = httpUGI;
     this.sparkAuthFactory = sparkAuthFactory;
     this.isCookieAuthEnabled =
-        (boolean) sparkConf.get(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_AUTH_ENABLED());
+        (boolean) conf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_AUTH_ENABLED());
     // Initialize the cookie based authentication related variables.
     if (isCookieAuthEnabled) {
       // Generate the signer with secret.
@@ -99,15 +99,15 @@ public class ThriftHttpServlet extends TServlet {
       LOG.debug("Using the random number as the secret for cookie generation " + secret);
       this.signer = new CookieSigner(secret.getBytes());
       this.cookieMaxAge =
-          new Long(((long) sparkConf.get(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_MAX_AGE())))
+          new Long(((long) conf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_MAX_AGE())))
               .intValue();
-      this.cookieDomain = sparkConf.get(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_DOMAIN());
+      this.cookieDomain = conf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_DOMAIN());
       this.cookiePath =
-          sparkConf.get(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_PATH());
+          conf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_PATH());
       this.isCookieSecure =
-          (boolean) sparkConf.get(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_IS_SECURE());
+          (boolean) conf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_IS_SECURE());
       this.isHttpOnlyCookie =
-           (boolean) sparkConf.get(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_IS_HTTPONLY());
+           (boolean) conf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_COOKIE_IS_HTTPONLY());
     }
   }
 
@@ -330,7 +330,7 @@ public class ThriftHttpServlet extends TServlet {
       try {
         AuthMethods authMethod = AuthMethods.getValidAuthMethod(authType);
         PasswdAuthenticationProvider provider =
-            AuthenticationProviderFactory.getAuthenticationProvider(authMethod, sparkConf);
+            AuthenticationProviderFactory.getAuthenticationProvider(authMethod, conf);
         provider.authenticate(userName, getPassword(request, authType));
 
       } catch (Exception e) {

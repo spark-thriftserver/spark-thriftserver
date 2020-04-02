@@ -44,10 +44,11 @@ public class DelegationTokenSecretManager
    * @param delegationTokenRemoverScanInterval how often the tokens are scanned
    *        for expired tokens
    */
-  public DelegationTokenSecretManager(long delegationKeyUpdateInterval,
-                                      long delegationTokenMaxLifetime,
-                                      long delegationTokenRenewInterval,
-                                      long delegationTokenRemoverScanInterval) {
+  public DelegationTokenSecretManager(
+      long delegationKeyUpdateInterval,
+      long delegationTokenMaxLifetime,
+      long delegationTokenRenewInterval,
+      long delegationTokenRemoverScanInterval) {
     super(delegationKeyUpdateInterval, delegationTokenMaxLifetime,
           delegationTokenRenewInterval, delegationTokenRemoverScanInterval);
   }
@@ -72,8 +73,8 @@ public class DelegationTokenSecretManager
     return id.getUser().getShortUserName();
   }
 
-  protected DelegationTokenIdentifier getTokenIdentifier(Token<DelegationTokenIdentifier> token)
-      throws IOException {
+  protected DelegationTokenIdentifier getTokenIdentifier(
+      Token<DelegationTokenIdentifier> token) throws IOException {
     // turn bytes back into identifier for cache lookup
     ByteArrayInputStream buf = new ByteArrayInputStream(token.getIdentifier());
     DataInputStream in = new DataInputStream(buf);

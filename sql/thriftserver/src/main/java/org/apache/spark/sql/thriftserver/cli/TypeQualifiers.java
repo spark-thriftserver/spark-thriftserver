@@ -48,19 +48,19 @@ public class TypeQualifiers {
     Map<String, TTypeQualifierValue> qMap = new HashMap<String, TTypeQualifierValue>();
     if (getCharacterMaximumLength() != null) {
       TTypeQualifierValue val = new TTypeQualifierValue();
-      val.setI32Value(getCharacterMaximumLength().intValue());
+      val.setI32Value(getCharacterMaximumLength());
       qMap.put(TCLIServiceConstants.CHARACTER_MAXIMUM_LENGTH, val);
     }
 
     if (precision != null) {
       TTypeQualifierValue val = new TTypeQualifierValue();
-      val.setI32Value(precision.intValue());
+      val.setI32Value(precision);
       qMap.put(TCLIServiceConstants.PRECISION, val);
     }
 
     if (scale != null) {
       TTypeQualifierValue val = new TTypeQualifierValue();
-      val.setI32Value(scale.intValue());
+      val.setI32Value(scale);
       qMap.put(TCLIServiceConstants.SCALE, val);
     }
 

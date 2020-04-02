@@ -17,7 +17,7 @@
 
 package org.apache.spark.sql.thriftserver.cli.thrift;
 
-import org.apache.spark.SparkConf;
+import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.thriftserver.cli.CLIService;
 import org.apache.spark.sql.thriftserver.cli.ICLIService;
 
@@ -34,15 +34,15 @@ public class EmbeddedThriftBinaryCLIService extends ThriftBinaryCLIService {
   }
 
   @Override
-  public synchronized void init(SparkConf sparkConf) {
+  public synchronized void init(SQLConf conf) {
     // Null SQLConf is passed in jdbc driver side code since driver side is supposed to be
     // independent of sqlConf object. Get new SQLConf object here in this case.
-    if (sparkConf == null) {
-        sparkConf = new SparkConf();
+    if (conf == null) {
+      conf = SQLConf.get();
     }
-    cliService.init(sparkConf);
+    cliService.init(conf);
     cliService.start();
-    super.init(sparkConf);
+    super.init(conf);
   }
 
   public ICLIService getService() {
