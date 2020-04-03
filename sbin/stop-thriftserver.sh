@@ -23,4 +23,18 @@ if [ -z "${SPARK_HOME}" ]; then
   export SPARK_HOME="$(cd "`dirname "$0"`"/..; pwd)"
 fi
 
-"${SPARK_HOME}/sbin"/spark-daemon.sh stop org.apache.spark.sql.hive.thriftserver.HiveThriftServer2 1
+. "${SPARK_HOME}"/bin/load-spark-env.sh
+
+# Find Spark jars.
+if [ -d "${SPARK_HOME}/jars" ]; then
+  SPARK_JARS_DIR="${SPARK_HOME}/jars"
+else
+  SPARK_JARS_DIR="${SPARK_HOME}/assembly/target/scala-$SPARK_SCALA_VERSION/jars"
+fi
+
+CLASS="org.apache.spark.sql.hive.thriftserver.HiveThriftServer2"
+if [ -f ${SPARK_JARS_DIR}/spark-thriftserver_*.jar ]; then
+  CLASS="org.apache.spark.sql.thriftserver.SparkThriftServer"
+fi
+
+"${SPARK_HOME}/sbin"/spark-daemon.sh stop ${CLASS} 1

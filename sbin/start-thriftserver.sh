@@ -27,9 +27,21 @@ if [ -z "${SPARK_HOME}" ]; then
   export SPARK_HOME="$(cd "`dirname "$0"`"/..; pwd)"
 fi
 
+. "${SPARK_HOME}"/bin/load-spark-env.sh
+
+# Find Spark jars.
+if [ -d "${SPARK_HOME}/jars" ]; then
+  SPARK_JARS_DIR="${SPARK_HOME}/jars"
+else
+  SPARK_JARS_DIR="${SPARK_HOME}/assembly/target/scala-$SPARK_SCALA_VERSION/jars"
+fi
+
 # NOTE: This exact class name is matched downstream by SparkSubmit.
 # Any changes need to be reflected there.
 CLASS="org.apache.spark.sql.hive.thriftserver.HiveThriftServer2"
+if [ -f ${SPARK_JARS_DIR}/spark-thriftserver_*.jar ]; then
+  CLASS="org.apache.spark.sql.thriftserver.SparkThriftServer"
+fi
 
 function usage {
   echo "Usage: ./sbin/start-thriftserver [options] [thrift server options]"

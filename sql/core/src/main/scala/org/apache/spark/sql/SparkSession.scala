@@ -1101,7 +1101,7 @@ object SparkSession extends Logging {
   private[spark] def hiveClassesArePresent: Boolean = {
     try {
       Utils.classForName(HIVE_SESSION_STATE_BUILDER_CLASS_NAME)
-      Utils.classForName("org.apache.hadoop.hive.conf.HiveConf")
+      Utils.classForName("org.apache.hadoop.hive.ql.metadata.Hive")
       true
     } catch {
       case _: ClassNotFoundException | _: NoClassDefFoundError => false

@@ -97,7 +97,6 @@
     <module>sql/catalyst</module>
     <module>sql/core</module>
     <module>sql/hive</module>
-    <module>sql/thriftserver</module>
     <module>assembly</module>
     <module>examples</module>
     <module>repl</module>
@@ -3088,6 +3087,13 @@
       <id>hive-thriftserver</id>
       <modules>
         <module>sql/hive-thriftserver</module>
+      </modules>
+    </profile>
+
+    <profile>
+      <id>spark-thriftserver</id>
+      <modules>
+        <module>sql/thriftserver</module>
       </modules>
     </profile>
 
