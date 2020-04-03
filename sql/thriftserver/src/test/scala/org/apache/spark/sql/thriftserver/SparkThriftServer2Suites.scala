@@ -926,10 +926,8 @@ abstract class SparkThriftServerTest extends SparkFunSuite with BeforeAndAfterAl
   private val CLASS_NAME = SparkThriftServer.getClass.getCanonicalName.stripSuffix("$")
   private val LOG_FILE_MARK = s"starting $CLASS_NAME, logging to "
 
-  protected val startScript =
-    "../../sbin/start-spark-thriftserver.sh".split("/").mkString(File.separator)
-  protected val stopScript =
-    "../../sbin/stop-spark-thriftserver.sh".split("/").mkString(File.separator)
+  protected val startScript = "../../sbin/start-thriftserver.sh".split("/").mkString(File.separator)
+  protected val stopScript = "../../sbin/stop-thriftserver.sh".split("/").mkString(File.separator)
 
   private var listeningPort: Int = _
   protected def serverPort: Int = listeningPort
