@@ -43,7 +43,7 @@ public class CustomAuthenticationProviderImpl implements PasswdAuthenticationPro
     Configuration hadoopConf = SparkHadoopUtil.get().conf();
     JavaConverters.mapAsJavaMap(conf.getAllConfs()).forEach(hadoopConf::set);
     hadoopConf.set(ServiceConf.THRIFTSERVER_CUSTOM_AUTHENTICATION_CLASS().key(),
-      conf.getConf(ServiceConf.THRIFTSERVER_CUSTOM_AUTHENTICATION_CLASS()));
+        ServiceConf.customAuthenticationClass(conf));
     Class<? extends PasswdAuthenticationProvider> customHandlerClass =
       (Class<? extends PasswdAuthenticationProvider>) hadoopConf.getClass(
         ServiceConf.THRIFTSERVER_CUSTOM_AUTHENTICATION_CLASS().key(),

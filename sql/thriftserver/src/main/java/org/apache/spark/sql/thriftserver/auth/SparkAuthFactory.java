@@ -109,8 +109,8 @@ public class SparkAuthFactory {
 
   public SparkAuthFactory(SQLConf conf) throws TTransportException, IOException {
     this.conf = conf;
-    transportMode = conf.getConf(ServiceConf.THRIFTSERVER_TRANSPORT_MODE());
-    authTypeStr = conf.getConf(ServiceConf.THRIFTSERVER_AUTHENTICATION());
+    transportMode = ServiceConf.transportMode(conf);
+    authTypeStr = ServiceConf.authentication(conf);
 
     // In http mode we use NOSASL as the default auth type
     if ("http".equalsIgnoreCase(transportMode)) {
@@ -122,8 +122,8 @@ public class SparkAuthFactory {
         authTypeStr = AuthTypes.NONE.getAuthName();
       }
       if (authTypeStr.equalsIgnoreCase(AuthTypes.KERBEROS.getAuthName())) {
-        String principal = conf.getConf(ServiceConf.THRIFTSERVER_KERBEROS_PRINCIPAL());
-        String keytab = conf.getConf(ServiceConf.THRIFTSERVER_KERBEROS_KEYTAB());
+        String principal = ServiceConf.kerberosPrincipal(conf);
+        String keytab = ServiceConf.kerberosKeytab(conf);
         if (needUgiLogin(UserGroupInformation.getCurrentUser(),
           SecurityUtil.getServerPrincipal(principal, "0.0.0.0"), keytab)) {
           saslServer = HadoopThriftAuthBridge.getInstance().createServer(keytab, principal);
@@ -146,7 +146,7 @@ public class SparkAuthFactory {
 
   public Map<String, String> getSaslProperties() {
     Map<String, String> saslProps = new HashMap<String, String>();
-    SaslQOP saslQOP = SaslQOP.fromString(conf.getConf(ServiceConf.THRIFTSERVER_THRIFT_SASL_QOP()));
+    SaslQOP saslQOP = SaslQOP.fromString(ServiceConf.thriftSaslQop(conf));
     saslProps.put(Sasl.QOP, saslQOP.toString());
     saslProps.put(Sasl.SERVER_AUTH, "true");
     return saslProps;
@@ -213,8 +213,8 @@ public class SparkAuthFactory {
 
   // Perform kerberos login using the hadoop shim API if the configuration is available
   public static void loginFromKeytab(SQLConf conf) throws IOException {
-    String principal = conf.getConf(ServiceConf.THRIFTSERVER_KERBEROS_PRINCIPAL());
-    String keyTabFile = conf.getConf(ServiceConf.THRIFTSERVER_KERBEROS_KEYTAB());
+    String principal = ServiceConf.kerberosPrincipal(conf);
+    String keyTabFile = ServiceConf.kerberosKeytab(conf);
     if (principal.isEmpty() || keyTabFile.isEmpty()) {
       throw new IOException(
         "SparkThriftServer Kerberos principal or keytab is not correctly configured");
@@ -227,8 +227,8 @@ public class SparkAuthFactory {
   // Perform SPNEGO login using the hadoop shim API if the configuration is available
   public static UserGroupInformation loginFromSpnegoKeytabAndReturnUGI(SQLConf conf)
     throws IOException {
-    String principal = conf.getConf(ServiceConf.THRIFTSERVER_SPNEGO_PRINCIPAL());
-    String keyTabFile = conf.getConf(ServiceConf.THRIFTSERVER_SPNEGO_KEYTAB());
+    String principal = ServiceConf.spnegoPrincipal(conf);
+    String keyTabFile = ServiceConf.spnegoKeytab(conf);
     if (principal.isEmpty() || keyTabFile.isEmpty()) {
       throw new IOException("SparkThriftServer SPNEGO" +
           " principal or keytab is not correctly configured");

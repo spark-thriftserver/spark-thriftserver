@@ -136,7 +136,7 @@ public abstract class ThriftCLIService extends AbstractService
     String portString;
     sparkHost = System.getenv("THRIFTSERVER_THRIFT_BIND_HOST");
     if (sparkHost == null) {
-      sparkHost = conf.getConf(ServiceConf.THRIFTSERVER_THRIFT_BIND_HOST());
+      sparkHost = ServiceConf.thriftBindHost(conf);
     }
     try {
       if (sparkHost != null && !sparkHost.isEmpty()) {
@@ -149,27 +149,25 @@ public abstract class ThriftCLIService extends AbstractService
     }
     if (SparkThriftServer.isHTTPTransportMode(conf)) {
       // HTTP mode
-      workerKeepAliveTime =
-          (long) conf.getConf(ServiceConf.THRIFTSERVER_THRIFT_HTTP_WORKER_KEEPALIVE_TIME());
+      workerKeepAliveTime = ServiceConf.httpWorkerKeepaliveTime(conf);
       portString = System.getenv("THRIFTSERVER_THRIFT_HTTP_PORT");
       if (portString != null) {
         portNum = Integer.parseInt(portString);
       } else {
-        portNum = (int) conf.getConf(ServiceConf.THRIFTSERVER_HTTP_PORT());
+        portNum = ServiceConf.httpPort(conf);
       }
     } else {
       // Binary mode
-      workerKeepAliveTime =
-          (long) conf.getConf(ServiceConf.THRIFTSERVER_THRIFT_WORKER_KEEPALIVE_TIME());
+      workerKeepAliveTime = ServiceConf.thriftWorkerKeepaliveTime(conf);
       portString = System.getenv("THRIFTSERVER_THRIFT_PORT");
       if (portString != null) {
         portNum = Integer.parseInt(portString);
       } else {
-        portNum = (int) conf.getConf(ServiceConf.THRIFTSERVER_THRIFT_PORT());
+        portNum = ServiceConf.thriftPort(conf);
       }
     }
-    minWorkerThreads = (int) conf.getConf(ServiceConf.THRIFTSERVER_THRIFT_MIN_WORKER_THREADS());
-    maxWorkerThreads = (int) conf.getConf(ServiceConf.THRIFTSERVER_THRIFT_MAX_WORKER_THREADS());
+    minWorkerThreads = ServiceConf.thriftMinThread(conf);
+    maxWorkerThreads = ServiceConf.thriftMaxThread(conf);
     super.init(conf);
   }
 
@@ -235,8 +233,7 @@ public abstract class ThriftCLIService extends AbstractService
   }
 
   @Override
-  public TCancelDelegationTokenResp CancelDelegationToken(TCancelDelegationTokenReq req)
-      throws TException {
+  public TCancelDelegationTokenResp CancelDelegationToken(TCancelDelegationTokenReq req) {
     TCancelDelegationTokenResp resp = new TCancelDelegationTokenResp();
 
     if (sparkAuthFactory == null || !sparkAuthFactory.isSASLKerberosUser()) {
@@ -255,8 +252,7 @@ public abstract class ThriftCLIService extends AbstractService
   }
 
   @Override
-  public TRenewDelegationTokenResp RenewDelegationToken(TRenewDelegationTokenReq req)
-      throws TException {
+  public TRenewDelegationTokenResp RenewDelegationToken(TRenewDelegationTokenReq req) {
     TRenewDelegationTokenResp resp = new TRenewDelegationTokenResp();
     if (sparkAuthFactory == null || !sparkAuthFactory.isSASLKerberosUser()) {
       resp.setStatus(unsecureTokenErrorStatus());
@@ -409,8 +405,7 @@ public abstract class ThriftCLIService extends AbstractService
         req.getClient_protocol());
     res.setServerProtocolVersion(protocol);
     SessionHandle sessionHandle;
-    if (((boolean) cliService.getConf().getConf(ServiceConf.THRIFTSERVER_ENABLE_DOAS())) &&
-        (userName != null)) {
+    if (ServiceConf.enableDoAs(cliService.getConf()) && userName != null) {
       sessionHandle = cliService.openSessionWithImpersonation(protocol, userName,
           req.getPassword(), ipAddress, req.getConfiguration());
     } else {
@@ -771,13 +766,13 @@ public abstract class ThriftCLIService extends AbstractService
     }
 
     // check whether substitution is allowed
-    if (!((boolean) conf.getConf(ServiceConf.THRIFTSERVER_ALLOW_USER_SUBSTITUTION()))) {
+    if (!ServiceConf.allowUserSubstitution(conf)) {
       throw new ServiceSQLException("Proxy user substitution is not allowed");
     }
 
     // If there's no authentication, then directly substitute the user
     if (SparkAuthFactory.AuthTypes.NONE.toString()
-        .equalsIgnoreCase(conf.getConf(ServiceConf.THRIFTSERVER_AUTHENTICATION()))) {
+        .equalsIgnoreCase(ServiceConf.authentication(conf))) {
       return proxyUser;
     }
 
@@ -789,7 +784,7 @@ public abstract class ThriftCLIService extends AbstractService
   }
 
   private boolean isKerberosAuthMode() {
-    return cliService.getConf().getConf(ServiceConf.THRIFTSERVER_AUTHENTICATION())
+    return ServiceConf.authentication(cliService.getConf())
         .equalsIgnoreCase(SparkAuthFactory.AuthTypes.KERBEROS.toString());
   }
 }

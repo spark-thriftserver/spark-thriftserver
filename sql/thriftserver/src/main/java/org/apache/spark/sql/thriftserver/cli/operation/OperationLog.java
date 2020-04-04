@@ -54,9 +54,8 @@ public class OperationLog {
     operationName = name;
     logFile = new LogFile(file);
 
-    if (((boolean) conf.getConf(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_ENABLE()))) {
-      String logLevel = conf.getConf(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_LEVEL());
-      opLoggingLevel = getLoggingLevel(logLevel);
+    if (ServiceConf.loggingOperationEnabled(conf)) {
+      opLoggingLevel = getLoggingLevel(ServiceConf.loggingOperationLevel(conf));
     }
   }
 

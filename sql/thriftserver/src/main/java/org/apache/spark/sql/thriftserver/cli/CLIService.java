@@ -88,8 +88,8 @@ public class CLIService extends CompositeService implements ICLIService {
       }
 
       // Also try creating a UGI object for the SPNego principal
-      String principal = conf.getConf(ServiceConf.THRIFTSERVER_SPNEGO_PRINCIPAL());
-      String keyTabFile = conf.getConf(ServiceConf.THRIFTSERVER_SPNEGO_KEYTAB());
+      String principal = ServiceConf.spnegoPrincipal(conf);
+      String keyTabFile = ServiceConf.spnegoKeytab(conf);
       if (principal.isEmpty() || keyTabFile.isEmpty()) {
         LOG.info("SPNego httpUGI not created, spNegoPrincipal: " + principal +
             ", ketabFile: " + keyTabFile);
@@ -142,8 +142,7 @@ public class CLIService extends CompositeService implements ICLIService {
    */
   @Deprecated
   public SessionHandle openSessionWithImpersonation(TProtocolVersion protocol, String username,
-      String password, Map<String, String> configuration)
-          throws ServiceSQLException {
+      String password, Map<String, String> configuration) throws ServiceSQLException {
     SessionHandle sessionHandle = sessionManager.openSession(protocol, username, password,
         null, configuration, true);
     LOG.debug(sessionHandle + ": openSessionWithImpersonation()");
@@ -195,8 +194,7 @@ public class CLIService extends CompositeService implements ICLIService {
    * @see ICLIService#closeSession(SessionHandle)
    */
   @Override
-  public void closeSession(SessionHandle sessionHandle)
-      throws ServiceSQLException {
+  public void closeSession(SessionHandle sessionHandle) throws ServiceSQLException {
     sessionManager.closeSession(sessionHandle);
     LOG.debug(sessionHandle + ": closeSession()");
   }
@@ -280,8 +278,7 @@ public class CLIService extends CompositeService implements ICLIService {
    * @see ICLIService#getTypeInfo(SessionHandle)
    */
   @Override
-  public OperationHandle getTypeInfo(SessionHandle sessionHandle)
-      throws ServiceSQLException {
+  public OperationHandle getTypeInfo(SessionHandle sessionHandle) throws ServiceSQLException {
     OperationHandle opHandle = sessionManager.getSession(sessionHandle)
         .getTypeInfo();
     LOG.debug(sessionHandle + ": getTypeInfo()");
@@ -292,8 +289,7 @@ public class CLIService extends CompositeService implements ICLIService {
    * @see ICLIService#getCatalogs(SessionHandle)
    */
   @Override
-  public OperationHandle getCatalogs(SessionHandle sessionHandle)
-      throws ServiceSQLException {
+  public OperationHandle getCatalogs(SessionHandle sessionHandle) throws ServiceSQLException {
     OperationHandle opHandle = sessionManager.getSession(sessionHandle)
         .getCatalogs();
     LOG.debug(sessionHandle + ": getCatalogs()");
@@ -305,8 +301,7 @@ public class CLIService extends CompositeService implements ICLIService {
    */
   @Override
   public OperationHandle getSchemas(SessionHandle sessionHandle,
-      String catalogName, String schemaName)
-          throws ServiceSQLException {
+      String catalogName, String schemaName) throws ServiceSQLException {
     OperationHandle opHandle = sessionManager.getSession(sessionHandle)
         .getSchemas(catalogName, schemaName);
     LOG.debug(sessionHandle + ": getSchemas()");
@@ -331,8 +326,7 @@ public class CLIService extends CompositeService implements ICLIService {
    * @see ICLIService#getTableTypes(SessionHandle)
    */
   @Override
-  public OperationHandle getTableTypes(SessionHandle sessionHandle)
-      throws ServiceSQLException {
+  public OperationHandle getTableTypes(SessionHandle sessionHandle) throws ServiceSQLException {
     OperationHandle opHandle = sessionManager.getSession(sessionHandle)
         .getTableTypes();
     LOG.debug(sessionHandle + ": getTableTypes()");
@@ -357,8 +351,7 @@ public class CLIService extends CompositeService implements ICLIService {
    */
   @Override
   public OperationHandle getFunctions(SessionHandle sessionHandle,
-      String catalogName, String schemaName, String functionName)
-          throws ServiceSQLException {
+      String catalogName, String schemaName, String functionName) throws ServiceSQLException {
     OperationHandle opHandle = sessionManager.getSession(sessionHandle)
         .getFunctions(catalogName, schemaName, functionName);
     LOG.debug(sessionHandle + ": getFunctions()");
@@ -396,8 +389,7 @@ public class CLIService extends CompositeService implements ICLIService {
    * @see ICLIService#getOperationStatus(OperationHandle)
    */
   @Override
-  public OperationStatus getOperationStatus(OperationHandle opHandle)
-      throws ServiceSQLException {
+  public OperationStatus getOperationStatus(OperationHandle opHandle) throws ServiceSQLException {
     Operation operation = sessionManager.getOperationManager().getOperation(opHandle);
     /**
      * If this is a background operation run asynchronously,
@@ -407,7 +399,7 @@ public class CLIService extends CompositeService implements ICLIService {
      */
     if (operation.shouldRunAsync()) {
       SQLConf conf = operation.getParentSession().getSQLContext().conf();
-      long timeout = (long) conf.getConf(ServiceConf.THRIFTSERVER_LONG_POLLING_TIMEOUT());
+      long timeout = ServiceConf.longPollingTimeout(conf);
       try {
         operation.getBackgroundHandle().get(timeout, TimeUnit.MILLISECONDS);
       } catch (TimeoutException e) {
@@ -433,8 +425,7 @@ public class CLIService extends CompositeService implements ICLIService {
    * @see ICLIService#cancelOperation(OperationHandle)
    */
   @Override
-  public void cancelOperation(OperationHandle opHandle)
-      throws ServiceSQLException {
+  public void cancelOperation(OperationHandle opHandle) throws ServiceSQLException {
     sessionManager.getOperationManager().getOperation(opHandle)
     .getParentSession().cancelOperation(opHandle);
     LOG.debug(opHandle + ": cancelOperation()");
@@ -444,8 +435,7 @@ public class CLIService extends CompositeService implements ICLIService {
    * @see ICLIService#closeOperation(OperationHandle)
    */
   @Override
-  public void closeOperation(OperationHandle opHandle)
-      throws ServiceSQLException {
+  public void closeOperation(OperationHandle opHandle) throws ServiceSQLException {
     sessionManager.getOperationManager().getOperation(opHandle)
     .getParentSession().closeOperation(opHandle);
     LOG.debug(opHandle + ": closeOperation");
@@ -455,8 +445,7 @@ public class CLIService extends CompositeService implements ICLIService {
    * @see ICLIService#getResultSetMetadata(OperationHandle)
    */
   @Override
-  public TableSchema getResultSetMetadata(OperationHandle opHandle)
-      throws ServiceSQLException {
+  public TableSchema getResultSetMetadata(OperationHandle opHandle) throws ServiceSQLException {
     TableSchema tableSchema = sessionManager.getOperationManager()
         .getOperation(opHandle).getParentSession().getResultSetMetadata(opHandle);
     LOG.debug(opHandle + ": getResultSetMetadata()");
@@ -467,8 +456,7 @@ public class CLIService extends CompositeService implements ICLIService {
    * @see ICLIService#fetchResults(OperationHandle)
    */
   @Override
-  public RowSet fetchResults(OperationHandle opHandle)
-      throws ServiceSQLException {
+  public RowSet fetchResults(OperationHandle opHandle) throws ServiceSQLException {
     return fetchResults(opHandle, Operation.DEFAULT_FETCH_ORIENTATION,
         Operation.DEFAULT_FETCH_MAX_ROWS, FetchType.QUERY_OUTPUT);
   }

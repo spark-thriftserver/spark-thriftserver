@@ -56,8 +56,7 @@ public class SessionManager extends CompositeService {
   public static final String SPARKRCFILE = ".sparkrc";
   private SQLConf conf;
   private SQLContext sqlContext;
-  private final Map<SessionHandle, ServiceSession> handleToSession =
-      new ConcurrentHashMap<SessionHandle, ServiceSession>();
+  private final Map<SessionHandle, ServiceSession> handleToSession = new ConcurrentHashMap<SessionHandle, ServiceSession>();
   private final OperationManager operationManager = new OperationManager();
   private ThreadPoolExecutor backgroundOperationPool;
   private boolean isOperationLogEnabled;
@@ -77,8 +76,8 @@ public class SessionManager extends CompositeService {
   @Override
   public synchronized void init(SQLConf conf) {
     this.conf = conf;
-    //Create operation log root directory, if operation logging is enabled
-    if (((boolean) conf.getConf(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_ENABLE()))) {
+    // Create operation log root directory, if operation logging is enabled
+    if (ServiceConf.loggingOperationEnabled(conf)) {
       initOperationLogRootDir();
     }
     createBackgroundOperationPool();
@@ -87,13 +86,11 @@ public class SessionManager extends CompositeService {
   }
 
   private void createBackgroundOperationPool() {
-    int poolSize = (int) conf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_THREADS());
+    int poolSize = ServiceConf.asyncExecThreads(conf);
     LOG.info("SparkThriftServer: Background operation thread pool size: " + poolSize);
-    int poolQueueSize =
-        (int) conf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_WAIT_QUEUE_SIZE());
+    int poolQueueSize = ServiceConf.asyncExecWaitQueueSize(conf);
     LOG.info("SparkThriftServer: Background operation thread wait queue size: " + poolQueueSize);
-    long keepAliveTime =
-       (long) conf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_KEEPALIVE_TIME());
+    long keepAliveTime = ServiceConf.asyncExecKeepaliveTime(conf);
     LOG.info("SparkThriftServer: Background operation thread keepalive time: "
         + keepAliveTime + " seconds");
 
@@ -106,15 +103,13 @@ public class SessionManager extends CompositeService {
         new ThreadFactoryWithName(threadPoolName));
     backgroundOperationPool.allowCoreThreadTimeOut(true);
 
-    checkInterval = (long) conf.getConf(ServiceConf.THRIFTSERVER_SESSION_CHECK_INTERVAL());
-    sessionTimeout = (long) conf.getConf(ServiceConf.THRIFTSERVER_IDLE_SESSION_TIMEOUT());
-    checkOperation =
-        (boolean) conf.getConf(ServiceConf.THRIFTSERVER_IDLE_SESSION_CHECK_OPERATION());
+    checkInterval = ServiceConf.sessionCheckInterval(conf);
+    sessionTimeout = ServiceConf.idleSessionTimeout(conf);
+    checkOperation = ServiceConf.idleSessionCheckOperation(conf);
   }
 
   private void initOperationLogRootDir() {
-    operationLogRootDir =
-      new File(conf.getConf(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_LOG_LOCATION()));
+    operationLogRootDir = new File(ServiceConf.loggingOperationLocation(conf));
     isOperationLogEnabled = true;
 
     if (operationLogRootDir.exists() && !operationLogRootDir.isDirectory()) {
@@ -192,7 +187,7 @@ public class SessionManager extends CompositeService {
     shutdown = true;
     if (backgroundOperationPool != null) {
       backgroundOperationPool.shutdown();
-      long timeout = (long) conf.getConf(ServiceConf.THRIFTSERVER_ASYNC_EXEC_SHUTDOWN_TIMEOUT());
+      long timeout = ServiceConf.asyncExecShutdownTimeout(conf);
       try {
         backgroundOperationPool.awaitTermination(timeout, TimeUnit.SECONDS);
       } catch (InterruptedException e) {

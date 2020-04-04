@@ -18,12 +18,14 @@
 package org.apache.spark.sql.thriftserver.cli.thrift;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.thrift.TProcessorFactory;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.server.TThreadPoolServer;
@@ -58,20 +60,16 @@ public class ThriftBinaryCLIService extends ThriftCLIService {
       TProcessorFactory processorFactory = sparkAuthFactory.getAuthProcFactory(this);
       TServerSocket serverSocket = null;
       List<String> sslVersionBlacklist = new ArrayList<String>();
-      for (String sslVersion : conf.getConf(ServiceConf.THRIFTSERVER_SSL_PROTOCOL_BLACKLIST())
-          .split(",")) {
-        sslVersionBlacklist.add(sslVersion);
-      }
-      if (!((boolean) conf.getConf(ServiceConf.THRIFTSERVER_USE_SSL()))) {
+      Collections.addAll(sslVersionBlacklist, ServiceConf.sslProtocolBlacklist(conf).split(","));
+      if (!ServiceConf.useSSL(conf)) {
         serverSocket = SparkAuthUtils.getServerSocket(sparkHost, portNum);
       } else {
-        String keyStorePath = conf.getConf(ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PATH()).trim();
+        String keyStorePath = ServiceConf.sslKeystorePath(conf).trim();
         if (keyStorePath.isEmpty()) {
           throw new IllegalArgumentException(ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PATH().key()
               + " Not configured for SSL connection");
         }
-        org.apache.hadoop.conf.Configuration hadoopConf =
-            sqlContext.sparkContext().hadoopConfiguration();
+        Configuration hadoopConf = sqlContext.sparkContext().hadoopConfiguration();
         char[] pass = hadoopConf.getPassword(
             ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PASSWORD().key()
                 .substring("spark.hadoop.".length()));
@@ -81,14 +79,9 @@ public class ThriftBinaryCLIService extends ThriftCLIService {
       }
 
       // Server args
-      int maxMessageSize =
-          (int) conf.getConf(ServiceConf.THRIFTSERVER_MAX_MESSAGE_SIZE());
-      int requestTimeout =
-          new Long((long) conf.getConf(ServiceConf.THRIFTSERVER_THRIFT_LOGIN_TIMEOUT()))
-              .intValue();
-      int beBackoffSlotLength =
-          new Long(((long) conf.getConf(
-              ServiceConf.THRIFTSERVER_THRIFT_LOGIN_BEBACKOFF_SLOT_LENGTH()))).intValue();
+      int maxMessageSize = ServiceConf.maxMessageSize(conf);
+      int requestTimeout = ServiceConf.thriftLoginTimeout(conf);
+      int beBackoffSlotLength = ServiceConf.thriftLoginBackoffSlotLength(conf);
       TThreadPoolServer.Args sargs = new TThreadPoolServer.Args(serverSocket)
           .processorFactory(processorFactory).transportFactory(transportFactory)
           .protocolFactory(new TBinaryProtocol.Factory())

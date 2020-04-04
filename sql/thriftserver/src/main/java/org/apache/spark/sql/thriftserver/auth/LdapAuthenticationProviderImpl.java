@@ -34,9 +34,9 @@ public class LdapAuthenticationProviderImpl implements PasswdAuthenticationProvi
   private final String ldapDomain;
 
   LdapAuthenticationProviderImpl(SQLConf conf) {
-    ldapURL = conf.getConf(ServiceConf.THRIFTSERVER_PLAIN_LDAP_URL());
-    baseDN = conf.getConf(ServiceConf.THRIFTSERVER_PLAIN_LDAP_BASEDN());
-    ldapDomain = conf.getConf(ServiceConf.THRIFTSERVER_PLAIN_LDAP_DOMAIN());
+    ldapURL = ServiceConf.ldapUrl(conf);
+    baseDN = ServiceConf.ldapBaseDN(conf);
+    ldapDomain = ServiceConf.ldapDomain(conf);
   }
 
   @Override

@@ -22,6 +22,7 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Shell;
 import org.apache.thrift.TProcessor;
@@ -75,13 +76,12 @@ public class ThriftHttpCLIService extends ThriftCLIService {
       // Connector configs
 
       ConnectionFactory[] connectionFactories;
-      boolean useSsl = (boolean) conf.getConf(ServiceConf.THRIFTSERVER_USE_SSL());
+      boolean useSsl = ServiceConf.useSSL(conf);
       String schemeName = useSsl ? "https" : "http";
       // Change connector if SSL is used
       if (useSsl) {
-        String keyStorePath = conf.getConf(ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PATH());
-        org.apache.hadoop.conf.Configuration hadoopConf =
-            sqlContext.sparkContext().hadoopConfiguration();
+        String keyStorePath = ServiceConf.sslKeystorePath(conf);
+        Configuration hadoopConf = sqlContext.sparkContext().hadoopConfiguration();
         char[] pass = hadoopConf.getPassword(
             ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PASSWORD().key()
                 .substring("spark.hadoop.".length()));
@@ -91,8 +91,7 @@ public class ThriftHttpCLIService extends ThriftCLIService {
               + " Not configured for SSL connection");
         }
         SslContextFactory sslContextFactory = new SslContextFactory.Server();
-        String[] excludedProtocols =
-            conf.getConf(ServiceConf.THRIFTSERVER_SSL_PROTOCOL_BLACKLIST()).split(",");
+        String[] excludedProtocols = ServiceConf.sslProtocolBlacklist(conf).split(",");
         LOG.info("HTTP Server SSL: adding excluded protocols: " +
              Arrays.toString(excludedProtocols));
         sslContextFactory.addExcludeProtocols(excludedProtocols);
@@ -118,10 +117,7 @@ public class ThriftHttpCLIService extends ThriftCLIService {
       connector.setPort(portNum);
       // Linux:yes, Windows:no
       connector.setReuseAddress(!Shell.WINDOWS);
-      int maxIdleTime =
-          new Long(((long) conf.getConf(ServiceConf
-               .THRIFTSERVER_THRIFT_HTTP_MAX_IDLE_TIME()))).intValue();
-      connector.setIdleTimeout(maxIdleTime);
+      connector.setIdleTimeout(ServiceConf.thriftHttpMaxIdleTime(conf));
 
       httpServer.addConnector(connector);
 
@@ -134,7 +130,7 @@ public class ThriftHttpCLIService extends ThriftCLIService {
       UserGroupInformation serviceUGI = cliService.getServiceUGI();
       // UGI for the http/_HOST (SPNego) principal
       UserGroupInformation httpUGI = cliService.getHttpUGI();
-      String authType = conf.getConf(ServiceConf.THRIFTSERVER_AUTHENTICATION());
+      String authType = ServiceConf.authentication(conf);
       TServlet thriftHttpServlet = new ThriftHttpServlet(processor, protocolFactory, authType,
           serviceUGI, httpUGI, sparkAuthFactory, conf);
 
@@ -142,7 +138,7 @@ public class ThriftHttpCLIService extends ThriftCLIService {
       final ServletContextHandler context = new ServletContextHandler(
           ServletContextHandler.SESSIONS);
       context.setContextPath("/");
-      String httpPath = getHttpPath(conf.getConf(ServiceConf.THRIFTSERVER_HTTP_PATH()));
+      String httpPath = getHttpPath(ServiceConf.httpPath(conf));
       httpServer.setHandler(context);
       context.addServlet(new ServletHolder(thriftHttpServlet), httpPath);
 
@@ -155,9 +151,8 @@ public class ThriftHttpCLIService extends ThriftCLIService {
       LOG.info(msg);
       httpServer.join();
     } catch (Throwable t) {
-      LOG.error(
-          "Error starting SparkThriftServer: could not start "
-              + ThriftHttpCLIService.class.getSimpleName(), t);
+      LOG.error("Error starting ThriftServer: could not start "
+          + ThriftHttpCLIService.class.getSimpleName(), t);
       System.exit(-1);
     }
   }

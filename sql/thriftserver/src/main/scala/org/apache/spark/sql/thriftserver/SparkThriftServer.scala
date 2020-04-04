@@ -68,7 +68,7 @@ object SparkThriftServer extends Logging {
   def isHTTPTransportMode(conf: SQLConf): Boolean = {
     Option(System.getenv("SPARK_THRIFTSERVER_TRANSPORT_MODE"))
       .orElse(Option(System.getenv("HIVE_SERVER2_TRANSPORT_MODE")))
-      .orElse(Option(conf.getConf(ServiceConf.THRIFTSERVER_TRANSPORT_MODE)))
+      .orElse(Option(ServiceConf.transportMode(conf)))
       .forall(_.equalsIgnoreCase("http"))
   }
 

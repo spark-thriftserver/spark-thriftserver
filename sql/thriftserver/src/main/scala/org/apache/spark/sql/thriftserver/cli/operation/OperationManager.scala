@@ -41,8 +41,8 @@ class OperationManager
   val sessionToActivePool = new ConcurrentHashMap[SessionHandle, String]()
 
   override def init(conf: SQLConf): Unit = synchronized {
-    if (conf.getConf(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_ENABLE)) {
-      initOperationLogCapture(conf.getConf(ServiceConf.THRIFTSERVER_LOGGING_OPERATION_LEVEL))
+    if (ServiceConf.loggingOperationEnabled(conf)) {
+      initOperationLogCapture(ServiceConf.loggingOperationLevel(conf))
     } else {
       logDebug("Operation level logging is turned off")
     }
@@ -72,7 +72,7 @@ class OperationManager
       async: Boolean,
       queryTimeOut: Long): SparkExecuteStatementOperation = synchronized {
     val conf = parentSession.getSQLContext.sessionState.conf
-    val runInBackground = async && conf.getConf(ServiceConf.THRIFTSERVER_ASYNC)
+    val runInBackground = async && ServiceConf.isAsync(conf)
     val operation = new SparkExecuteStatementOperation(parentSession, statement, confOverlay,
       runInBackground)(sessionToActivePool)
     handleToOperation.put(operation.getHandle, operation)

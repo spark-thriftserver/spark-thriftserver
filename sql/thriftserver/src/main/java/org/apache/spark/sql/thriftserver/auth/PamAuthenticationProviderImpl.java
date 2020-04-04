@@ -29,7 +29,7 @@ public class PamAuthenticationProviderImpl implements PasswdAuthenticationProvid
   private final String pamServiceNames;
 
   PamAuthenticationProviderImpl(SQLConf conf) {
-    pamServiceNames = conf.getConf(ServiceConf.THRIFTSERVER_PAM_SERVICES());
+    pamServiceNames = ServiceConf.pamServices(conf);
   }
 
   @Override
