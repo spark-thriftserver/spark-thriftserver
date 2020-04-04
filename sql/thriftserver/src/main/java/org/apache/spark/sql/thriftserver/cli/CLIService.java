@@ -205,21 +205,7 @@ public class CLIService extends CompositeService implements ICLIService {
   @Override
   public GetInfoValue getInfo(SessionHandle sessionHandle, GetInfoType getInfoType)
       throws ServiceSQLException {
-    GetInfoValue infoValue = null;
-    switch (getInfoType) {
-      case CLI_SERVER_NAME:
-        infoValue = new GetInfoValue("Spark SQL");
-        break;
-      case CLI_DBMS_NAME:
-        infoValue = new GetInfoValue("Spark SQL");
-        break;
-      case CLI_DBMS_VER:
-        infoValue = new GetInfoValue(sqlContext.sparkContext().version());
-        break;
-      default:
-        infoValue = sessionManager.getSession(sessionHandle)
-            .getInfo(getInfoType);
-    }
+    GetInfoValue infoValue = sessionManager.getSession(sessionHandle).getInfo(getInfoType);
     LOG.debug(sessionHandle + ": getInfo()");
     return infoValue;
   }

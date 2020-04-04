@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
 import org.apache.spark.sql.thriftserver.cli.*;
 import org.apache.spark.sql.thriftserver.cli.operation.*;
@@ -297,11 +298,28 @@ public class ServiceSessionImpl implements ServiceSession {
   }
 
   @Override
-  public GetInfoValue getInfo(GetInfoType getInfoType)
-      throws ServiceSQLException {
+  public GetInfoValue getInfo(GetInfoType getInfoType) throws ServiceSQLException {
     acquire(true);
     try {
-      throw new ServiceSQLException("Unrecognized GetInfoType value: " + getInfoType.toString());
+      switch (getInfoType) {
+        case CLI_SERVER_NAME:
+          return new GetInfoValue("Spark SQL");
+        case CLI_DBMS_NAME:
+          return new GetInfoValue("Spark SQL");
+        case CLI_DBMS_VER:
+          return new GetInfoValue(sqlContext.sparkContext().version());
+        case CLI_MAX_COLUMN_NAME_LEN:
+          return new GetInfoValue(128);
+        case CLI_MAX_SCHEMA_NAME_LEN:
+          return new GetInfoValue(128);
+        case CLI_MAX_TABLE_NAME_LEN:
+          return new GetInfoValue(128);
+        case CLI_ODBC_KEYWORDS:
+          return new GetInfoValue(String.join(",", ODBC_KEYWORDS));
+        case CLI_TXN_CAPABLE:
+        default:
+          throw new ServiceSQLException("Unrecognized GetInfoType value: " + getInfoType);
+      }
     } finally {
       release(true);
     }
@@ -716,4 +734,35 @@ public class ServiceSessionImpl implements ServiceSession {
     acquire(true);
     throw new ServiceSQLException("GetCrossReference is not supported yet");
   }
+
+  // From https://docs.microsoft.com/en-us/sql/t-sql/language-elements/reserved-keywords-transact-sql#odbc-reserved-keywords
+  private static final Set<String> ODBC_KEYWORDS = Collections.unmodifiableSet(new HashSet<>(
+    Lists.newArrayList("ABSOLUTE", "ACTION", "ADA", "ADD", "ALL", "ALLOCATE", "ALTER", "AND",
+      "ANY", "ARE", "AS", "ASC", "ASSERTION", "AT", "AUTHORIZATION", "AVG", "BEGIN", "BETWEEN",
+      "BIT_LENGTH", "BIT", "BOTH", "BY", "CASCADE", "CASCADED", "CASE", "CAST", "CATALOG",
+      "CHAR_LENGTH", "CHAR", "CHARACTER_LENGTH", "CHARACTER", "CHECK", "CLOSE", "COALESCE",
+      "COLLATE", "COLLATION", "COLUMN", "COMMIT", "CONNECT", "CONNECTION", "CONSTRAINT",
+      "CONSTRAINTS", "CONTINUE", "CONVERT", "CORRESPONDING", "COUNT", "CREATE", "CROSS",
+      "CURRENT_DATE", "CURRENT_TIME", "CURRENT_TIMESTAMP", "CURRENT_USER", "CURRENT", "CURSOR",
+      "DATE", "DAY", "DEALLOCATE", "DEC", "DECIMAL", "DECLARE", "DEFAULT", "DEFERRABLE",
+      "DEFERRED", "DELETE", "DESC", "DESCRIBE", "DESCRIPTOR", "DIAGNOSTICS", "DISCONNECT",
+      "DISTINCT", "DOMAIN", "DOUBLE", "DROP", "ELSE", "END", "ESCAPE", "EXCEPT", "EXCEPTION",
+      "EXEC", "EXECUTE", "EXISTS", "EXTERNAL", "EXTRACT", "FALSE", "FETCH", "FIRST", "FLOAT",
+      "FOR", "FOREIGN", "FORTRAN", "FOUND", "FROM", "FULL", "GET", "GLOBAL", "GO", "GOTO", "GRANT",
+      "GROUP", "HAVING", "HOUR", "IDENTITY", "IMMEDIATE", "IN", "INCLUDE", "INDEX", "INDICATOR",
+      "INITIALLY", "INNER", "INPUT", "INSENSITIVE", "INSERT", "INT", "INTEGER", "INTERSECT",
+      "INTERVAL", "INTO", "IS", "ISOLATION", "JOIN", "KEY", "LANGUAGE", "LAST", "LEADING", "LEFT",
+      "LEVEL", "LIKE", "LOCAL", "LOWER", "MATCH", "MAX", "MIN", "MINUTE", "MODULE", "MONTH",
+      "NAMES", "NATIONAL", "NATURAL", "NCHAR", "NEXT", "NO", "NONE", "NOT", "NULL", "NULLIF",
+      "NUMERIC", "OCTET_LENGTH", "OF", "ON", "ONLY", "OPEN", "OPTION", "OR", "ORDER", "OUTER",
+      "OUTPUT", "OVERLAPS", "PAD", "PARTIAL", "PASCAL", "POSITION", "PRECISION", "PREPARE",
+      "PRESERVE", "PRIMARY", "PRIOR", "PRIVILEGES", "PROCEDURE", "PUBLIC", "READ", "REAL",
+      "REFERENCES", "RELATIVE", "RESTRICT", "REVOKE", "RIGHT", "ROLLBACK", "ROWS", "SCHEMA",
+      "SCROLL", "SECOND", "SECTION", "SELECT", "SESSION_USER", "SESSION", "SET", "SIZE",
+      "SMALLINT", "SOME", "SPACE", "SQL", "SQLCA", "SQLCODE", "SQLERROR", "SQLSTATE", "SQLWARNING",
+      "SUBSTRING", "SUM", "SYSTEM_USER", "TABLE", "TEMPORARY", "THEN", "TIME", "TIMESTAMP",
+      "TIMEZONE_HOUR", "TIMEZONE_MINUTE", "TO", "TRAILING", "TRANSACTION", "TRANSLATE",
+      "TRANSLATION", "TRIM", "TRUE", "UNION", "UNIQUE", "UNKNOWN", "UPDATE", "UPPER", "USAGE",
+      "USER", "USING", "VALUE", "VALUES", "VARCHAR", "VARYING", "VIEW", "WHEN", "WHENEVER",
+      "WHERE", "WITH", "WORK", "WRITE", "YEAR", "ZONE")));
 }
