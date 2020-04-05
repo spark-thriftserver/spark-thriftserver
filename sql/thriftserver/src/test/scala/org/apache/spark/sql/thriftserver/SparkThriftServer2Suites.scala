@@ -973,7 +973,7 @@ abstract class SparkThriftServerTest extends SparkFunSuite with BeforeAndAfterAl
 
       tempLog4jConf
     }
-
+    val metastore = s"jdbc:derby:;databaseName=$metastorePath/metastore_db;create=true"
     s"""$startScript
        |  --master local
        |  --conf ${StaticSQLConf.WAREHOUSE_PATH}=$warehousePath
@@ -982,6 +982,7 @@ abstract class SparkThriftServerTest extends SparkFunSuite with BeforeAndAfterAl
        |  --conf ${ServiceConf.THRIFTSERVER_LOGGING_OPERATION_LOG_LOCATION.key}=$operationLogPath
        |  --conf $portConf=$port
        |  --driver-java-options -Dderby.system.home=$metastorePath
+       |  --conf spark.hadoop.javax.jdo.option.ConnectionURL=$metastore
        |  --driver-class-path $driverClassPath
        |  --driver-java-options -Dlog4j.debug
        |  --conf spark.ui.enabled=false
