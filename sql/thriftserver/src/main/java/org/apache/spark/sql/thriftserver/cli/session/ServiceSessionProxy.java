@@ -51,8 +51,7 @@ public class ServiceSessionProxy implements InvocationHandler {
   }
 
   @Override
-  public Object invoke(Object arg0, final Method method, final Object[] args)
-      throws Throwable {
+  public Object invoke(Object arg0, final Method method, final Object[] args) throws Throwable {
     try {
       if (method.getDeclaringClass() == ServiceSessionBase.class) {
         return invoke(method, args);

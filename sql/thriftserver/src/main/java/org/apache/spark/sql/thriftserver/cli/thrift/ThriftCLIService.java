@@ -454,9 +454,9 @@ public abstract class ThriftCLIService extends AbstractService
   public TGetInfoResp GetInfo(TGetInfoReq req) throws TException {
     TGetInfoResp resp = new TGetInfoResp();
     try {
-      GetInfoValue getInfoValue =
-          cliService.getInfo(new SessionHandle(req.getSessionHandle()),
-              GetInfoType.getGetInfoType(req.getInfoType()));
+      SessionHandle sessionHandle = new SessionHandle(req.getSessionHandle());
+      GetInfoType infoType = GetInfoType.getGetInfoType(req.getInfoType());
+      GetInfoValue getInfoValue = cliService.getInfo(sessionHandle, infoType);
       resp.setInfoValue(getInfoValue.toTGetInfoValue());
       resp.setStatus(OK_STATUS);
     } catch (Exception e) {

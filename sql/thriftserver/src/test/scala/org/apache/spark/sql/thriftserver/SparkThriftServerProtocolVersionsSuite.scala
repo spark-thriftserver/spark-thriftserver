@@ -85,12 +85,10 @@ class SparkThriftServerProtocolVersionsSuite extends SparkThriftJdbcTest {
       val openResp = client.OpenSession(clientProtocol)
       val sessHandle = openResp.getSessionHandle
 
-      val dbVersionReq =
-        new TGetInfoReq(sessHandle, GetInfoType.CLI_DBMS_VER.toTGetInfoType)
+      val dbVersionReq = new TGetInfoReq(sessHandle, GetInfoType.CLI_DBMS_VER.toTGetInfoType)
       val dbVersion = client.GetInfo(dbVersionReq).getInfoValue.getStringValue
 
-      val dbNameReq =
-        new TGetInfoReq(sessHandle, GetInfoType.CLI_DBMS_NAME.toTGetInfoType)
+      val dbNameReq = new TGetInfoReq(sessHandle, GetInfoType.CLI_DBMS_NAME.toTGetInfoType)
       val dbName = client.GetInfo(dbNameReq).getInfoValue.getStringValue
 
       assert(dbVersion === org.apache.spark.SPARK_VERSION)
