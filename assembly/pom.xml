@@ -208,6 +208,11 @@
         </dependency>
         <dependency>
           <groupId>${hive.group}</groupId>
+          <artifactId>hive-metastore</artifactId>
+          <scope>${hive.serde.scope}</scope>
+        </dependency>
+        <dependency>
+          <groupId>${hive.group}</groupId>
           <artifactId>hive-service</artifactId>
           <scope>${hive.serde.scope}</scope>
         </dependency>
