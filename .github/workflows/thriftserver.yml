@@ -1,0 +1,36 @@
+name: Test new thrift server module
+
+on:
+  push:
+    branches:
+      - thriftserver
+  pull_request:
+    branches:
+      - thriftserver
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java: [ '1.8', '11' ]
+        hadoop: [ 'hadoop-2.7', 'hadoop-3.2' ]
+        hive: [ 'hive-1.2', 'hive-2.3' ]
+        exclude:
+          - java: '11'
+            hive: 'hive-1.2'
+          - hadoop: 'hadoop-3.2'
+            hive: 'hive-1.2'
+    name: Test Spark - JDK${{ matrix.java }}/${{ matrix.hadoop }}/${{ matrix.hive }}
+
+    steps:
+      - uses: actions/checkout@master
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ matrix.java }}
+      - name: Test thrift server with Sbt
+        run: |
+          ./build/sbt "thriftserver/test-only" -Pspark-thriftserver -P${{ matrix.hive }} -P${{ matrix.hadoop }} -Djava.version=${{ matrix.java }}
