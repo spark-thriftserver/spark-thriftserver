@@ -926,8 +926,7 @@ abstract class SparkThriftServerTest extends SparkFunSuite with BeforeAndAfterAl
   private val CLASS_NAME = SparkThriftServer.getClass.getCanonicalName.stripSuffix("$")
   private val LOG_FILE_MARK = s"starting $CLASS_NAME, logging to "
 
-  protected val startScript = "../../sbin/start-thriftserver.sh".split("/").mkString(File.separator)
-  protected val stopScript = "../../sbin/stop-thriftserver.sh".split("/").mkString(File.separator)
+  protected val script = "../../sbin/spark-daemon.sh".split("/").mkString(File.separator)
 
   private var listeningPort: Int = _
   protected def serverPort: Int = listeningPort
@@ -974,7 +973,8 @@ abstract class SparkThriftServerTest extends SparkFunSuite with BeforeAndAfterAl
       tempLog4jConf
     }
     val metastore = s"jdbc:derby:;databaseName=$metastorePath/metastore_db;create=true"
-    s"""$startScript
+    s"""$script submit $CLASS_NAME 1
+       |  --name "${getClass.getSimpleName}"
        |  --master local
        |  --conf ${StaticSQLConf.WAREHOUSE_PATH}=$warehousePath
        |  --conf ${ServiceConf.THRIFTSERVER_THRIFT_BIND_HOST.key}=localhost
@@ -1083,7 +1083,7 @@ abstract class SparkThriftServerTest extends SparkFunSuite with BeforeAndAfterAl
   private def stopThriftServer(): Unit = {
     // The `spark-daemon.sh' script uses kill, which is not synchronous, have to wait for a while.
     SparkUtils.executeAndGetOutput(
-      command = Seq(stopScript),
+      command = Seq(script, "stop", CLASS_NAME, "1"),
       extraEnvironment = Map("SPARK_PID_DIR" -> pidDir.getCanonicalPath))
     Thread.sleep(3.seconds.toMillis)
 

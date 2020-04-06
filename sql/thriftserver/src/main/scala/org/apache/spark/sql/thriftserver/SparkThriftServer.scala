@@ -47,10 +47,10 @@ object SparkThriftServer extends Logging {
 
   /**
    * :: DeveloperApi ::
-   * Starts a new thrift server with the given context.
+   * Starts a new thrift server with the given Spark session.
    */
   @DeveloperApi
-  def startWithContext(spark: SparkSession): SparkThriftServer = {
+  def startWithSparkSession(spark: SparkSession): SparkThriftServer = {
     val server = new SparkThriftServer(spark)
 
     server.init(spark.sessionState.conf)

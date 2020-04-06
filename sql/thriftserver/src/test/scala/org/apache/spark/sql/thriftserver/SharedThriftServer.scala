@@ -73,7 +73,7 @@ trait SharedThriftServer extends SharedSparkSession {
   private def startThriftServer(port: Int, attempt: Int): Unit = {
     logInfo(s"Trying to start SparkThriftServer: port=$port, attempt=$attempt")
     spark.sparkContext.conf.set(ServiceConf.THRIFTSERVER_THRIFT_PORT, port)
-    sparkServer = SparkThriftServer.startWithContext(spark.newSession())
+    sparkServer = SparkThriftServer.startWithSparkSession(spark.newSession())
 
     // Wait for thrift server to be ready to serve the query, via executing simple query
     // till the query succeeds. See SPARK-30345 for more details.
