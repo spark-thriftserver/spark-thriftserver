@@ -32,7 +32,7 @@ import org.apache.thrift.server.TThreadPoolServer;
 import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TTransportFactory;
 
-import org.apache.spark.sql.SQLContext;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.thriftserver.auth.SparkAuthFactory;
 import org.apache.spark.sql.thriftserver.auth.SparkAuthUtils;
 import org.apache.spark.sql.thriftserver.cli.CLIService;
@@ -41,8 +41,8 @@ import org.apache.spark.sql.thriftserver.server.ThreadFactoryWithName;
 
 public class ThriftBinaryCLIService extends ThriftCLIService {
 
-  public ThriftBinaryCLIService(CLIService cliService, SQLContext sqlContext) {
-    super(cliService, sqlContext, ThriftBinaryCLIService.class.getSimpleName());
+  public ThriftBinaryCLIService(CLIService cliService, SparkSession spark) {
+    super(cliService, spark, ThriftBinaryCLIService.class.getSimpleName());
   }
 
   @Override
@@ -55,7 +55,7 @@ public class ThriftBinaryCLIService extends ThriftCLIService {
           new ThreadFactoryWithName(threadPoolName));
 
       // Thrift configs
-      sparkAuthFactory = new SparkAuthFactory(conf);
+      sparkAuthFactory = new SparkAuthFactory(spark);
       TTransportFactory transportFactory = sparkAuthFactory.getAuthTransFactory();
       TProcessorFactory processorFactory = sparkAuthFactory.getAuthProcFactory(this);
       TServerSocket serverSocket = null;
@@ -69,7 +69,7 @@ public class ThriftBinaryCLIService extends ThriftCLIService {
           throw new IllegalArgumentException(ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PATH().key()
               + " Not configured for SSL connection");
         }
-        Configuration hadoopConf = sqlContext.sparkContext().hadoopConfiguration();
+        Configuration hadoopConf = spark.sparkContext().hadoopConfiguration();
         char[] pass = hadoopConf.getPassword(
             ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PASSWORD().key()
                 .substring("spark.hadoop.".length()));

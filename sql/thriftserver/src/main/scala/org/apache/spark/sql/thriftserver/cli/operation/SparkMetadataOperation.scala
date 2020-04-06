@@ -18,7 +18,7 @@
 package org.apache.spark.sql.thriftserver.cli.operation
 
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.catalog.CatalogTableType
 import org.apache.spark.sql.catalyst.catalog.CatalogTableType.{EXTERNAL, MANAGED, VIEW}
 import org.apache.spark.sql.thriftserver.cli._
@@ -33,7 +33,7 @@ private[thriftserver] abstract class SparkMetadataOperation(
   protected var RESULT_SET_SCHEMA: TableSchema = null
   protected val SEARCH_STRING_ESCAPE: Char = '\\'
 
-  protected val sqlContext: SQLContext = session.getSQLContext
+  protected val spark: SparkSession = session.getSparkSession
   setHasResultSet(true)
 
   @throws[ServiceSQLException]

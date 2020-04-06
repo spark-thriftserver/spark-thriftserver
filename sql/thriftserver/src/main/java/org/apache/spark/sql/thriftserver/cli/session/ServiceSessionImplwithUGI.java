@@ -25,7 +25,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.spark.sql.SQLContext;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.thriftserver.auth.SparkAuthFactory;
 import org.apache.spark.sql.thriftserver.cli.ServiceSQLException;
 import org.apache.hive.service.rpc.thrift.TProtocolVersion;
@@ -46,9 +46,9 @@ public class ServiceSessionImplwithUGI extends ServiceSessionImpl {
       TProtocolVersion protocol,
       String username,
       String password,
-      SQLContext sqlContext,
+      SparkSession spark,
       String ipAddress) throws ServiceSQLException {
-    super(protocol, username, password, sqlContext, ipAddress);
+    super(protocol, username, password, spark, ipAddress);
     setSessionUGI(username);
   }
 

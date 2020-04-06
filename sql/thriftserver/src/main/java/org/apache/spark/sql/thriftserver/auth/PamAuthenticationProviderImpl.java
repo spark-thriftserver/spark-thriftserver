@@ -21,15 +21,15 @@ import javax.security.sasl.AuthenticationException;
 
 import net.sf.jpam.Pam;
 
-import org.apache.spark.sql.internal.SQLConf;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.thriftserver.internal.ServiceConf;
 
 public class PamAuthenticationProviderImpl implements PasswdAuthenticationProvider {
 
   private final String pamServiceNames;
 
-  PamAuthenticationProviderImpl(SQLConf conf) {
-    pamServiceNames = ServiceConf.pamServices(conf);
+  PamAuthenticationProviderImpl(SparkSession spark) {
+    pamServiceNames = ServiceConf.pamServices(spark.sessionState().conf());
   }
 
   @Override

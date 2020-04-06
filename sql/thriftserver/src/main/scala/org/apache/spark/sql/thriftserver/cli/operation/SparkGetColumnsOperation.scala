@@ -48,7 +48,7 @@ private[thriftserver] class SparkGetColumnsOperation(
   extends SparkMetadataOperation(parentSession, OperationType.GET_COLUMNS)
     with Logging {
 
-  val catalog: SessionCatalog = sqlContext.sessionState.catalog
+  val catalog: SessionCatalog = spark.sessionState.catalog
 
   private var statementId: String = _
 
@@ -140,7 +140,7 @@ private[thriftserver] class SparkGetColumnsOperation(
 
     setState(OperationState.RUNNING)
     // Always use the latest class loader provided by executionHive's state.
-    val executionHiveClassLoader = sqlContext.sharedState.jarClassLoader
+    val executionHiveClassLoader = spark.sharedState.jarClassLoader
     Thread.currentThread().setContextClassLoader(executionHiveClassLoader)
 
     SparkThriftServer.listener.onStatementStart(

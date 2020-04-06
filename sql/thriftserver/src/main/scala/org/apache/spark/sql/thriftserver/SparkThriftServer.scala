@@ -50,15 +50,15 @@ object SparkThriftServer extends Logging {
    * Starts a new thrift server with the given context.
    */
   @DeveloperApi
-  def startWithContext(sqlContext: SQLContext): SparkThriftServer = {
-    val server = new SparkThriftServer(sqlContext)
+  def startWithContext(spark: SparkSession): SparkThriftServer = {
+    val server = new SparkThriftServer(spark)
 
-    server.init(sqlContext.conf)
+    server.init(spark.sessionState.conf)
     server.start()
-    listener = new SparkThriftServerListener(server, sqlContext.conf)
-    sqlContext.sparkContext.addSparkListener(listener)
-    uiTab = if (sqlContext.sparkContext.getConf.get(UI_ENABLED)) {
-      Some(new ThriftServerTab(sqlContext.sparkContext))
+    listener = new SparkThriftServerListener(server, spark.sessionState.conf)
+    spark.sparkContext.addSparkListener(listener)
+    uiTab = if (spark.sparkContext.getConf.get(UI_ENABLED)) {
+      Some(new ThriftServerTab(spark.sparkContext))
     } else {
       None
     }
@@ -83,7 +83,7 @@ object SparkThriftServer extends Logging {
     }
 
     try {
-      val server = new SparkThriftServer(spark.sqlContext)
+      val server = new SparkThriftServer(spark)
       server.init(spark.sqlContext.conf)
       server.start()
       logInfo("SparkThriftServer started")
@@ -304,7 +304,7 @@ object SparkThriftServer extends Logging {
   }
 }
 
-private[spark] class SparkThriftServer(sqlContext: SQLContext)
+private[spark] class SparkThriftServer(spark: SparkSession)
   extends CompositeService(classOf[SparkThriftServer].getCanonicalName) with Logging {
 
   import SparkThriftServer._
@@ -317,12 +317,12 @@ private[spark] class SparkThriftServer(sqlContext: SQLContext)
   private var thriftCLIService: ThriftCLIService = _
 
   override def init(conf: SQLConf): Unit = {
-    cliService = new CLIService(this, sqlContext)
+    cliService = new CLIService(this, spark)
     addService(cliService)
     if (isHTTPTransportMode(conf)) {
-      thriftCLIService = new ThriftHttpCLIService(cliService, sqlContext)
+      thriftCLIService = new ThriftHttpCLIService(cliService, spark)
     } else {
-      thriftCLIService = new ThriftBinaryCLIService(cliService, sqlContext)
+      thriftCLIService = new ThriftBinaryCLIService(cliService, spark)
     }
     addService(thriftCLIService)
     super.init(conf)

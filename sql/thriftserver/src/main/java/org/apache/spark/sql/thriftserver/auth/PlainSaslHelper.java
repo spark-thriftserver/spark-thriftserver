@@ -37,6 +37,7 @@ import org.apache.thrift.transport.TSaslServerTransport;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportFactory;
 
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.thriftserver.auth.AuthenticationProviderFactory.AuthMethods;
 import org.apache.spark.sql.thriftserver.cli.thrift.ThriftCLIService;
 import org.apache.hive.service.rpc.thrift.TCLIService.Iface;
@@ -52,12 +53,12 @@ public final class PlainSaslHelper {
     Security.addProvider(new PlainSaslServer.SaslPlainProvider());
   }
 
-  public static TTransportFactory getPlainTransportFactory(String authTypeStr)
-    throws LoginException {
+  public static TTransportFactory getPlainTransportFactory(
+      String authTypeStr, SparkSession spark) throws LoginException {
     TSaslServerTransport.Factory saslFactory = new TSaslServerTransport.Factory();
     try {
       saslFactory.addServerDefinition("PLAIN", authTypeStr, null, new HashMap<String, String>(),
-        new PlainServerCallbackHandler(authTypeStr));
+        new PlainServerCallbackHandler(authTypeStr, spark));
     } catch (AuthenticationException e) {
       throw new LoginException("Error setting callback handler" + e);
     }
@@ -77,9 +78,12 @@ public final class PlainSaslHelper {
   private static final class PlainServerCallbackHandler implements CallbackHandler {
 
     private final AuthMethods authMethod;
+    private final SparkSession spark;
 
-    PlainServerCallbackHandler(String authMethodStr) throws AuthenticationException {
+    PlainServerCallbackHandler(
+        String authMethodStr, SparkSession spark) throws AuthenticationException {
       authMethod = AuthMethods.getValidAuthMethod(authMethodStr);
+      this.spark = spark;
     }
 
     @Override
@@ -102,7 +106,7 @@ public final class PlainSaslHelper {
         }
       }
       PasswdAuthenticationProvider provider =
-        AuthenticationProviderFactory.getAuthenticationProvider(authMethod);
+        AuthenticationProviderFactory.getAuthenticationProvider(authMethod, spark);
       provider.authenticate(username, password);
       if (ac != null) {
         ac.setAuthorized(true);

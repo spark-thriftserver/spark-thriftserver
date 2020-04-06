@@ -35,7 +35,7 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.spark.sql.SQLContext;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.thriftserver.CompositeService;
 import org.apache.spark.sql.thriftserver.SparkThriftServer;
@@ -55,7 +55,7 @@ public class SessionManager extends CompositeService {
   private static final Logger LOG = LoggerFactory.getLogger(SessionManager.class);
   public static final String SPARKRCFILE = ".sparkrc";
   private SQLConf conf;
-  private SQLContext sqlContext;
+  private SparkSession spark;
   private final Map<SessionHandle, ServiceSession> handleToSession = new ConcurrentHashMap<SessionHandle, ServiceSession>();
   private final OperationManager operationManager = new OperationManager();
   private ThreadPoolExecutor backgroundOperationPool;
@@ -68,9 +68,9 @@ public class SessionManager extends CompositeService {
 
   private volatile boolean shutdown;
 
-  public SessionManager(SQLContext sqlContext) {
+  public SessionManager(SparkSession spark) {
     super(SessionManager.class.getSimpleName());
-    this.sqlContext = sqlContext;
+    this.spark = spark;
   }
 
   @Override
@@ -228,22 +228,22 @@ public class SessionManager extends CompositeService {
       String ipAddress, Map<String, String> sessionConf, boolean withImpersonation)
       throws ServiceSQLException {
     ServiceSession session;
-    SQLContext ctx = null;
-    if(sqlContext.conf().hiveThriftServerSingleSession()) {
-      ctx = sqlContext;
+    SparkSession ss = null;
+    if(spark.sessionState().conf().hiveThriftServerSingleSession()) {
+      ss = spark;
     } else {
-      ctx = sqlContext.newSession();
+      ss = spark.newSession();
     }
     // If doAs is set to true for SparkThriftServer,
     // we will create a proxy object for the session impl.
     // Within the proxy object, we wrap the method call in a UserGroupInformation#doAs
     if (withImpersonation) {
       ServiceSessionImplwithUGI sessionWithUGI = new ServiceSessionImplwithUGI(protocol, username,
-          password, ctx, ipAddress);
+          password, ss, ipAddress);
       session = ServiceSessionProxy.getProxy(sessionWithUGI, sessionWithUGI.getSessionUgi());
       sessionWithUGI.setProxySession(session);
     } else {
-      session = new ServiceSessionImpl(protocol, username, password, ctx, ipAddress);
+      session = new ServiceSessionImpl(protocol, username, password, ss, ipAddress);
     }
     session.setSessionManager(this);
     session.setOperationManager(operationManager);
@@ -265,7 +265,7 @@ public class SessionManager extends CompositeService {
         session.getSessionHandle().getSessionId().toString(),
         session.getUserName());
     if (sessionConf != null && sessionConf.containsKey("use:database")) {
-      session.getSQLContext().sql("use " + sessionConf.get("use:database"));
+      session.getSparkSession().sql("use " + sessionConf.get("use:database"));
     }
     handleToSession.put(session.getSessionHandle(), session);
     return session.getSessionHandle();
@@ -273,10 +273,10 @@ public class SessionManager extends CompositeService {
 
   public void closeSession(SessionHandle sessionHandle) throws ServiceSQLException {
     SparkThriftServer.listener().onSessionClosed(sessionHandle.getSessionId().toString());
-    SQLContext ctx = Optional.of(handleToSession.get(sessionHandle))
-      .map(ServiceSession :: getSQLContext).orElse(sqlContext);
-    JavaConverters.seqAsJavaList(ctx.sparkSession().sessionState().catalog().getTempViewNames())
-      .forEach(ctx::uncacheTable);
+    SparkSession ss = Optional.of(handleToSession.get(sessionHandle))
+      .map(ServiceSession :: getSparkSession).orElse(spark);
+    JavaConverters.seqAsJavaList(ss.sessionState().catalog().getTempViewNames())
+      .forEach(ss.catalog()::uncacheTable);
     ServiceSession session = handleToSession.remove(sessionHandle);
     if (session == null) {
       throw new ServiceSQLException("Session does not exist!");

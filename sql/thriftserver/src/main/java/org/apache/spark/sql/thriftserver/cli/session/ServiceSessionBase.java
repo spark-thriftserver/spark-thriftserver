@@ -20,8 +20,7 @@ package org.apache.spark.sql.thriftserver.cli.session;
 import java.io.File;
 import java.util.List;
 
-import org.apache.spark.SparkConf;
-import org.apache.spark.sql.SQLContext;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.thriftserver.cli.SessionHandle;
 import org.apache.spark.sql.thriftserver.cli.operation.OperationManager;
 import org.apache.hive.service.rpc.thrift.TProtocolVersion;
@@ -74,7 +73,7 @@ public interface ServiceSessionBase {
 
   String getPassword();
 
-  SQLContext getSQLContext();
+  SparkSession getSparkSession();
 
   String getUserName();
 

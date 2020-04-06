@@ -71,7 +71,7 @@ class OperationManager
       confOverlay: JMap[String, String],
       async: Boolean,
       queryTimeOut: Long): SparkExecuteStatementOperation = synchronized {
-    val conf = parentSession.getSQLContext.sessionState.conf
+    val conf = parentSession.getSparkSession.sessionState.conf
     val runInBackground = async && ServiceConf.isAsync(conf)
     val operation = new SparkExecuteStatementOperation(parentSession, statement, confOverlay,
       runInBackground)(sessionToActivePool)

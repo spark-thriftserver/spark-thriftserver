@@ -31,7 +31,7 @@ import org.apache.spark.sql.thriftserver.cli.operation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.spark.sql.SQLContext;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.internal.VariableSubstitution;
 import org.apache.spark.sql.thriftserver.auth.SparkAuthFactory;
 import org.apache.spark.sql.thriftserver.cli.processor.ISparkFileProcessor;
@@ -56,7 +56,7 @@ public class ServiceSessionImpl implements ServiceSession {
   private final SessionHandle sessionHandle;
   private String username;
   private final String password;
-  private SQLContext sqlContext;
+  private SparkSession spark;
   private String ipAddress;
   private static final Logger LOG = LoggerFactory.getLogger(ServiceSessionImpl.class);
   private SessionManager sessionManager;
@@ -71,13 +71,13 @@ public class ServiceSessionImpl implements ServiceSession {
       TProtocolVersion protocol,
       String username,
       String password,
-      SQLContext sqlContext,
+      SparkSession spark,
       String ipAddress) {
     this.username = username;
     this.password = password;
     this.sessionHandle = new SessionHandle(protocol);
     this.ipAddress = ipAddress;
-    this.sqlContext = sqlContext;
+    this.spark = spark;
   }
 
   @Override
@@ -131,7 +131,7 @@ public class ServiceSessionImpl implements ServiceSession {
     ISparkFileProcessor processor = new GlobalSparkrcFileProcessor();
 
     try {
-      String sparkrc = sqlContext.conf()
+      String sparkrc = spark.sessionState().conf()
         .getConf(ServiceConf.THRIFTSERVER_GLOABLE_INIT_FILE_LOCATION());
       if (sparkrc != null) {
         File sparkrcFile = new File(sparkrc);
@@ -169,7 +169,7 @@ public class ServiceSessionImpl implements ServiceSession {
   // Copy from org.apache.hadoop.hive.ql.processors.SetProcessor, only change:
   // setConf(varname, propName, varvalue, true) when varname.startsWith(SPARKCONF_PREFIX)
   private int setVariable(String varname, String varvalue) throws Exception {
-    VariableSubstitution substitution = new VariableSubstitution(sqlContext.conf());
+    VariableSubstitution substitution = new VariableSubstitution(spark.sessionState().conf());
     if (varvalue.contains("\n")){
       LOG.error("Warning: Value had a \\n character in it.");
     }
@@ -182,18 +182,18 @@ public class ServiceSessionImpl implements ServiceSession {
       System.getProperties().setProperty(propName, substitution.substitute(varvalue));
     } else if (varname.startsWith(SPARKCONF_PREFIX)) {
       String propName = varname.substring(SPARKCONF_PREFIX.length());
-      sqlContext.setConf(propName, substitution.substitute(varvalue));
+      spark.sessionState().conf().setConfString(propName, substitution.substitute(varvalue));
     } else if (varname.startsWith(SPARKVAR_PREFIX)) {
       String propName = varname.substring(SPARKVAR_PREFIX.length());
-      sqlContext.setConf(propName, substitution.substitute(varvalue));
+      spark.sessionState().conf().setConfString(propName, substitution.substitute(varvalue));
     } else if (varname.startsWith(HIVECONF_PREFIX)) {
       String propName = varname.substring(HIVECONF_PREFIX.length());
-      sqlContext.setConf(propName, substitution.substitute(varvalue));
+      spark.sessionState().conf().setConfString(propName, substitution.substitute(varvalue));
     } else if (varname.startsWith(HIVEVAR_PREFIX)) {
       String propName = varname.substring(HIVEVAR_PREFIX.length());
-      sqlContext.setConf(propName, substitution.substitute(varvalue));
+      spark.sessionState().conf().setConfString(propName, substitution.substitute(varvalue));
     } else {
-      sqlContext.setConf(varname, substitution.substitute(varvalue));
+      spark.sessionState().conf().setConfString(varname, substitution.substitute(varvalue));
     }
     return 0;
   }
@@ -293,8 +293,8 @@ public class ServiceSessionImpl implements ServiceSession {
   }
 
   @Override
-  public SQLContext getSQLContext() {
-    return sqlContext;
+  public SparkSession getSparkSession() {
+    return spark;
   }
 
   @Override
@@ -307,7 +307,7 @@ public class ServiceSessionImpl implements ServiceSession {
         case CLI_DBMS_NAME:
           return new GetInfoValue("Spark SQL");
         case CLI_DBMS_VER:
-          return new GetInfoValue(sqlContext.sparkContext().version());
+          return new GetInfoValue(spark.sparkContext().version());
         case CLI_MAX_COLUMN_NAME_LEN:
           return new GetInfoValue(128);
         case CLI_MAX_SCHEMA_NAME_LEN:
@@ -685,7 +685,7 @@ public class ServiceSessionImpl implements ServiceSession {
       String owner,
       String renewer) throws ServiceSQLException {
     SparkAuthFactory.verifyProxyAccess(getUsername(), owner, getIpAddress(),
-      sqlContext.sparkContext().hadoopConfiguration());
+      spark.sparkContext().hadoopConfiguration());
     return authFactory.getDelegationToken(owner, renewer, getIpAddress());
   }
 
@@ -694,7 +694,7 @@ public class ServiceSessionImpl implements ServiceSession {
       SparkAuthFactory authFactory,
       String tokenStr) throws ServiceSQLException {
     SparkAuthFactory.verifyProxyAccess(getUsername(), getUserFromToken(authFactory, tokenStr),
-      getIpAddress(), sqlContext.sparkContext().hadoopConfiguration());
+      getIpAddress(), spark.sparkContext().hadoopConfiguration());
     authFactory.cancelDelegationToken(tokenStr);
   }
 
@@ -703,7 +703,7 @@ public class ServiceSessionImpl implements ServiceSession {
       SparkAuthFactory authFactory,
       String tokenStr) throws ServiceSQLException {
     SparkAuthFactory.verifyProxyAccess(getUsername(), getUserFromToken(authFactory, tokenStr),
-      getIpAddress(), sqlContext.sparkContext().hadoopConfiguration());
+      getIpAddress(), spark.sparkContext().hadoopConfiguration());
     authFactory.renewDelegationToken(tokenStr);
   }
 

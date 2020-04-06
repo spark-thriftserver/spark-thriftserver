@@ -37,7 +37,7 @@ import org.apache.thrift.transport.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.spark.deploy.SparkHadoopUtil;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.thriftserver.auth.thrift.HadoopThriftAuthBridge;
 import org.apache.spark.sql.thriftserver.auth.thrift.HadoopThriftAuthBridge.Server.ServerMode;
@@ -76,6 +76,7 @@ public class SparkAuthFactory {
   private HadoopThriftAuthBridge.Server saslServer;
   private String authTypeStr;
   private final String transportMode;
+  private final SparkSession spark;
   private final SQLConf conf;
   private SparkDelegationTokenManager delegationTokenManager = null;
 
@@ -107,8 +108,9 @@ public class SparkAuthFactory {
     }
   }
 
-  public SparkAuthFactory(SQLConf conf) throws TTransportException, IOException {
-    this.conf = conf;
+  public SparkAuthFactory(SparkSession spark) throws TTransportException, IOException {
+    this.spark = spark;
+    this.conf = spark.sessionState().conf();
     transportMode = ServiceConf.transportMode(conf);
     authTypeStr = ServiceConf.authentication(conf);
 
@@ -132,13 +134,10 @@ public class SparkAuthFactory {
           saslServer = new HadoopThriftAuthBridge.Server();
         }
 
-        Configuration hadoopConf = SparkHadoopUtil.get().conf();
-        JavaConverters.mapAsJavaMap(conf.getAllConfs()).forEach(hadoopConf::set);
-
         // start delegation token manager
         delegationTokenManager = new SparkDelegationTokenManager();
         delegationTokenManager.startDelegationTokenSecretManager(
-          hadoopConf, ServerMode.HIVESERVER2);
+          spark.sparkContext().hadoopConfiguration(), ServerMode.HIVESERVER2);
         saslServer.setSecretManager(delegationTokenManager.getSecretManager());
       }
     }
@@ -161,15 +160,15 @@ public class SparkAuthFactory {
         throw new LoginException(e.getMessage());
       }
     } else if (authTypeStr.equalsIgnoreCase(AuthTypes.NONE.getAuthName())) {
-      transportFactory = PlainSaslHelper.getPlainTransportFactory(authTypeStr);
+      transportFactory = PlainSaslHelper.getPlainTransportFactory(authTypeStr, spark);
     } else if (authTypeStr.equalsIgnoreCase(AuthTypes.LDAP.getAuthName())) {
-      transportFactory = PlainSaslHelper.getPlainTransportFactory(authTypeStr);
+      transportFactory = PlainSaslHelper.getPlainTransportFactory(authTypeStr, spark);
     } else if (authTypeStr.equalsIgnoreCase(AuthTypes.PAM.getAuthName())) {
-      transportFactory = PlainSaslHelper.getPlainTransportFactory(authTypeStr);
+      transportFactory = PlainSaslHelper.getPlainTransportFactory(authTypeStr, spark);
     } else if (authTypeStr.equalsIgnoreCase(AuthTypes.NOSASL.getAuthName())) {
       transportFactory = new TTransportFactory();
     } else if (authTypeStr.equalsIgnoreCase(AuthTypes.CUSTOM.getAuthName())) {
-      transportFactory = PlainSaslHelper.getPlainTransportFactory(authTypeStr);
+      transportFactory = PlainSaslHelper.getPlainTransportFactory(authTypeStr, spark);
     } else {
       throw new LoginException("Unsupported authentication type " + authTypeStr);
     }

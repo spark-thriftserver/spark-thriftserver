@@ -64,7 +64,7 @@ private[thriftserver] class SparkGetSchemasOperation(
     logInfo(s"$logMsg with $statementId")
     setState(OperationState.RUNNING)
     // Always use the latest class loader provided by executionHive's state.
-    val executionHiveClassLoader = sqlContext.sharedState.jarClassLoader
+    val executionHiveClassLoader = spark.sharedState.jarClassLoader
     Thread.currentThread().setContextClassLoader(executionHiveClassLoader)
 
     SparkThriftServer.listener.onStatementStart(
@@ -76,11 +76,11 @@ private[thriftserver] class SparkGetSchemasOperation(
 
     try {
       val schemaPattern = convertSchemaPattern(schemaName)
-      sqlContext.sessionState.catalog.listDatabases(schemaPattern).foreach { dbName =>
+      spark.sessionState.catalog.listDatabases(schemaPattern).foreach { dbName =>
         rowSet.addRow(Array[AnyRef](dbName, DEFAULT_HIVE_CATALOG))
       }
 
-      val globalTempViewDb = sqlContext.sessionState.catalog.globalTempViewManager.database
+      val globalTempViewDb = spark.sessionState.catalog.globalTempViewManager.database
       val databasePattern = Pattern.compile(CLIServiceUtils.patternToRegex(schemaName))
       if (databasePattern.matcher(globalTempViewDb).matches()) {
         rowSet.addRow(Array[AnyRef](globalTempViewDb, DEFAULT_HIVE_CATALOG))

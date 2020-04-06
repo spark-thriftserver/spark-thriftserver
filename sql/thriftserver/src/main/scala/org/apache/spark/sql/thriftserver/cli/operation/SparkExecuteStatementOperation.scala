@@ -30,7 +30,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils
 
 import org.apache.spark.SparkContext
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.{DataFrame, Row => SparkRow, SQLContext}
+import org.apache.spark.sql.{DataFrame, Row => SparkRow, SparkSession}
 import org.apache.spark.sql.execution.HiveResult
 import org.apache.spark.sql.execution.command.SetCommand
 import org.apache.spark.sql.internal.SQLConf
@@ -51,7 +51,8 @@ private[thriftserver] class SparkExecuteStatementOperation(
   extends ExecuteStatementOperation(parentSession, statement, confOverlay, runInBackground)
   with Logging {
 
-  private val sqlContext: SQLContext = parentSession.getSQLContext
+  private val spark: SparkSession = parentSession.getSparkSession
+  private val conf: SQLConf = spark.sessionState.conf
   private var result: DataFrame = _
 
   // We cache the returned rows to get iterators again in case the user wants to use FETCH_FIRST.
@@ -127,7 +128,7 @@ private[thriftserver] class SparkExecuteStatementOperation(
     if ((order.equals(FetchOrientation.FETCH_FIRST) ||
         order.equals(FetchOrientation.FETCH_PRIOR)) && previousFetchEndOffset != 0) {
       // Reset the iterator to the beginning of the query.
-      iter = if (sqlContext.getConf(SQLConf.THRIFTSERVER_INCREMENTAL_COLLECT.key).toBoolean) {
+      iter = if (conf.getConf(SQLConf.THRIFTSERVER_INCREMENTAL_COLLECT)) {
         resultList = None
         result.toLocalIterator.asScala
       } else {
@@ -271,11 +272,11 @@ private[thriftserver] class SparkExecuteStatementOperation(
         }
       }
       // Always use the latest class loader provided by executionHive's state.
-      val executionHiveClassLoader = sqlContext.sharedState.jarClassLoader
+      val executionHiveClassLoader = spark.sharedState.jarClassLoader
       Thread.currentThread().setContextClassLoader(executionHiveClassLoader)
 
-      sqlContext.sparkContext.setJobGroup(statementId, statement)
-      result = sqlContext.sql(statement)
+      spark.sparkContext.setJobGroup(statementId, statement)
+      result = spark.sql(statement)
       logDebug(result.queryExecution.toString())
       result.queryExecution.logical match {
         case SetCommand(Some((SQLConf.THRIFTSERVER_POOL.key, Some(value)))) =>
@@ -286,7 +287,7 @@ private[thriftserver] class SparkExecuteStatementOperation(
       }
       SparkThriftServer.listener.onStatementParsed(statementId, result.queryExecution.toString())
       iter = {
-        if (sqlContext.getConf(SQLConf.THRIFTSERVER_INCREMENTAL_COLLECT.key).toBoolean) {
+        if (conf.getConf(SQLConf.THRIFTSERVER_INCREMENTAL_COLLECT)) {
           resultList = None
           result.toLocalIterator.asScala
         } else {
@@ -304,7 +305,7 @@ private[thriftserver] class SparkExecuteStatementOperation(
         // task interrupted, it may have start some spark job, so we need to cancel again to
         // make sure job was cancelled when background thread was interrupted
         if (statementId != null) {
-          sqlContext.sparkContext.cancelJobGroup(statementId)
+          spark.sparkContext.cancelJobGroup(statementId)
         }
         val currentState = getStatus().getState()
         if (currentState.isTerminal) {
@@ -332,7 +333,7 @@ private[thriftserver] class SparkExecuteStatementOperation(
           SparkThriftServer.listener.onStatementFinish(statementId)
         }
       }
-      sqlContext.sparkContext.clearJobGroup()
+      spark.sparkContext.clearJobGroup()
     }
   }
 
@@ -355,20 +356,20 @@ private[thriftserver] class SparkExecuteStatementOperation(
       }
     }
     if (statementId != null) {
-      sqlContext.sparkContext.cancelJobGroup(statementId)
+      spark.sparkContext.cancelJobGroup(statementId)
     }
   }
 
   private def withSchedulerPool[T](body: => T): T = {
     val pool = sessionToActivePool.get(parentSession.getSessionHandle)
     if (pool != null) {
-      sqlContext.sparkContext.setLocalProperty(SparkContext.SPARK_SCHEDULER_POOL, pool)
+      spark.sparkContext.setLocalProperty(SparkContext.SPARK_SCHEDULER_POOL, pool)
     }
     try {
       body
     } finally {
       if (pool != null) {
-        sqlContext.sparkContext.setLocalProperty(SparkContext.SPARK_SCHEDULER_POOL, null)
+        spark.sparkContext.setLocalProperty(SparkContext.SPARK_SCHEDULER_POOL, null)
       }
     }
   }

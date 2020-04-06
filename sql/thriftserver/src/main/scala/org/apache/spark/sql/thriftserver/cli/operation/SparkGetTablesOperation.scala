@@ -89,10 +89,10 @@ private[thriftserver] class SparkGetTablesOperation(
     logInfo(s"$logMsg with $statementId")
     setState(OperationState.RUNNING)
     // Always use the latest class loader provided by executionHive's state.
-    val executionHiveClassLoader = sqlContext.sharedState.jarClassLoader
+    val executionHiveClassLoader = spark.sharedState.jarClassLoader
     Thread.currentThread().setContextClassLoader(executionHiveClassLoader)
 
-    val catalog = sqlContext.sessionState.catalog
+    val catalog = spark.sessionState.catalog
     val schemaPattern = convertSchemaPattern(schemaName)
     val tablePattern = convertIdentifierPattern(tableName, true)
     val matchingDbs = catalog.listDatabases(schemaPattern)

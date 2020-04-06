@@ -39,7 +39,7 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.ExecutorThreadPool;
 import org.eclipse.jetty.util.thread.ScheduledExecutorScheduler;
 
-import org.apache.spark.sql.SQLContext;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.thriftserver.auth.SparkAuthFactory;
 import org.apache.spark.sql.thriftserver.cli.CLIService;
 import org.apache.spark.sql.thriftserver.internal.ServiceConf;
@@ -49,8 +49,8 @@ import org.apache.spark.sql.thriftserver.server.ThreadFactoryWithName;
 
 public class ThriftHttpCLIService extends ThriftCLIService {
 
-  public ThriftHttpCLIService(CLIService cliService, SQLContext sqlContext) {
-    super(cliService, sqlContext, ThriftHttpCLIService.class.getSimpleName());
+  public ThriftHttpCLIService(CLIService cliService, SparkSession spark) {
+    super(cliService, spark, ThriftHttpCLIService.class.getSimpleName());
   }
 
   /**
@@ -81,7 +81,7 @@ public class ThriftHttpCLIService extends ThriftCLIService {
       // Change connector if SSL is used
       if (useSsl) {
         String keyStorePath = ServiceConf.sslKeystorePath(conf);
-        Configuration hadoopConf = sqlContext.sparkContext().hadoopConfiguration();
+        Configuration hadoopConf = spark.sparkContext().hadoopConfiguration();
         char[] pass = hadoopConf.getPassword(
             ServiceConf.THRIFTSERVER_SSL_KEYSTORE_PASSWORD().key()
                 .substring("spark.hadoop.".length()));
@@ -122,7 +122,7 @@ public class ThriftHttpCLIService extends ThriftCLIService {
       httpServer.addConnector(connector);
 
       // Thrift configs
-      sparkAuthFactory = new SparkAuthFactory(conf);
+      sparkAuthFactory = new SparkAuthFactory(spark);
       TProcessor processor = new TCLIService.Processor<Iface>(this);
       TProtocolFactory protocolFactory = new TBinaryProtocol.Factory();
       // Set during the init phase of SparkThriftServer if auth mode is kerberos
@@ -132,7 +132,7 @@ public class ThriftHttpCLIService extends ThriftCLIService {
       UserGroupInformation httpUGI = cliService.getHttpUGI();
       String authType = ServiceConf.authentication(conf);
       TServlet thriftHttpServlet = new ThriftHttpServlet(processor, protocolFactory, authType,
-          serviceUGI, httpUGI, sparkAuthFactory, conf);
+          serviceUGI, httpUGI, sparkAuthFactory, spark);
 
       // Context handler
       final ServletContextHandler context = new ServletContextHandler(

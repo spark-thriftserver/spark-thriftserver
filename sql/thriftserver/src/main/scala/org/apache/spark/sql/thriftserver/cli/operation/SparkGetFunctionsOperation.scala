@@ -74,10 +74,10 @@ private[thriftserver] class SparkGetFunctionsOperation(
     logInfo(s"$logMsg with $statementId")
     setState(OperationState.RUNNING)
     // Always use the latest class loader provided by executionHive's state.
-    val executionHiveClassLoader = sqlContext.sharedState.jarClassLoader
+    val executionHiveClassLoader = spark.sharedState.jarClassLoader
     Thread.currentThread().setContextClassLoader(executionHiveClassLoader)
 
-    val catalog = sqlContext.sessionState.catalog
+    val catalog = spark.sessionState.catalog
     // get databases for schema pattern
     val schemaPattern = convertSchemaPattern(schemaName)
     val matchingDbs = catalog.listDatabases(schemaPattern)

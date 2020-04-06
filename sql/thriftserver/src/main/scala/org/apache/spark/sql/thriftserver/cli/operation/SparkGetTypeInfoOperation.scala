@@ -90,7 +90,7 @@ private[thriftserver] class SparkGetTypeInfoOperation(
     logInfo(s"$logMsg with $statementId")
     setState(OperationState.RUNNING)
     // Always use the latest class loader provided by executionHive's state.
-    val executionHiveClassLoader = sqlContext.sharedState.jarClassLoader
+    val executionHiveClassLoader = spark.sharedState.jarClassLoader
     Thread.currentThread().setContextClassLoader(executionHiveClassLoader)
 
     SparkThriftServer.listener.onStatementStart(

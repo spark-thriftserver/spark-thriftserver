@@ -33,7 +33,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.util.KerberosName;
-import org.apache.spark.sql.thriftserver.auth.*;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TProtocolFactory;
 import org.apache.thrift.server.TServlet;
@@ -46,7 +45,9 @@ import org.ietf.jgss.Oid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.internal.SQLConf;
+import org.apache.spark.sql.thriftserver.auth.*;
 import org.apache.spark.sql.thriftserver.CookieSigner;
 import org.apache.spark.sql.thriftserver.auth.AuthenticationProviderFactory.AuthMethods;
 import org.apache.spark.sql.thriftserver.cli.ServiceSQLException;
@@ -65,6 +66,7 @@ public class ThriftHttpServlet extends TServlet {
   private final String authType;
   private final UserGroupInformation serviceUGI;
   private final UserGroupInformation httpUGI;
+  private SparkSession spark;
   private SQLConf conf;
 
   // Class members for cookie based authentication.
@@ -83,9 +85,10 @@ public class ThriftHttpServlet extends TServlet {
 
   public ThriftHttpServlet(TProcessor processor, TProtocolFactory protocolFactory,
       String authType, UserGroupInformation serviceUGI, UserGroupInformation httpUGI,
-      SparkAuthFactory sparkAuthFactory, SQLConf conf) {
+      SparkAuthFactory sparkAuthFactory, SparkSession spark) {
     super(processor, protocolFactory);
-    this.conf = conf;
+    this.spark = spark;
+    this.conf = spark.sessionState().conf();
     this.authType = authType;
     this.serviceUGI = serviceUGI;
     this.httpUGI = httpUGI;
@@ -324,7 +327,7 @@ public class ThriftHttpServlet extends TServlet {
       try {
         AuthMethods authMethod = AuthMethods.getValidAuthMethod(authType);
         PasswdAuthenticationProvider provider =
-            AuthenticationProviderFactory.getAuthenticationProvider(authMethod, conf);
+          AuthenticationProviderFactory.getAuthenticationProvider(authMethod, spark);
         provider.authenticate(userName, getPassword(request, authType));
 
       } catch (Exception e) {

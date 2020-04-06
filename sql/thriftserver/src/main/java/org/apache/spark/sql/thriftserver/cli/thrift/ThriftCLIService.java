@@ -35,7 +35,7 @@ import org.apache.thrift.transport.TTransport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.spark.sql.SQLContext;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.thriftserver.AbstractService;
 import org.apache.spark.sql.thriftserver.ServiceException;
@@ -69,7 +69,7 @@ public abstract class ThriftCLIService extends AbstractService
   protected boolean isEmbedded = false;
 
   protected SQLConf conf;
-  protected SQLContext sqlContext;
+  protected SparkSession spark;
 
   protected int minWorkerThreads;
   protected int maxWorkerThreads;
@@ -90,10 +90,10 @@ public abstract class ThriftCLIService extends AbstractService
     }
   }
 
-  public ThriftCLIService(CLIService service, SQLContext sqlContext, String serviceName) {
+  public ThriftCLIService(CLIService service, SparkSession spark, String serviceName) {
     super(serviceName);
     this.cliService = service;
-    this.sqlContext = sqlContext;
+    this.spark = spark;
     currentServerContext = new ThreadLocal<ServerContext>();
     serverEventHandler = new TServerEventHandler() {
       @Override
@@ -778,7 +778,7 @@ public abstract class ThriftCLIService extends AbstractService
 
     // Verify proxy user privilege of the realUser for the proxyUser
     SparkAuthFactory.verifyProxyAccess(realUser, proxyUser, ipAddress,
-        sqlContext.sparkContext().hadoopConfiguration());
+        spark.sparkContext().hadoopConfiguration());
     LOG.debug("Verified proxy user: " + proxyUser);
     return proxyUser;
   }

@@ -31,7 +31,7 @@ import org.apache.hive.service.rpc.thrift.TOperationHandle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.spark.sql.SQLContext;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.internal.SQLConf;
 import org.apache.spark.sql.thriftserver.CompositeService;
 import org.apache.spark.sql.thriftserver.ServiceException;
@@ -59,22 +59,22 @@ public class CLIService extends CompositeService implements ICLIService {
 
   private final Logger LOG = LoggerFactory.getLogger(CLIService.class.getName());
 
-  private SQLContext sqlContext;
+  private SparkSession spark;
   private SessionManager sessionManager;
   private UserGroupInformation serviceUGI;
   private UserGroupInformation httpUGI;
   // The SparkThriftServer instance running this service
   private final SparkThriftServer sparkServer;
 
-  public CLIService(SparkThriftServer sparkServer, SQLContext sqlContext) {
+  public CLIService(SparkThriftServer sparkServer, SparkSession spark) {
     super(CLIService.class.getSimpleName());
     this.sparkServer = sparkServer;
-    this.sqlContext = sqlContext;
+    this.spark = spark;
   }
 
   @Override
   public synchronized void init(SQLConf conf) {
-    sessionManager = new SessionManager(sqlContext);
+    sessionManager = new SessionManager(spark);
     addService(sessionManager);
     //  If the hadoop cluster is secure, do a kerberos login for the service from the keytab
     if (UserGroupInformation.isSecurityEnabled()) {
@@ -384,7 +384,7 @@ public class CLIService extends CompositeService implements ICLIService {
      * However, if the background operation is complete, we return immediately.
      */
     if (operation.shouldRunAsync()) {
-      SQLConf conf = operation.getParentSession().getSQLContext().conf();
+      SQLConf conf = operation.getParentSession().getSparkSession().sessionState().conf();
       long timeout = ServiceConf.longPollingTimeout(conf);
       try {
         operation.getBackgroundHandle().get(timeout, TimeUnit.MILLISECONDS);
