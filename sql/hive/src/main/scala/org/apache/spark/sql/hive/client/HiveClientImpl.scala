@@ -119,10 +119,14 @@ private[hive] class HiveClientImpl(
     case hive.v3_1 => new Shim_v3_1()
   }
 
+  def isProxyUser(ugi: UserGroupInformation): Boolean = {
+    ugi.getAuthenticationMethod == UserGroupInformation.AuthenticationMethod.PROXY
+  }
+
   def getCurrentState(): SessionState = {
     val ugi = UserGroupInformation.getCurrentUser
     // TODO need to check if we should add more condition
-    if (ugi.getAuthenticationMethod() == UserGroupInformation.AuthenticationMethod.PROXY) {
+    if (isProxyUser(ugi)) {
       getOrCreateSessionState(ugi.getShortUserName)
     } else {
       state
@@ -419,7 +423,11 @@ private[hive] class HiveClientImpl(
           logWarning(
             "HiveClient got thrift exception, destroying client and retrying " +
               s"(${retryLimit - numTries} tries remaining)", e)
-          sessionHiveMap.remove(userName)
+          if (isProxyUser(UserGroupInformation.getCurrentUser)) {
+            sessionHiveMap.remove(userName)
+          } else {
+            clientLoader.cachedHive = null
+          }
           Thread.sleep(retryDelayMillis)
       }
     } while (numTries <= retryLimit && System.nanoTime < deadline)
